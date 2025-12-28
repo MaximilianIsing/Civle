@@ -2,115 +2,134 @@
   "districts": [
     {
       "name": "Aerodrome",
+      "description": "**Placement:** Placeable on any flat land tile.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Aqueduct",
+      "description": "**Placement:** Placeable adjacent to a City Center and either a Mountain, Lake, or River (on an edge that is not directly connected between the City Center and the Aquaduct)",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": true
     },
     {
       "name": "Campus",
+      "description": "**Placement:** Placeable on any land tile.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Canal",
+      "description": "**Placement:** Placeable on any flat land tile with a Coast or Lake tile on one side, and either a City Center or another body of water on the other. A single canal passage may go either straight, or bend 60 degrees; three-way canals are not allowed.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "City_Center",
+      "description": "**Placement:** Placeable on any land tile.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Commercial_Hub",
+      "description": "**Placement:** Placeable on any land tile.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Dam",
+      "description": "**Placement:** Placeable on a Floodplains tile that contains atleast 2 River Edges.",
       "allowed_terrain": ["Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Diplomatic_Quarter",
+      "description": "**Placement:** Placeable on any land tile.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Encampment",
+      "description": "**Placement:** Placeable on any land tile that is not adjacent to a City Center.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": true,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Entertainment_Complex",
+      "description": "**Placement:** Placeable on any land tile.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Government_Plaza",
+      "description": "**Placement:** Placeable on any land tile.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Harbor",
-      "allowed_terrain": ["Coast"],
+      "description": "**Placement:** Placeable on any water tile that is adjacent to land.",
+      "allowed_terrain": ["Coast", "Ocean"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Holy_Site",
+      "description": "**Placement:** Placeable on any land tile.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Industrial_Zone",
+      "description": "**Placement:** Placeable on any land tile.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Neighborhood",
+      "description": "**Placement:** Placeable on any land tile.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Preserve",
+      "description": "**Placement:** Placeable on any land tile that is not adjacent to a City Center.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": true,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Spaceport",
+      "description": "**Placement:** Placeable on any flat land tile.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Theater_Square",
+      "description": "**Placement:** Placeable on any land tile.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     },
     {
       "name": "Water_Park",
-      "allowed_terrain": ["Coast"],
+      "description":  "**Placement:** Placeable on any water tile that is adjacent to land.",
+      "allowed_terrain": ["Coast", "Ocean"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
     }
@@ -118,6 +137,7 @@
   "improvements": [
     {
       "name": "Camp",
+      "description": "A recourse improvement, may only be placed on certain recourses. Ignores other terrain and features.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "must_be_on_woods": false,
       "must_be_coastal": false,
@@ -126,6 +146,7 @@
     },
     {
       "name": "Farm",
+      "description": "A standard improvement, may be placed on any featureless (or clearable) flat land.",
       "allowed_terrain": ["Grassland", "Plains", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "must_be_on_woods": false,
       "must_be_coastal": false,
@@ -134,14 +155,16 @@
     },
     {
       "name": "Fishing_Boats",
-      "allowed_terrain": ["Coast"],
+      "description": "A coastal recourse improvement, may only be placed on certain recourses. Ignores other terrain and features.",
+      "allowed_terrain": ["Coast", "Ocean"],
       "must_be_on_woods": false,
       "must_be_coastal": false,
       "only_buildable_on_resources": true,
       "resources_its_built_on": ["Fish", "Amber", "Pearls", "Turtles", "Whales"]
     },
     {
-      "name": "Lumber_Mill",
+      "name": "Lumber_Mill",a
+      "description": "A standard improvement, may be placed on any recourceless (or clearable) tile with woods. Ignores terrain.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills"],
       "must_be_on_woods": true,
       "must_be_coastal": false,
@@ -150,6 +173,7 @@
     },
     {
       "name": "Mine",
+      "description": "A standard improvement, may be placed on any featureless (or clearable) hills tile.",
       "allowed_terrain": ["Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills"],
       "must_be_on_woods": false,
       "must_be_coastal": false,
@@ -158,6 +182,7 @@
     },
     {
       "name": "Offshore_Oil_Rig",
+      "description": "A coastal recourse improvement, may only be placed on certain recourses. Ignores other terrain and features.",
       "allowed_terrain": ["Coast", "Ocean"],
       "must_be_on_woods": false,
       "must_be_coastal": false,
@@ -166,6 +191,7 @@
     },
     {
       "name": "Offshore_Wind_Farm",
+      "description": "A coastal standard improvement, may be placed on any featureless (or clearable) water tile.",
       "allowed_terrain": ["Coast", "Ocean"],
       "must_be_on_woods": false,
       "must_be_coastal": false,
@@ -174,6 +200,7 @@
     },
     {
       "name": "Oil_Well",
+      "description": "A recourse improvement, may only be placed on certain recourses. Ignores other terrain and features.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Desert_Floodplains"],
       "must_be_on_woods": false,
       "must_be_coastal": false,
@@ -182,6 +209,7 @@
     },
     {
       "name": "Pasture",
+      "description": "A recourse improvement, may only be placed on certain recourses. Ignores other terrain and features.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Tundra_Hills"],
       "must_be_on_woods": false,
       "must_be_coastal": false,
@@ -190,6 +218,7 @@
     },
     {
       "name": "Plantation",
+      "description": "A recourse improvement, may only be placed on certain recourses. Ignores other terrain and features.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "must_be_on_woods": false,
       "must_be_coastal": false,
@@ -198,6 +227,7 @@
     },
     {
       "name": "Quarry",
+      "description": "A recourse improvement, may only be placed on certain recourses. Ignores other terrain and features.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Tundra_Hills"],
       "must_be_on_woods": false,
       "must_be_coastal": false,
@@ -206,6 +236,7 @@
     },
     {
       "name": "Seaside_Resort",
+      "description": "A standard improvement, may only be placed on featureless (or clearable) flat land adjacent to a Coast tile.",
       "allowed_terrain": ["Desert", "Plains", "Grassland"],
       "must_be_on_woods": false,
       "must_be_coastal": true,
@@ -214,6 +245,7 @@
     },
     {
       "name": "Ski_Resort",
+      "description": "A standard improvement, may only be placed on Mountain tiles.",
       "allowed_terrain": ["Mountain_Desert", "Mountain_Grassland", "Mountain_Plains", "Mountain_Snow", "Mountain_Tundra"],
       "must_be_on_woods": false,
       "must_be_coastal": false,
@@ -222,6 +254,7 @@
     },
     {
       "name": "Solar_Farm",
+      "description": "A standard improvement, may only be placed on featureless (or clearable) flat land.",
       "allowed_terrain": ["Desert", "Plains", "Grassland", "Tundra"],
       "must_be_on_woods": false,
       "must_be_coastal": false,
@@ -230,6 +263,7 @@
     },
     {
       "name": "Wind_Farm",
+      "description": "A standard improvement, may only be placed on featureless (or clearable) hills tiles.",
       "allowed_terrain": ["Snow_Hill", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Tundra_Hills"],
       "must_be_on_woods": false,
       "must_be_coastal": false,
@@ -240,6 +274,7 @@
   "wonders": [
     {
       "name": "Angkor_Wat",
+      "description": "May be placed on any land tile adjacent to an Aqueduct.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "allowed_features": [],
       "required_feature_adjacency": [],
@@ -248,6 +283,7 @@
     },
     {
       "name": "Bolshoi_Theatre",
+      "description": "May be placed on any land tile adjacent to a Theater Square.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "allowed_features": [],
       "required_feature_adjacency": [],
@@ -256,6 +292,7 @@
     },
     {
       "name": "Casa_de_Contratacion",
+      "description": "May be placed on any land tile adjacent to a Government Plaza.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "allowed_features": [],
       "required_feature_adjacency": [],
@@ -264,6 +301,7 @@
     },
     {
       "name": "Colosseum",
+      "description": "May be placed on any flat land tile adjacent to an Entertainment Complex.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "allowed_features": [],
       "required_feature_adjacency": [],
@@ -272,7 +310,8 @@
     },
     {
       "name": "Colossus",
-      "allowed_terrain": ["Coast"],
+      "description": "May be placed on any water tile that is adjacent to land.",
+      "allowed_terrain": ["Coast", "Ocean"],
       "allowed_features": [],
       "required_feature_adjacency": [],
       "required_resource_adjacency": [],
@@ -280,6 +319,7 @@
     },
     {
       "name": "Etemenanki",
+      "description": "May be placed on any Floodplains tile or Marsh.",
       "allowed_terrain": ["Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "allowed_features": ["Marsh"],
       "required_feature_adjacency": [],
@@ -288,6 +328,7 @@
     },
     {
       "name": "Great_Zimbabwe",
+      "description": "May be placed on any land tile adjacent to Cattle and a Commercial Hub.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "allowed_features": [],
       "required_feature_adjacency": [],
@@ -296,14 +337,16 @@
     },
     {
       "name": "Oracle",
+      "description": "May be placed on any hill tile.",
       "allowed_terrain": ["Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills"],
       "allowed_features": [],
       "required_feature_adjacency": [],
       "required_resource_adjacency": [],
-      "required_district_adjacency": ["Campus"]
+      "required_district_adjacency": []
     },
     {
       "name": "Pyramids",
+      "description": "May be placed on any desert tile.",
       "allowed_terrain": ["Desert", "Desert_Floodplains"],
       "allowed_features": [],
       "required_feature_adjacency": [],
@@ -312,6 +355,7 @@
     },
     {
       "name": "Stonehenge",
+      "description": "May be placed on any flat land tile adjacent to Stone.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow"],
       "allowed_features": [],
       "required_feature_adjacency": [],
@@ -320,6 +364,7 @@
     },
     {
       "name": "Temple_of_Artemis",
+      "description": "May be placed on any land tile adjacent to a Camp.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "allowed_features": [],
       "required_feature_adjacency": ["Camp"],
@@ -328,6 +373,7 @@
     },
     {
       "name": "University_of_Sankore",
+      "description": "May be placed on any desert tile adjacent to a Campus.",
       "allowed_terrain": ["Desert", "Desert_Floodplains"],
       "allowed_features": [],
       "required_feature_adjacency": [],
