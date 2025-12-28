@@ -1011,13 +1011,78 @@
                     const sourceKey = `${draggedDistrict.row},${draggedDistrict.col}`;
                     const targetKey = `${row},${col}`;
                     
-                    // If dropping on the same hex, do nothing
-                    if (sourceKey !== targetKey) {
+                    // If dropping on the same hex, do nothing and clear the dragged state IMMEDIATELY
+                    if (sourceKey === targetKey) {
+                        // Dropped back on original location - restore opacity first, then clear
+                        const draggedImg = document.querySelector(`.hex-district[data-row="${draggedDistrict.row}"][data-col="${draggedDistrict.col}"]`);
+                        if (draggedImg) {
+                            draggedImg.style.opacity = '1';
+                            draggedImg.style.cursor = 'grab';
+                        }
+                        // Clear IMMEDIATELY before anything else to prevent map container handler from seeing it
+                        draggedDistrict = null;
+                        // Make sure event doesn't bubble
+                        e.stopPropagation();
+                        e.preventDefault();
+                        return; // Exit early, don't process further
+                    } else {
                         const tile = challengeData.tiles[targetKey];
                         const districtName = draggedDistrict.name;
+                        const targetDistrict = placedItems[targetKey];
                         
-                        // Check if valid placement (exclude old location when moving)
-                        if (isValidPlacement(row, col, 'district', districtName, tile, { row: draggedDistrict.row, col: draggedDistrict.col })) {
+                        // Check if we're swapping with another district of the same type
+                        let isSwap = false;
+                        if (targetDistrict && 
+                            targetDistrict.type === 'district' && 
+                            targetDistrict.name === districtName &&
+                            districtName !== 'City_Center') {
+                            isSwap = canDistrictsSwap(sourceKey, targetKey);
+                        }
+                        
+                        if (isSwap) {
+                            // Perform swap: exchange positions and owners
+                            const sourceDistrict = placedItems[sourceKey];
+                            const targetDistrictOwner = targetDistrict.owner;
+                            
+                            // Remove both from their current locations
+                            delete placedItems[sourceKey];
+                            delete placedItems[targetKey];
+                            
+                            // Place them in swapped positions
+                            // First, place source district at target location
+                            placedItems[targetKey] = { 
+                                type: 'district', 
+                                name: districtName
+                            };
+                            
+                            // Then, place target district at source location
+                            placedItems[sourceKey] = { 
+                                type: 'district', 
+                                name: districtName
+                            };
+                            
+                            // Assign ownership for both districts (will use ambiguous owners if applicable)
+                            assignDistrictOwnership(targetKey, row, col, districtName, { row: draggedDistrict.row, col: draggedDistrict.col });
+                            assignDistrictOwnership(sourceKey, draggedDistrict.row, draggedDistrict.col, districtName, { row, col });
+                            
+                            // Update visuals for both locations and their neighbors
+                            updateHexVisual(draggedDistrict.row, draggedDistrict.col);
+                            const oldNeighbors = getNeighbors(draggedDistrict.row, draggedDistrict.col);
+                            oldNeighbors.forEach(neighbor => {
+                                updateHexVisual(neighbor.row, neighbor.col);
+                            });
+                            
+                            updateHexVisual(row, col);
+                            const newNeighbors = getNeighbors(row, col);
+                            newNeighbors.forEach(neighbor => {
+                                updateHexVisual(neighbor.row, neighbor.col);
+                            });
+                            
+                            updateAllScores();
+                            populateSidebar();
+                            draggedDistrict = null;
+                        } else if (isValidPlacement(row, col, 'district', districtName, tile, { row: draggedDistrict.row, col: draggedDistrict.col })) {
+                            // Normal move (not a swap)
                             // Remove from old location (this adds it back to availableItems)
                             const oldKey = `${draggedDistrict.row},${draggedDistrict.col}`;
                             // Get the old owner before removing
@@ -1037,109 +1102,58 @@
                             
                             // Assign district to a City_Center if it's not a City_Center itself
                             // This allows districts to swap city center owners when moved to a new location
+                            // Uses ambiguous ownership if multiple city centers are valid
                             if (districtName !== 'City_Center') {
-                                // First, check if this district is adjacent to any City_Center (first ring)
-                                const neighbors = getNeighbors(row, col);
-                                let adjacentCityCenter = null;
-                                for (const neighbor of neighbors) {
-                                    const neighborKey = `${neighbor.row},${neighbor.col}`;
-                                    const neighborPlaced = placedItems[neighborKey];
-                                    if (neighborPlaced && neighborPlaced.type === 'district' && neighborPlaced.name === 'City_Center') {
-                                        adjacentCityCenter = neighborKey;
-                                        break;
-                                    }
-                                }
-                                
-                                if (adjacentCityCenter) {
-                                    // District is in a City_Center's first ring - must be owned by that City_Center
-                                    // This may result in swapping from the old owner to the new adjacent City_Center
-                                    placedItems[key].owner = adjacentCityCenter;
-                                } else {
-                                    // District is not adjacent to any City_Center, find nearest available City_Center within 3 tiles
-                                    // But exclude City_Centers that have this district in their first ring
-                                    // This allows swapping owners if the district moves to a different city center's area
-                                    let nearestCityCenter = null;
-                                    let nearestDistance = Infinity;
-                                    
-                                    for (const [cityKey, cityPlaced] of Object.entries(placedItems)) {
-                                        if (cityPlaced.type === 'district' && cityPlaced.name === 'City_Center') {
-                                            const [cityRow, cityCol] = cityKey.split(',').map(Number);
-                                            
-                                            // Check if this district is in another City_Center's first ring
-                                            const cityNeighbors = getNeighbors(cityRow, cityCol);
-                                            let isInAnotherCityFirstRing = false;
-                                            for (const cityNeighbor of cityNeighbors) {
-                                                if (cityNeighbor.row === row && cityNeighbor.col === col) {
-                                                    // This district is in this City_Center's first ring
-                                                    // But we're checking a different City_Center, so skip
-                                                    isInAnotherCityFirstRing = true;
-                                                    break;
-                                                }
-                                            }
-                                            
-                                            if (isInAnotherCityFirstRing) {
-                                                continue; // Skip this City_Center
-                                            }
-                                            
-                                            const distance = getHexDistance(row, col, cityRow, cityCol);
-                                            
-                                            if (distance <= 3 && distance < nearestDistance) {
-                                                // Check if this City_Center already owns a district of this type
-                                                // Exclude both the new location (key) and old location (oldKey) to allow swapping
-                                                let alreadyOwns = false;
-                                                for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
-                                                    if (districtPlaced.type === 'district' && 
-                                                        districtPlaced.name === districtName &&
-                                                        districtPlaced.owner === cityKey &&
-                                                        districtKey !== key &&
-                                                        districtKey !== oldKey) {
-                                                        alreadyOwns = true;
-                                                        break;
-                                                    }
-                                                }
-                                                
-                                                if (!alreadyOwns) {
-                                                    nearestCityCenter = cityKey;
-                                                    nearestDistance = distance;
-                                                }
-                                            }
-                                        }
-                                    }
-                                    
-                                    if (nearestCityCenter) {
-                                        // Assign to the nearest available City_Center (may be different from old owner)
-                                        placedItems[key].owner = nearestCityCenter;
-                                    }
-                                }
+                                assignDistrictOwnership(key, row, col, districtName, { row: draggedDistrict.row, col: draggedDistrict.col });
                             }
                             
                             availableItems[districtName] = (availableItems[districtName] || 0) - 1;
                             
-                            // If a City_Center was moved, delete any districts it owned that are now out of range
+                            // If a City_Center was moved, reassign ownership of districts it owned
+                            // This allows districts to swap to other city centers if they're better positioned
                             if (districtName === 'City_Center') {
-                                const newCityKey = key;
+                                const districtsToReassign = [];
                                 const districtsToDelete = [];
                                 
                                 // Find all districts that were owned by this City_Center at its old location
+                                // Handle both direct owners and ambiguous owners
                                 for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
                                     if (districtPlaced.type === 'district' && 
-                                        districtPlaced.name !== 'City_Center' &&
-                                        districtPlaced.owner === oldKey) {
-                                        // Check if district is still within 3 tiles of the new City_Center location
-                                        const [districtRow, districtCol] = districtKey.split(',').map(Number);
-                                        const distance = getHexDistance(row, col, districtRow, districtCol);
-                                        
-                                        if (distance > 3) {
-                                            // District is out of range - mark for deletion
-                                            districtsToDelete.push(districtKey);
-                                        } else {
-                                            // District is still in range - reassign ownership to new location
-                                            districtPlaced.owner = newCityKey;
+                                        districtPlaced.name !== 'City_Center') {
+                                        // Check if this district is owned by (or could be owned by) the old city center
+                                        if (Array.isArray(districtPlaced.owner)) {
+                                            if (districtPlaced.owner.includes(oldKey)) {
+                                                districtsToReassign.push(districtKey);
+                                            }
+                                        } else if (districtPlaced.owner === oldKey) {
+                                            districtsToReassign.push(districtKey);
                                         }
                                     }
                                 }
                                 
-                                // Delete districts that are out of range
+                                // Reassign ownership for all districts that were owned by the old city center
+                                // This will find the best available city center (could be the moved one or a different one)
+                                for (const districtKey of districtsToReassign) {
+                                    reassignDistrictOwnership(districtKey);
+                                    
+                                    const district = placedItems[districtKey];
+                                    if (district) {
+                                        // If no valid owner was found (district is out of range of all city centers), delete it
+                                        if (!district.owner) {
+                                            districtsToDelete.push(districtKey);
+                                        } else {
+                                            // Update visuals for the reassigned district and its neighbors
+                                            const [districtRow, districtCol] = districtKey.split(',').map(Number);
+                                            updateHexVisual(districtRow, districtCol);
+                                            const districtNeighbors = getNeighbors(districtRow, districtCol);
+                                            districtNeighbors.forEach(neighbor => {
+                                                updateHexVisual(neighbor.row, neighbor.col);
+                                            });
+                                        }
+                                    }
+                                }
+                                
+                                // Delete districts that are out of range of all city centers
                                 for (const districtKey of districtsToDelete) {
                                     const district = placedItems[districtKey];
                                     if (district) {
@@ -1154,6 +1168,36 @@
                                         districtNeighbors.forEach(neighbor => {
                                             updateHexVisual(neighbor.row, neighbor.col);
                                         });
+                                    }
+                                }
+                                
+                                // Also check all districts that might now be better owned by the moved city center
+                                // This handles the case where a district was within range of 2 city centers
+                                // and the moved city center is now closer
+                                for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
+                                    if (districtPlaced.type === 'district' && 
+                                        districtPlaced.name !== 'City_Center' &&
+                                        districtPlaced.owner) {
+                                        // Check if this district is not already owned by the new city center location
+                                        let isOwnedByNewCity = false;
+                                        if (Array.isArray(districtPlaced.owner)) {
+                                            isOwnedByNewCity = districtPlaced.owner.includes(key);
+                                        } else {
+                                            isOwnedByNewCity = districtPlaced.owner === key;
+                                        }
+                                        
+                                        if (!isOwnedByNewCity) {
+                                            // Reassign to see if the moved city center is now a better owner
+                                            reassignDistrictOwnership(districtKey);
+                                            
+                                            // Update visuals if ownership changed
+                                            const [districtRow, districtCol] = districtKey.split(',').map(Number);
+                                            updateHexVisual(districtRow, districtCol);
+                                            const districtNeighbors = getNeighbors(districtRow, districtCol);
+                                            districtNeighbors.forEach(neighbor => {
+                                                updateHexVisual(neighbor.row, neighbor.col);
+                                            });
+                                        }
                                     }
                                 }
                                 
@@ -1232,17 +1276,25 @@
                             // Invalid placement - district stays in original location
                             // draggedDistrict will be cleared in dragend
                         }
-                    } else {
-                        // Dropped on same hex - do nothing
-                        draggedDistrict = null;
                     }
                 } else if (draggedImprovement) {
                     // Dragging an improvement to move it
                     const sourceKey = `${draggedImprovement.row},${draggedImprovement.col}`;
                     const targetKey = `${row},${col}`;
                     
-                    // If dropping on the same hex, do nothing
-                    if (sourceKey !== targetKey) {
+                    // If dropping on the same hex, do nothing and clear the dragged state
+                    if (sourceKey === targetKey) {
+                        // Dropped back on original location - restore opacity first, then clear
+                        const draggedImg = document.querySelector(`.hex-improvement[data-row="${draggedImprovement.row}"][data-col="${draggedImprovement.col}"]`);
+                        if (draggedImg) {
+                            draggedImg.style.opacity = '1';
+                            draggedImg.style.cursor = 'grab';
+                        }
+                        // Clear immediately to prevent map container drop handler from deleting it
+                        draggedImprovement = null;
+                        e.stopPropagation(); // Prevent event from bubbling to map container
+                        return; // Exit early, don't process further
+                    } else {
                         const tile = challengeData.tiles[targetKey];
                         const improvementName = draggedImprovement.name;
                         
@@ -1285,9 +1337,6 @@
                             // Invalid placement - improvement stays in original location
                             // draggedImprovement will be cleared in dragend
                         }
-                    } else {
-                        // Dropped on same hex - do nothing
-                        draggedImprovement = null;
                     }
                 }
             });
@@ -1795,75 +1844,9 @@
             placedItems[key] = { type, name };
             
             // Assign district to a City_Center if it's a district (except City_Center itself)
+            // Uses ambiguous ownership if multiple city centers are valid
             if (type === 'district' && name !== 'City_Center') {
-                // First, check if this district is adjacent to any City_Center (first ring)
-                const neighbors = getNeighbors(row, col);
-                let adjacentCityCenter = null;
-                for (const neighbor of neighbors) {
-                    const neighborKey = `${neighbor.row},${neighbor.col}`;
-                    const neighborPlaced = placedItems[neighborKey];
-                    if (neighborPlaced && neighborPlaced.type === 'district' && neighborPlaced.name === 'City_Center') {
-                        adjacentCityCenter = neighborKey;
-                        break;
-                    }
-                }
-                
-                if (adjacentCityCenter) {
-                    // District is in a City_Center's first ring - must be owned by that City_Center
-                    placedItems[key].owner = adjacentCityCenter;
-                } else {
-                    // District is not adjacent to any City_Center, find nearest available City_Center within 3 tiles
-                    // But exclude City_Centers that have this district in their first ring
-                    let nearestCityCenter = null;
-                    let nearestDistance = Infinity;
-                    
-                    for (const [cityKey, cityPlaced] of Object.entries(placedItems)) {
-                        if (cityPlaced.type === 'district' && cityPlaced.name === 'City_Center') {
-                            const [cityRow, cityCol] = cityKey.split(',').map(Number);
-                            
-                            // Check if this district is in another City_Center's first ring
-                            const cityNeighbors = getNeighbors(cityRow, cityCol);
-                            let isInAnotherCityFirstRing = false;
-                            for (const cityNeighbor of cityNeighbors) {
-                                if (cityNeighbor.row === row && cityNeighbor.col === col) {
-                                    // This district is in this City_Center's first ring
-                                    // But we're checking a different City_Center, so skip
-                                    isInAnotherCityFirstRing = true;
-                                    break;
-                                }
-                            }
-                            
-                            if (isInAnotherCityFirstRing) {
-                                continue; // Skip this City_Center
-                            }
-                            
-                            const distance = getHexDistance(row, col, cityRow, cityCol);
-                            
-                            if (distance <= 3 && distance < nearestDistance) {
-                                // Check if this City_Center already owns a district of this type
-                                let alreadyOwns = false;
-                                for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
-                                    if (districtPlaced.type === 'district' && 
-                                        districtPlaced.name === name &&
-                                        districtPlaced.owner === cityKey &&
-                                        districtKey !== key) {
-                                        alreadyOwns = true;
-                                        break;
-                                    }
-                                }
-                                
-                                if (!alreadyOwns) {
-                                    nearestCityCenter = cityKey;
-                                    nearestDistance = distance;
-                                }
-                            }
-                        }
-                    }
-                    
-                    if (nearestCityCenter) {
-                        placedItems[key].owner = nearestCityCenter;
-                    }
-                }
+                assignDistrictOwnership(key, row, col, name);
             }
             
             availableItems[name] = (availableItems[name] || 0) - 1;
@@ -2126,18 +2109,29 @@
                     // If district is adjacent to a City_Center, it must be owned by that City_Center
                     if (adjacentCityCenter) {
                         // Check if that City_Center already owns a district of this type
+                        // Consider ambiguous owners - if a district has ambiguous owners, we can still place
                         let alreadyOwns = false;
                         for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
-                            if (districtPlaced.type === 'district' && 
-                                districtPlaced.name === name &&
-                                districtPlaced.owner === adjacentCityCenter) {
-                                // Skip if this is the district being moved (same location)
-                                const [districtRow, districtCol] = districtKey.split(',').map(Number);
-                                if (excludeLocation && 
-                                    districtRow === excludeLocation.row && 
-                                    districtCol === excludeLocation.col) {
-                                    continue;
+                            if (districtPlaced.type !== 'district' || districtPlaced.name !== name) continue;
+                            
+                            // Skip if this is the district being moved (same location)
+                            const [districtRow, districtCol] = districtKey.split(',').map(Number);
+                            if (excludeLocation && 
+                                districtRow === excludeLocation.row && 
+                                districtCol === excludeLocation.col) {
+                                continue;
+                            }
+                            
+                            // Check if this district is owned by (or could be owned by) this city center
+                            if (Array.isArray(districtPlaced.owner)) {
+                                // Ambiguous owner - if this city is the only owner, it's taken
+                                if (districtPlaced.owner.length === 1 && districtPlaced.owner[0] === adjacentCityCenter) {
+                                    alreadyOwns = true;
+                                    break;
                                 }
+                                // If ambiguous with multiple owners, we can still place (allows swapping)
+                            } else if (districtPlaced.owner === adjacentCityCenter) {
+                                // Direct owner - city center already owns this type
                                 alreadyOwns = true;
                                 break;
                             }
@@ -2177,18 +2171,29 @@
                                 const distance = getHexDistance(row, col, cityRow, cityCol);
                                 if (distance <= 3) {
                                     // Check if this City_Center already owns a district of this type
+                                    // Consider ambiguous owners - if a district has ambiguous owners, we can still place
                                     let alreadyOwns = false;
                                     for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
-                                        if (districtPlaced.type === 'district' && 
-                                            districtPlaced.name === name &&
-                                            districtPlaced.owner === cityKey) {
-                                            // Skip if this is the district being moved (same location)
-                                            const [districtRow, districtCol] = districtKey.split(',').map(Number);
-                                            if (excludeLocation && 
-                                                districtRow === excludeLocation.row && 
-                                                districtCol === excludeLocation.col) {
-                                                continue;
+                                        if (districtPlaced.type !== 'district' || districtPlaced.name !== name) continue;
+                                        
+                                        // Skip if this is the district being moved (same location)
+                                        const [districtRow, districtCol] = districtKey.split(',').map(Number);
+                                        if (excludeLocation && 
+                                            districtRow === excludeLocation.row && 
+                                            districtCol === excludeLocation.col) {
+                                            continue;
+                                        }
+                                        
+                                        // Check if this district is owned by (or could be owned by) this city center
+                                        if (Array.isArray(districtPlaced.owner)) {
+                                            // Ambiguous owner - if this city is the only owner, it's taken
+                                            if (districtPlaced.owner.length === 1 && districtPlaced.owner[0] === cityKey) {
+                                                alreadyOwns = true;
+                                                break;
                                             }
+                                            // If ambiguous with multiple owners, we can still place (allows swapping)
+                                        } else if (districtPlaced.owner === cityKey) {
+                                            // Direct owner - city center already owns this type
                                             alreadyOwns = true;
                                             break;
                                         }
@@ -2239,7 +2244,23 @@
                 } else if (itemData.resources_its_built_on && itemData.resources_its_built_on.length > 0) {
                     // Can be built on resource or without
                     if (tile.resource && !itemData.resources_its_built_on.includes(tile.resource)) {
-                        return false;
+                        // If there's a resource on the tile that's not in the list, check if it's a bonus resource
+                        // Bonus resources are allowed for improvements with only_buildable_on_resources: false
+                        if (resourcesData) {
+                            const isBonus = resourcesData.bonus_resources.some(r => r.name === tile.resource);
+                            const isStrategic = resourcesData.strategic_resources.some(r => r.name === tile.resource);
+                            const isLuxury = resourcesData.luxury_resources.some(r => r.name === tile.resource);
+                            
+                            // Allow placement if it's a bonus resource
+                            // But still block strategic/luxury resources that aren't in the list
+                            if (!isBonus && (isStrategic || isLuxury)) {
+                                return false;
+                            }
+                            // If it's a bonus resource, allow placement (don't return false)
+                        } else {
+                            // If we don't have resources data, use the old behavior
+                            return false;
+                        }
                     }
                 }
             }
@@ -2672,6 +2693,201 @@
             
             // Hex distance formula
             return (Math.abs(q1 - q2) + Math.abs(r1 - r2) + Math.abs(s1 - s2)) / 2;
+        }
+
+        // Helper function to check if a city center owns (or could own via ambiguous ownership) a district of a type
+        function cityCenterOwnsDistrictType(cityKey, districtName, excludeDistrictKey = null) {
+            for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
+                if (districtKey === excludeDistrictKey) continue;
+                if (districtPlaced.type !== 'district' || districtPlaced.name !== districtName) continue;
+                
+                // Check if this district is owned by (or could be owned by) this city center
+                if (Array.isArray(districtPlaced.owner)) {
+                    // Ambiguous owner - check if city center is in the array
+                    if (districtPlaced.owner.includes(cityKey)) {
+                        return true;
+                    }
+                } else if (districtPlaced.owner === cityKey) {
+                    // Direct owner
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Helper function to get all possible city center owners for a district at a location
+        function getPossibleOwners(row, col, districtName, excludeLocation = null) {
+            const possibleOwners = [];
+            
+            // First, check if this district is adjacent to any City_Center (first ring)
+            const neighbors = getNeighbors(row, col);
+            let adjacentCityCenter = null;
+            for (const neighbor of neighbors) {
+                const neighborKey = `${neighbor.row},${neighbor.col}`;
+                const neighborPlaced = placedItems[neighborKey];
+                
+                // Skip if this is the excluded location
+                if (excludeLocation && neighbor.row === excludeLocation.row && neighbor.col === excludeLocation.col) {
+                    continue;
+                }
+                
+                if (neighborPlaced && neighborPlaced.type === 'district' && neighborPlaced.name === 'City_Center') {
+                    adjacentCityCenter = neighborKey;
+                    break;
+                }
+            }
+            
+            if (adjacentCityCenter) {
+                // District is in a City_Center's first ring - must be owned by that City_Center
+                return [adjacentCityCenter];
+            } else {
+                // District is not adjacent to any City_Center, find all City_Centers within 3 tiles
+                // But exclude City_Centers that have this district in their first ring
+                for (const [cityKey, cityPlaced] of Object.entries(placedItems)) {
+                    if (cityPlaced.type !== 'district' || cityPlaced.name !== 'City_Center') continue;
+                    
+                    const [cityRow, cityCol] = cityKey.split(',').map(Number);
+                    
+                    // Skip if this is the excluded location
+                    if (excludeLocation && cityRow === excludeLocation.row && cityCol === excludeLocation.col) {
+                        continue;
+                    }
+                    
+                    // Check if this district is in another City_Center's first ring
+                    const cityNeighbors = getNeighbors(cityRow, cityCol);
+                    let isInAnotherCityFirstRing = false;
+                    for (const cityNeighbor of cityNeighbors) {
+                        if (cityNeighbor.row === row && cityNeighbor.col === col) {
+                            isInAnotherCityFirstRing = true;
+                            break;
+                        }
+                    }
+                    
+                    if (isInAnotherCityFirstRing) {
+                        continue; // Skip this City_Center
+                    }
+                    
+                    const distance = getHexDistance(row, col, cityRow, cityCol);
+                    if (distance <= 3) {
+                        // Check if this City_Center already owns a district of this type
+                        // But consider ambiguous owners - if a district has ambiguous owners including this city,
+                        // we can still add this city as a possible owner (allows swapping)
+                        let alreadyOwns = false;
+                        
+                        for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
+                            if (districtPlaced.type !== 'district' || districtPlaced.name !== districtName) continue;
+                            
+                            // Skip if this is the excluded location (old location when moving)
+                            if (excludeLocation) {
+                                const [districtRow, districtCol] = districtKey.split(',').map(Number);
+                                if (districtRow === excludeLocation.row && districtCol === excludeLocation.col) {
+                                    continue;
+                                }
+                            }
+                            
+                            // Skip if this is the current location (new location when moving)
+                            // The district being assigned ownership is already at this location
+                            const [districtRow, districtCol] = districtKey.split(',').map(Number);
+                            if (districtRow === row && districtCol === col) {
+                                continue;
+                            }
+                            
+                            // Check if this district is owned by this city center
+                            if (Array.isArray(districtPlaced.owner)) {
+                                // Ambiguous owner - check if this city is included
+                                if (districtPlaced.owner.includes(cityKey)) {
+                                    // If this city is the ONLY owner (array with 1 element), it's taken
+                                    if (districtPlaced.owner.length === 1) {
+                                        alreadyOwns = true;
+                                        break;
+                                    }
+                                    // If this city is one of MULTIPLE owners, we can still add this city
+                                    // The ambiguous ownership allows flexibility - the existing district could
+                                    // belong to one of the other cities, freeing up this city for the new district
+                                }
+                            } else if (districtPlaced.owner === cityKey) {
+                                // Direct owner (not ambiguous) - city center already owns this type
+                                alreadyOwns = true;
+                                break;
+                            }
+                        }
+                        
+                        // Add this city center as a possible owner if it doesn't already own this type
+                        // (or if it owns it ambiguously, which allows swapping)
+                        if (!alreadyOwns) {
+                            possibleOwners.push(cityKey);
+                        }
+                    }
+                }
+            }
+            
+            return possibleOwners;
+        }
+
+        // Helper function to assign ownership to a district (supports ambiguous owners)
+        function assignDistrictOwnership(districtKey, row, col, districtName, excludeLocation = null) {
+            const district = placedItems[districtKey];
+            if (!district || district.type !== 'district' || district.name !== districtName) {
+                return;
+            }
+            
+            const possibleOwners = getPossibleOwners(row, col, districtName, excludeLocation);
+            
+            if (possibleOwners.length === 0) {
+                // No valid owner - remove ownership
+                delete district.owner;
+            } else if (possibleOwners.length === 1) {
+                // Single owner - assign directly (not ambiguous)
+                district.owner = possibleOwners[0];
+            } else {
+                // Multiple possible owners - assign as ambiguous (array)
+                // This allows the district to belong to any of these city centers
+                district.owner = possibleOwners;
+            }
+        }
+
+        // Helper function to check if two districts of the same type can swap positions and owners
+        function canDistrictsSwap(district1Key, district2Key) {
+            const district1 = placedItems[district1Key];
+            const district2 = placedItems[district2Key];
+            
+            // Both must be districts of the same type
+            if (!district1 || !district2 || 
+                district1.type !== 'district' || district2.type !== 'district' ||
+                district1.name !== district2.name ||
+                district1.name === 'City_Center') {
+                return false;
+            }
+            
+            // Get possible owners for both districts
+            const [district1Row, district1Col] = district1Key.split(',').map(Number);
+            const [district2Row, district2Col] = district2Key.split(',').map(Number);
+            
+            const district1Owners = getPossibleOwners(district1Row, district1Col, district1.name, { row: district2Row, col: district2Col });
+            const district2Owners = getPossibleOwners(district2Row, district2Col, district2.name, { row: district1Row, col: district1Col });
+            
+            // They can swap if:
+            // 1. Both have at least 2 possible owners (ambiguous)
+            // 2. The possible owners overlap (they share at least 2 city centers)
+            if (district1Owners.length >= 2 && district2Owners.length >= 2) {
+                // Check if they share at least 2 city centers
+                const sharedOwners = district1Owners.filter(owner => district2Owners.includes(owner));
+                return sharedOwners.length >= 2;
+            }
+            
+            return false;
+        }
+
+        // Helper function to reassign district ownership to the best available city center
+        // This allows districts to swap owners when city centers move
+        function reassignDistrictOwnership(districtKey) {
+            const district = placedItems[districtKey];
+            if (!district || district.type !== 'district' || district.name === 'City_Center') {
+                return;
+            }
+            
+            const [districtRow, districtCol] = districtKey.split(',').map(Number);
+            assignDistrictOwnership(districtKey, districtRow, districtCol, district.name);
         }
 
         function getNeighbors(row, col) {
@@ -3148,16 +3364,25 @@
             });
 
             mapContainer.addEventListener('drop', (e) => {
-                if (draggedDistrict) {
-                    e.preventDefault();
-                    // Delete the district by removing it
-                    removeItem(draggedDistrict.row, draggedDistrict.col);
-                    draggedDistrict = null;
-                } else if (draggedImprovement) {
-                    e.preventDefault();
-                    // Delete the improvement by removing it
-                    removeItem(draggedImprovement.row, draggedImprovement.col);
-                    draggedImprovement = null;
+                // Only delete if dropping on the map container itself (not on a hex)
+                // Check if the drop target is actually the map container, not a hex
+                const dropTarget = e.target;
+                const isDroppingOnHex = dropTarget.closest('.hex') !== null;
+                
+                // If dropping on a hex, the hex handler should have already handled it
+                // Only delete if we're actually dropping on the map container background
+                if (!isDroppingOnHex) {
+                    if (draggedDistrict) {
+                        e.preventDefault();
+                        // Delete the district by removing it
+                        removeItem(draggedDistrict.row, draggedDistrict.col);
+                        draggedDistrict = null;
+                    } else if (draggedImprovement) {
+                        e.preventDefault();
+                        // Delete the improvement by removing it
+                        removeItem(draggedImprovement.row, draggedImprovement.col);
+                        draggedImprovement = null;
+                    }
                 }
             });
 
