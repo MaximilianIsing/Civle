@@ -1,0 +1,338 @@
+{
+  "districts": [
+    {
+      "name": "Aerodrome",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Aqueduct",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": true
+    },
+    {
+      "name": "Campus",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Canal",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "City_Center",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Commercial_Hub",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Dam",
+      "allowed_terrain": ["Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Diplomatic_Quarter",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Encampment",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": true,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Entertainment_Complex",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Government_Plaza",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Harbor",
+      "allowed_terrain": ["Coast"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Holy_Site",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Industrial_Zone",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Neighborhood",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Preserve",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": true,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Spaceport",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Theater_Square",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    },
+    {
+      "name": "Water_Park",
+      "allowed_terrain": ["Coast"],
+      "cant_be_adjacent_to_city_center": false,
+      "must_be_adjacent_to_city_center": false
+    }
+  ],
+  "improvements": [
+    {
+      "name": "Camp",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "must_be_on_woods": false,
+      "must_be_coastal": false,
+      "only_buildable_on_resources": true,
+      "resources_its_built_on": ["Deer", "Furs", "Ivory", "Truffles"]
+    },
+    {
+      "name": "Farm",
+      "allowed_terrain": ["Grassland", "Plains", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "must_be_on_woods": false,
+      "must_be_coastal": false,
+      "only_buildable_on_resources": false,
+      "resources_its_built_on": ["Rice", "Wheat", "Maize"]
+    },
+    {
+      "name": "Fishing_Boats",
+      "allowed_terrain": ["Coast"],
+      "must_be_on_woods": false,
+      "must_be_coastal": false,
+      "only_buildable_on_resources": true,
+      "resources_its_built_on": ["Fish", "Amber", "Pearls", "Turtles", "Whales"]
+    },
+    {
+      "name": "Lumber_Mill",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills"],
+      "must_be_on_woods": true,
+      "must_be_coastal": false,
+      "only_buildable_on_resources": false,
+      "resources_its_built_on": []
+    },
+    {
+      "name": "Mine",
+      "allowed_terrain": ["Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills"],
+      "must_be_on_woods": false,
+      "must_be_coastal": false,
+      "only_buildable_on_resources": false,
+      "resources_its_built_on": ["Iron", "Coal", "Niter", "Uranium", "Salt", "Diamonds", "Jade", "Mercury", "Silver"]
+    },
+    {
+      "name": "Offshore_Oil_Rig",
+      "allowed_terrain": ["Coast", "Ocean"],
+      "must_be_on_woods": false,
+      "must_be_coastal": false,
+      "only_buildable_on_resources": true,
+      "resources_its_built_on": ["Oil"]
+    },
+    {
+      "name": "Offshore_Wind_Farm",
+      "allowed_terrain": ["Coast", "Ocean"],
+      "must_be_on_woods": false,
+      "must_be_coastal": false,
+      "only_buildable_on_resources": false,
+      "resources_its_built_on": []
+    },
+    {
+      "name": "Oil_Well",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Desert_Floodplains"],
+      "must_be_on_woods": false,
+      "must_be_coastal": false,
+      "only_buildable_on_resources": true,
+      "resources_its_built_on": ["Oil"]
+    },
+    {
+      "name": "Pasture",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Tundra_Hills"],
+      "must_be_on_woods": false,
+      "must_be_coastal": false,
+      "only_buildable_on_resources": true,
+      "resources_its_built_on": ["Horses", "Cattle", "Sheep"]
+    },
+    {
+      "name": "Plantation",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "must_be_on_woods": false,
+      "must_be_coastal": false,
+      "only_buildable_on_resources": true,
+      "resources_its_built_on": ["Bananas", "Citrus", "Cotton", "Dyes", "Incense", "Silk", "Spices", "Sugar", "Tea", "Tobacco", "Wine", "Coffee", "Cocoa", "Olives"]
+    },
+    {
+      "name": "Quarry",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Tundra_Hills"],
+      "must_be_on_woods": false,
+      "must_be_coastal": false,
+      "only_buildable_on_resources": true,
+      "resources_its_built_on": ["Stone", "Marble", "Gypsum"]
+    },
+    {
+      "name": "Seaside_Resort",
+      "allowed_terrain": ["Desert", "Plains", "Grassland"],
+      "must_be_on_woods": false,
+      "must_be_coastal": true,
+      "only_buildable_on_resources": false,
+      "resources_its_built_on": []
+    },
+    {
+      "name": "Ski_Resort",
+      "allowed_terrain": ["Mountain_Desert", "Mountain_Grassland", "Mountain_Plains", "Mountain_Snow", "Mountain_Tundra"],
+      "must_be_on_woods": false,
+      "must_be_coastal": false,
+      "only_buildable_on_resources": false,
+      "resources_its_built_on": []
+    },
+    {
+      "name": "Solar_Farm",
+      "allowed_terrain": ["Desert", "Plains", "Grassland", "Tundra"],
+      "must_be_on_woods": false,
+      "must_be_coastal": false,
+      "only_buildable_on_resources": false,
+      "resources_its_built_on": []
+    },
+    {
+      "name": "Wind_Farm",
+      "allowed_terrain": ["Snow_Hill", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Tundra_Hills"],
+      "must_be_on_woods": false,
+      "must_be_coastal": false,
+      "only_buildable_on_resources": false,
+      "resources_its_built_on": []
+    }
+  ],
+  "wonders": [
+    {
+      "name": "Angkor_Wat",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": ["Aqueduct"]
+    },
+    {
+      "name": "Bolshoi_Theatre",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": ["Theater_Square"]
+    },
+    {
+      "name": "Casa_de_Contratacion",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": ["Government_Plaza"]
+    },
+    {
+      "name": "Colosseum",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": ["Entertainment_Complex"]
+    },
+    {
+      "name": "Colossus",
+      "allowed_terrain": ["Coast"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": ["Harbor"]
+    },
+    {
+      "name": "Etemenanki",
+      "allowed_terrain": ["Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "allowed_features": ["Marsh"],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": []
+    },
+    {
+      "name": "Great_Zimbabwe",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": ["Cattle"],
+      "required_district_adjacency": ["Commercial_Hub"]
+    },
+    {
+      "name": "Oracle",
+      "allowed_terrain": ["Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": ["Campus"]
+    },
+    {
+      "name": "Pyramids",
+      "allowed_terrain": ["Desert", "Desert_Floodplains"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": []
+    },
+    {
+      "name": "Stonehenge",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": ["Stone"],
+      "required_district_adjacency": []
+    },
+    {
+      "name": "Temple_of_Artemis",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "allowed_features": [],
+      "required_feature_adjacency": ["Camp"],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": []
+    },
+    {
+      "name": "University_of_Sankore",
+      "allowed_terrain": ["Desert", "Desert_Floodplains"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": ["Campus"]
+    }
+  ]
+}
