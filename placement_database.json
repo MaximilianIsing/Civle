@@ -154,7 +154,7 @@
       "must_be_on_woods": false,
       "must_be_coastal": false,
       "only_buildable_on_resources": false,
-      "resources_its_built_on": ["Iron", "Coal", "Niter", "Uranium", "Salt", "Diamonds", "Jade", "Mercury", "Silver"]
+      "resources_its_built_on": ["Iron", "Coal", "Niter", "Uranium", "Salt", "Diamonds", "Jade", "Mercury", "Silver", "Copper"]
     },
     {
       "name": "Offshore_Oil_Rig",
