@@ -25,8 +25,268 @@ const server = http.createServer((req, res) => {
     
     let filePath;
     
+    // Handle score submission endpoint
+    if (pathname === '/submit-score' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body);
+                const score = data.score;
+                const name = data.name || null;
+                
+                // If no score provided, this is just a name update - skip duplicate check
+                if (score === undefined && name) {
+                    // This shouldn't happen, but handle it gracefully
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, error: 'Score required' }), 'utf-8');
+                    return;
+                }
+                
+                // If score is provided, check if this is a duplicate submission
+                if (score !== undefined) {
+                    // Note: We can't perfectly prevent duplicate submissions without user identification,
+                    // but we'll rely on client-side localStorage to prevent multiple submissions per day
+                }
+                
+                // Get current date in EST timezone
+                const now = new Date();
+                const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+                const month = String(estDate.getMonth() + 1).padStart(2, '0');
+                const day = String(estDate.getDate()).padStart(2, '0');
+                const dateString = `${month}-${day}`;
+                
+                // Ensure scores directory exists
+                const scoresDir = './scores';
+                if (!fs.existsSync(scoresDir)) {
+                    fs.mkdirSync(scoresDir, { recursive: true });
+                }
+                
+                const scoresFile = `${scoresDir}/${dateString}.json`;
+                
+                // Read existing scores or create new array
+                let scores = [];
+                if (fs.existsSync(scoresFile)) {
+                    const fileContent = fs.readFileSync(scoresFile, 'utf8');
+                    scores = JSON.parse(fileContent);
+                }
+                
+                // Check for duplicate name if name is provided
+                if (name) {
+                    // Check for inappropriate words
+                    let badWords = [];
+                    try {
+                        const badWordsContent = fs.readFileSync('./data/bad-words.txt', 'utf8');
+                        badWords = badWordsContent.split('\n')
+                            .map(word => word.trim().toLowerCase())
+                            .filter(word => word.length > 0);
+                    } catch (err) {
+                        console.error('Error reading bad-words.txt:', err);
+                    }
+                    
+                    const nameLower = name.toLowerCase();
+                    const containsBadWord = badWords.some(word => nameLower.includes(word));
+                    if (containsBadWord) {
+                        res.writeHead(400, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ success: false, error: 'Name contains inappropriate content' }), 'utf-8');
+                        return;
+                    }
+                    
+                    const nameExists = scores.some(e => e.name && e.name.toLowerCase() === name.toLowerCase());
+                    if (nameExists) {
+                        res.writeHead(400, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ success: false, error: 'Name already taken' }), 'utf-8');
+                        return;
+                    }
+                }
+                
+                // Add new score entry
+                const entry = {
+                    score: score,
+                    name: name,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // If name is provided, try to update most recent entry with same score and no name
+                if (name) {
+                    // Find the most recent entry with same score and no name
+                    // We iterate backwards to find the most recently added entry with this score
+                    let found = false;
+                    for (let i = scores.length - 1; i >= 0; i--) {
+                        if (scores[i].score === score && !scores[i].name) {
+                            scores[i].name = name;
+                            // Don't update timestamp - keep original timestamp for tie-breaking
+                            // This ensures older scores rank higher in ties
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        scores.push(entry);
+                    }
+                } else {
+                    scores.push(entry);
+                }
+                
+                // Sort by score (descending), then by timestamp (ascending - older first)
+                scores.sort((a, b) => {
+                    if (b.score !== a.score) {
+                        return b.score - a.score;
+                    }
+                    // Tie: older timestamp (smaller value) comes first
+                    return new Date(a.timestamp) - new Date(b.timestamp);
+                });
+                
+                // Keep only top 100 scores
+                scores = scores.slice(0, 100);
+                
+                // Write back to file
+                fs.writeFileSync(scoresFile, JSON.stringify(scores, null, 2));
+                
+                // Find rank - find the first entry with matching score and name (or no name if name not provided)
+                let rank = scores.length;
+                if (name) {
+                    // Find entry with this score and name
+                    const index = scores.findIndex(e => e.score === score && e.name === name);
+                    if (index !== -1) {
+                        rank = index + 1;
+                    }
+                } else {
+                    // Find the most recent entry (last in array before sorting) with this score and no name
+                    // Since we just added it, it should be the last one with this score and no name
+                    for (let i = scores.length - 1; i >= 0; i--) {
+                        if (scores[i].score === score && !scores[i].name) {
+                            rank = i + 1;
+                            break;
+                        }
+                    }
+                }
+                
+                // Check if in top 20
+                const inTop20 = rank <= 20;
+                
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ 
+                    success: true, 
+                    rank: rank,
+                    inTop20: inTop20
+                }), 'utf-8');
+            } catch (err) {
+                console.error('Error submitting score:', err);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Server error' }), 'utf-8');
+            }
+        });
+        return;
+    }
+    
+    // Handle reset leaderboard endpoint
+    if (pathname === '/reset_leaderboard' && req.method === 'GET') {
+        try {
+            // Read the endpoint key from file
+            const endpointKey = fs.readFileSync('endpoint_key.txt', 'utf8').trim();
+            const providedKey = queryParams.get('key');
+            
+            // If key matches, reset the leaderboard
+            if (providedKey === endpointKey) {
+                // Get current date in EST timezone
+                const now = new Date();
+                const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+                const month = String(estDate.getMonth() + 1).padStart(2, '0');
+                const day = String(estDate.getDate()).padStart(2, '0');
+                const dateString = `${month}-${day}`;
+                
+                const scoresFile = `./scores/${dateString}.json`;
+                
+                // Delete the scores file if it exists
+                if (fs.existsSync(scoresFile)) {
+                    fs.unlinkSync(scoresFile);
+                }
+                
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, message: 'Leaderboard reset successfully' }), 'utf-8');
+            } else {
+                // Invalid key
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Invalid key' }), 'utf-8');
+            }
+        } catch (err) {
+            console.error('Error resetting leaderboard:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Server error' }), 'utf-8');
+        }
+        return;
+    }
+    
+    // Handle leaderboard endpoint
+    if (pathname === '/leaderboard' && req.method === 'GET') {
+        try {
+            // Get current date in EST timezone
+            const now = new Date();
+            const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const month = String(estDate.getMonth() + 1).padStart(2, '0');
+            const day = String(estDate.getDate()).padStart(2, '0');
+            const dateString = `${month}-${day}`;
+            
+            const scoresFile = `./scores/${dateString}.json`;
+            
+            let leaderboard = [];
+            if (fs.existsSync(scoresFile)) {
+                const fileContent = fs.readFileSync(scoresFile, 'utf8');
+                const scores = JSON.parse(fileContent);
+                // Get top 20
+                leaderboard = scores.slice(0, 20).map(entry => ({
+                    name: entry.name || null,
+                    score: entry.score
+                }));
+            }
+            
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+                success: true, 
+                leaderboard: leaderboard 
+            }), 'utf-8');
+        } catch (err) {
+            console.error('Error loading leaderboard:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Server error' }), 'utf-8');
+        }
+        return;
+    }
+    
+    // Handle daily challenge endpoint
+    if (pathname === '/daily-challenge') {
+        try {
+            // Get current date in EST timezone
+            const now = new Date();
+            const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const month = String(estDate.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+            const day = String(estDate.getDate()).padStart(2, '0');
+            const dateString = `${month}-${day}`;
+            
+            // Try to read the challenge file for today's date
+            const challengePath = `./day_challenges/${dateString}.civle`;
+            
+            if (fs.existsSync(challengePath)) {
+                const challengeContent = fs.readFileSync(challengePath, 'utf8');
+                res.writeHead(200, { 'Content-Type': 'text/plain' });
+                res.end(challengeContent, 'utf-8');
+            } else {
+                // Challenge not found for today
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Challenge not found for today' }), 'utf-8');
+            }
+        } catch (err) {
+            console.error('Error serving daily challenge:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Server error loading challenge' }), 'utf-8');
+        }
+        return;
+    }
     // Check if accessing map_maker with key
-    if (pathname === '/map_maker' || pathname === '/map_maker.html') {
+    else if (pathname === '/map_maker' || pathname === '/map_maker.html') {
         try {
             // Read the endpoint key from file
             const endpointKey = fs.readFileSync('endpoint_key.txt', 'utf8').trim();
