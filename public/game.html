@@ -40,77 +40,95 @@
         }
 
         body {
-            font-family: 'Montserrat', Arial, sans-serif;
-            background: #1a1a1a;
-            color: #fff;
+            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #121213;
+            color: #ffffff;
             display: flex;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            margin: 0;
         }
 
         .header {
-            background: #2d2d2d;
-            padding: 10px 20px;
+            background: #121213;
+            padding: 16px 0;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            border-bottom: 2px solid #444;
+            border-bottom: 1px solid #3a3a3c;
+            position: relative;
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
         }
 
         .header-logo {
-            width: 48px;
-            height: 48px;
+            width: 40px;
+            height: 40px;
             object-fit: contain;
         }
 
         .header h1 {
-            font-size: 24px;
+            font-size: 37px;
+            font-weight: 700;
             margin: 0;
+            letter-spacing: 0.01em;
+            color: #ffffff;
         }
 
         .controls {
+            position: absolute;
+            right: 16px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
         }
 
         button {
-            padding: 8px 16px;
-            background: #4a90e2;
-            color: white;
-            border: none;
+            padding: 6px 12px;
+            background: #3a3a3c;
+            color: #ffffff;
+            border: 1px solid #565758;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.1s;
         }
 
         button:hover {
-            background: #357abd;
+            background: #565758;
         }
 
         button:active {
-            background: #2968a3;
+            background: #6b6b6d;
         }
 
         .file-label {
             display: inline-block;
-            padding: 8px 16px;
-            background: #4a90e2;
-            color: white;
+            padding: 8px;
+            background: transparent;
+            color: #ffffff;
+            border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 20px;
+            font-weight: 400;
+            transition: background 0.1s;
+            line-height: 1;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .file-label:hover {
-            background: #357abd;
+            background: #3a3a3c;
         }
 
         input[type="file"] {
@@ -121,18 +139,19 @@
             display: flex;
             flex: 1;
             overflow: hidden;
+            background: #121213;
         }
 
         .sidebar {
-            width: 300px;
-            background: #2d2d2d;
-            padding: 20px;
+            width: 280px;
+            background: #121213;
+            padding: 24px;
             overflow-y: auto;
-            border-right: 2px solid #444;
+            border-right: 1px solid #3a3a3c;
         }
 
         .sidebar::-webkit-scrollbar {
-            width: 10px;
+            width: 8px;
         }
 
         .sidebar::-webkit-scrollbar-track {
@@ -140,31 +159,40 @@
         }
 
         .sidebar::-webkit-scrollbar-thumb {
-            background: #4a4a4a;
-            border-radius: 5px;
+            background: #3a3a3c;
+            border-radius: 4px;
         }
 
         .sidebar::-webkit-scrollbar-thumb:hover {
-            background: #5a5a5a;
+            background: #565758;
         }
 
         .sidebar h2 {
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #4a90e2;
+            font-size: 16px;
+            margin-bottom: 16px;
+            color: #ffffff;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .available-item {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px;
-            margin: 5px 0;
-            background: #3a3a3a;
-            border: 2px solid #555;
+            padding: 10px 12px;
+            margin: 4px 0;
+            background: #3a3a3c;
+            border: 1.5px solid #565758;
             border-radius: 4px;
             cursor: grab;
             user-select: none;
+            transition: all 0.1s;
+        }
+
+        .available-item:hover {
+            border-color: #818384;
+            background: #565758;
         }
 
         .available-item:active {
@@ -176,19 +204,20 @@
         }
 
         .available-item img {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             object-fit: contain;
         }
 
         .available-item .count {
             margin-left: auto;
-            font-weight: bold;
-            color: #4a90e2;
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 14px;
         }
 
         .available-item .count.zero {
-            color: #888;
+            color: #818384;
         }
 
         .map-container {
@@ -196,9 +225,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 24px;
             overflow: hidden;
             position: relative;
+            background: #121213;
         }
 
         .map-transform-wrapper {
@@ -321,7 +351,7 @@
             bottom: 8px;
             right: 20px;
             z-index: 3;
-            filter: drop-shadow(0 0 3px rgba(0,0,0,0.8));
+            filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));
         }
 
         .hex-district {
@@ -332,12 +362,20 @@
             top: 5%;
             left: calc(5% - 1px);
             z-index: 25000000;
-            filter: drop-shadow(0 0 5px rgba(0,0,0,0.9));
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
             cursor: grab;
+        }
+        
+        .hex-district:hover {
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
         }
         
         .hex-district:active {
             cursor: grabbing;
+        }
+        
+        .hex-district.dragging {
+            opacity: 0.6;
         }
 
         .hex-improvement {
@@ -348,8 +386,12 @@
             bottom: calc(15% + 12px);
             left: calc(15% + 7px);
             z-index: 5;
-            filter: drop-shadow(0 0 5px rgba(0,0,0,0.9));
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
             cursor: grab;
+        }
+        
+        .hex-improvement:hover {
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
         }
         
         .hex-improvement:active {
@@ -368,7 +410,7 @@
             top: 10%;
             left: 10%;
             z-index: 6;
-            filter: drop-shadow(0 0 8px rgba(255,215,0,0.8));
+            filter: drop-shadow(0 2px 6px rgba(255,215,0,0.6));
         }
 
         .hex-rivers {
@@ -399,16 +441,18 @@
             top: 70%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            padding: 1px 3px;
-            border-radius: 2px;
+            background: rgba(58, 58, 60, 0.95);
+            border: 1px solid #565758;
+            padding: 2px 4px;
+            border-radius: 3px;
             font-size: 8px;
-            font-weight: bold;
+            font-weight: 600;
             z-index: 25000001;
             pointer-events: none;
             display: flex;
             align-items: center;
             gap: 1px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
 
         .yield-badge {
@@ -424,7 +468,7 @@
         }
 
         .yield-amount {
-            color: #fff;
+            color: #ffffff;
             font-size: 8px;
             line-height: 1;
         }
@@ -434,78 +478,280 @@
             top: 70%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            padding: 1px 3px;
-            border-radius: 2px;
+            background: rgba(58, 58, 60, 0.95);
+            border: 1px solid #565758;
+            padding: 2px 4px;
+            border-radius: 3px;
             font-size: 8px;
-            font-weight: bold;
+            font-weight: 600;
             z-index: 25000001;
             pointer-events: none;
             display: flex;
             align-items: center;
             gap: 1px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
 
         .score-panel {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #2d2d2d;
-            border: 2px solid #555;
+            top: 24px;
+            right: 24px;
+            background: #3a3a3c;
+            border: 1px solid #565758;
             border-radius: 8px;
-            padding: 15px;
-            min-width: 200px;
+            padding: 16px;
+            min-width: 180px;
             z-index: 1001;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
 
         .score-panel h3 {
-            margin-bottom: 10px;
-            color: #4a90e2;
-            font-size: 16px;
+            margin-bottom: 12px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: center;
         }
 
         .score-item {
             display: flex;
             justify-content: space-between;
-            padding: 5px 0;
-            font-size: 14px;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 13px;
+            color: #ffffff;
+            gap: 8px;
+        }
+        
+        .score-item .yield-icon {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+        }
+        
+        .score-item .yield-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
+        .score-formula {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #565758;
+            font-size: 13px;
+            color: #ffffff;
+        }
+        
         .score-total {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 2px solid #555;
-            font-weight: bold;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #565758;
+            font-weight: 700;
             font-size: 16px;
-            color: #4a90e2;
+            color: #ffffff;
+        }
+        
+        .submit-score-btn {
+            width: 100%;
+            margin-top: 16px;
+            padding: 10px;
+            background: #6aaa64;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.1s;
+        }
+        
+        .submit-score-btn:hover {
+            background: #5c9a56;
+        }
+        
+        .submit-score-btn:active {
+            background: #4d8a46;
+        }
+        
+        .submit-score-btn:disabled {
+            background: #3a3a3c;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .leaderboard-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .leaderboard-modal.active {
+            display: flex;
+        }
+        
+        .leaderboard-content {
+            background: #121213;
+            border: 1px solid #565758;
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: #ffffff;
+        }
+        
+        .leaderboard-content h2 {
+            margin: 0 0 16px 0;
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+        }
+        
+        .leaderboard-content .rank-info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #ffffff;
+        }
+        
+        .name-input-section {
+            margin-bottom: 20px;
+        }
+        
+        .name-input-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .name-input-section input {
+            width: 100%;
+            padding: 10px;
+            background: #3a3a3c;
+            color: #ffffff;
+            border: 1px solid #565758;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .name-input-section input:focus {
+            outline: none;
+            border-color: #818384;
+        }
+        
+        .name-input-section .char-count {
+            font-size: 12px;
+            color: #818384;
+            margin-top: 4px;
+            text-align: right;
+        }
+        
+        .leaderboard-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #3a3a3c;
+            border: 1px solid #565758;
+            border-radius: 4px;
+        }
+        
+        .leaderboard-item.rank-1 {
+            background: #c9b458;
+            border-color: #b8a347;
+        }
+        
+        .leaderboard-item .rank {
+            font-weight: 700;
+            font-size: 16px;
+            min-width: 30px;
+        }
+        
+        .leaderboard-item .name {
+            flex: 1;
+            margin: 0 12px;
+            font-size: 14px;
+        }
+        
+        .leaderboard-item .score {
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .leaderboard-item .score-icon {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+        }
+        
+        .leaderboard-close-btn {
+            width: 100%;
+            margin-top: 16px;
+            padding: 10px;
+            background: #3a3a3c;
+            color: #ffffff;
+            border: 1px solid #565758;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.1s;
+        }
+        
+        .leaderboard-close-btn:hover {
+            background: #565758;
         }
 
         .zoom-controls {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: 24px;
+            left: 24px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             z-index: 1001;
         }
 
         .zoom-controls button {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             padding: 0;
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 20px;
+            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #2d2d2d;
-            border: 2px solid #555;
+            background: #3a3a3c;
+            border: 1px solid #565758;
+            color: #ffffff;
         }
 
         .zoom-controls button:hover {
-            background: #3a3a3a;
-            border-color: #4a90e2;
+            background: #565758;
+            border-color: #818384;
         }
 
         .hex-row:last-child {
@@ -514,40 +760,46 @@
 
         .empty-state {
             text-align: center;
-            color: #888;
+            color: #818384;
             padding: 40px;
         }
 
         .empty-state h2 {
-            margin-bottom: 20px;
-            color: #4a90e2;
+            margin-bottom: 12px;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .empty-state p {
+            color: #818384;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="header-left">
-            <img src="assets/logo/Logo128x128.png" alt="Civle Logo" class="header-logo">
-            <h1>Civle Game</h1>
+            <h1>CIVLE</h1>
         </div>
         <div class="controls">
-            <label for="loadChallenge" class="file-label">Load Challenge</label>
-            <input type="file" id="loadChallenge" accept=".civle,.json" onchange="loadChallenge(event)">
+            <label for="loadChallenge" class="file-label">⚙️</label>
+            <input type="file" id="loadChallenge" accept=".civle,.json" onchange="loadChallenge(event)" style="display: none;">
         </div>
     </div>
 
     <div class="main-container">
         <div class="sidebar" id="sidebar">
             <div class="empty-state">
-                <h2>Load a Challenge</h2>
-                <p>Upload a .civle challenge file to begin playing</p>
+                <h2>Loading Today's Challenge...</h2>
+                <p>Please wait while we load the daily challenge</p>
             </div>
         </div>
 
         <div class="map-container" id="mapContainer">
             <div class="empty-state">
-                <h2>No Challenge Loaded</h2>
-                <p>Load a challenge file to see the map</p>
+                <h2>Loading...</h2>
+                <p>Please wait</p>
             </div>
         </div>
     </div>
@@ -860,6 +1112,198 @@
                 }
             };
             reader.readAsText(file);
+        }
+
+        // Load daily challenge from server
+        async function loadDailyChallenge() {
+            try {
+                const response = await fetch('/daily-challenge');
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        console.log('No challenge available for today');
+                        // Show message that challenge will be available later
+                        const sidebar = document.getElementById('sidebar');
+                        if (sidebar) {
+                            sidebar.innerHTML = `
+                                <div class="empty-state">
+                                    <h2>No Challenge Today</h2>
+                                    <p>Check back tomorrow for a new challenge!</p>
+                                </div>
+                            `;
+                        }
+                        return;
+                    }
+                    throw new Error('Failed to load daily challenge');
+                }
+                
+                const data = await response.text();
+                
+                // Parse the challenge data (same logic as loadChallenge)
+                if (data.startsWith('CIV1')) {
+                    // New optimized format
+                    const width = data.charCodeAt(4) - 48;
+                    const height = data.charCodeAt(5) - 48;
+                    
+                    GRID_WIDTH = width;
+                    GRID_HEIGHT = height;
+                    
+                    challengeData = {
+                        width: width,
+                        height: height,
+                        tiles: {},
+                        allocations: {
+                            districts: {},
+                            improvements: {},
+                            wonders: {}
+                        }
+                    };
+                    
+                    const tilesData = data.substring(7);
+                    const parts = tilesData.split('||');
+                    const tilesStr = parts[0];
+                    
+                    if (tilesStr) {
+                        const tiles = tilesStr.split('|');
+                        tiles.forEach(tileStr => {
+                            if (!tileStr) return;
+                            const [pos, data] = tileStr.split(':');
+                            if (!pos || !data) return;
+                            
+                            const [rowStr, colStr] = pos.split(',');
+                            const row = parseInt(rowStr);
+                            const col = parseInt(colStr);
+                            
+                            const dataParts = data.split(';');
+                            let mainData = dataParts[0];
+                            
+                            let tStr = '';
+                            let fStr = '';
+                            let rStr = '';
+                            
+                            if (mainData.includes(',') && mainData.split(',').length >= 3) {
+                                const fields = mainData.split(',');
+                                tStr = fields[0] || '.';
+                                fStr = fields[1] || '.';
+                                rStr = fields[2] || '.';
+                            } else {
+                                tStr = mainData[0] || '.';
+                                fStr = mainData[1] || '.';
+                                rStr = mainData[2] || '.';
+                            }
+                            
+                            const key = `${row},${col}`;
+                            challengeData.tiles[key] = {};
+                            
+                            if (tStr && tStr !== '.') {
+                                const tIdx = fromBase36(tStr) - 1;
+                                const terrain = terrainNameMap.get(tIdx);
+                                if (terrain) {
+                                    challengeData.tiles[key].terrain = terrain.name;
+                                    challengeData.tiles[key].terrainPath = terrain.path;
+                                }
+                            }
+                            
+                            if (fStr && fStr !== '.') {
+                                const fIdx = fromBase36(fStr) - 1;
+                                const feature = featureNameMap.get(fIdx);
+                                if (feature) {
+                                    challengeData.tiles[key].feature = feature.name;
+                                    challengeData.tiles[key].featurePath = feature.path;
+                                }
+                            }
+                            
+                            if (rStr && rStr !== '.') {
+                                const rIdx = fromBase36(rStr) - 1;
+                                const resource = resourceNameMap.get(rIdx);
+                                if (resource) {
+                                    challengeData.tiles[key].resource = resource;
+                                    challengeData.tiles[key].resourcePath = `assets/recources/${resource}.webp`;
+                                }
+                            }
+                            
+                            if (dataParts.length > 1 && dataParts[1]) {
+                                const riversBin = parseInt(dataParts[1], 36).toString(2).padStart(6, '0');
+                                challengeData.tiles[key].rivers = [];
+                                for (let i = 0; i < 6; i++) {
+                                    challengeData.tiles[key].rivers[i] = riversBin[i] === '1';
+                                }
+                            }
+                        });
+                    }
+                    
+                    // Load allocations
+                    const allocationsStr = parts.length > 1 ? parts[1] : null;
+                    if (allocationsStr) {
+                        const allocations = allocationsStr.split(',');
+                        allocations.forEach(allocStr => {
+                            if (!allocStr) return;
+                            const parts = allocStr.split(':');
+                            const type = parts[0];
+                            const name = parts[1];
+                            
+                            if (type === 'd') {
+                                if (parts[2] === 'c') {
+                                    challengeData.allocations.districts[name] = true;
+                                } else {
+                                    challengeData.allocations.districts[name] = parseInt(parts[2]) || 0;
+                                }
+                            } else if (type === 'i') {
+                                challengeData.allocations.improvements[name] = parseInt(parts[2]) || 0;
+                            } else if (type === 'w') {
+                                challengeData.allocations.wonders[name] = true;
+                            }
+                        });
+                    }
+                } else {
+                    // Old JSON format
+                    const loadedData = JSON.parse(data);
+                    challengeData = loadedData;
+                    GRID_WIDTH = loadedData.width;
+                    GRID_HEIGHT = loadedData.height;
+                }
+                
+                // Initialize game
+                placedItems = {};
+                availableItems = {};
+                
+                // Copy allocations to available items
+                Object.keys(challengeData.allocations.districts).forEach(name => {
+                    const count = challengeData.allocations.districts[name];
+                    if (count === true) {
+                        availableItems[name] = 1;
+                    } else if (count > 0) {
+                        availableItems[name] = count;
+                    }
+                });
+                
+                Object.keys(challengeData.allocations.improvements).forEach(name => {
+                    const count = challengeData.allocations.improvements[name];
+                    if (count > 0) {
+                        availableItems[name] = count;
+                    }
+                });
+                
+                Object.keys(challengeData.allocations.wonders).forEach(name => {
+                    if (challengeData.allocations.wonders[name]) {
+                        availableItems[name] = 1;
+                    }
+                });
+                
+                initializeGame();
+            } catch (error) {
+                console.error('Error loading daily challenge:', error);
+                // Show error message but don't block the UI
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) {
+                    sidebar.innerHTML = `
+                        <div class="empty-state">
+                            <h2>Error Loading Challenge</h2>
+                            <p>${error.message}</p>
+                            <p>You can still load a challenge file manually.</p>
+                        </div>
+                    `;
+                }
+            }
         }
 
         function initializeGame() {
@@ -3226,34 +3670,339 @@
                 scorePanel.innerHTML = `
                     <h3>Adjacency Bonuses</h3>
                     <div class="score-item">
-                        <span>Science:</span>
-                        <span>${totalScience}</span>
+                        <span class="yield-label">
+                            <img src="assets/yields/Science.webp" alt="Science" class="yield-icon">
+                            <span>Science:</span>
+                        </span>
+                        <span>+${totalScience}</span>
                     </div>
                     <div class="score-item">
-                        <span>Faith:</span>
-                        <span>${totalFaith}</span>
+                        <span class="yield-label">
+                            <img src="assets/yields/Culture.webp" alt="Culture" class="yield-icon">
+                            <span>Culture:</span>
+                        </span>
+                        <span>+${totalCulture}</span>
                     </div>
                     <div class="score-item">
-                        <span>Gold:</span>
-                        <span>${totalGold}</span>
+                        <span class="yield-label">
+                            <img src="assets/yields/Production.webp" alt="Production" class="yield-icon">
+                            <span>Production:</span>
+                        </span>
+                        <span>+${totalProduction}</span>
                     </div>
                     <div class="score-item">
-                        <span>Production:</span>
-                        <span>${totalProduction}</span>
+                        <span class="yield-label">
+                            <img src="assets/yields/Faith.webp" alt="Faith" class="yield-icon">
+                            <span>Faith:</span>
+                        </span>
+                        <span>+${totalFaith}</span>
                     </div>
                     <div class="score-item">
-                        <span>Culture:</span>
-                        <span>${totalCulture}</span>
+                        <span class="yield-label">
+                            <img src="assets/yields/Gold.webp" alt="Gold" class="yield-icon">
+                            <span>Gold:</span>
+                        </span>
+                        <span>+${totalGold}</span>
+                    </div>
+                    <div class="score-formula">
+                        <div class="score-item" style="justify-content: center; gap: 4px;">
+                            <img src="assets/yields/Score.webp" alt="Score" class="yield-icon">
+                            <span>=</span>
+                            <img src="assets/yields/Science.webp" alt="Science" class="yield-icon">
+                            <span>+</span>
+                            <img src="assets/yields/Culture.webp" alt="Culture" class="yield-icon">
+                            <span>+</span>
+                            <img src="assets/yields/Production.webp" alt="Production" class="yield-icon">
+                            <span>+</span>
+                            <img src="assets/yields/Faith.webp" alt="Faith" class="yield-icon">
+                            <span>+</span>
+                            <span>0.5×</span>
+                            <img src="assets/yields/Gold.webp" alt="Gold" class="yield-icon">
+                        </div>
                     </div>
                     <div class="score-total">
                         <div class="score-item">
-                            <span>Total Score:</span>
-                            <span>${totalScience + totalFaith + totalGold + totalProduction + totalCulture}</span>
+                            <span class="yield-label">
+                                <img src="assets/yields/Score.webp" alt="Score" class="yield-icon">
+                                <span>Total Score:</span>
+                            </span>
+                            <span>${totalScience + totalCulture + totalProduction + totalFaith + (totalGold * 0.5)}</span>
                         </div>
                     </div>
+                    <button id="submitScoreBtn" class="submit-score-btn">Submit Score</button>
                 `;
+                
+                // Check if user has already submitted today
+                checkSubmissionStatus();
+                
+                // Add event listener for submit button
+                const submitBtn = document.getElementById('submitScoreBtn');
+                if (submitBtn) {
+                    submitBtn.onclick = handleScoreButtonClick;
+                }
             }
         }
+        
+        function getTodayKey() {
+            // Get current date in EST timezone (same as server)
+            const now = new Date();
+            const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const month = String(estDate.getMonth() + 1).padStart(2, '0');
+            const day = String(estDate.getDate()).padStart(2, '0');
+            return `submitted_${estDate.getFullYear()}-${month}-${day}`;
+        }
+        
+        function checkSubmissionStatus() {
+            const submitBtn = document.getElementById('submitScoreBtn');
+            if (!submitBtn) return;
+            
+            const todayKey = getTodayKey();
+            const hasSubmitted = localStorage.getItem(todayKey) === 'true';
+            
+            if (hasSubmitted) {
+                submitBtn.textContent = 'View Leaderboard';
+            } else {
+                submitBtn.textContent = 'Submit Score';
+            }
+        }
+        
+        async function handleScoreButtonClick() {
+            const submitBtn = document.getElementById('submitScoreBtn');
+            if (!submitBtn) return;
+            
+            const todayKey = getTodayKey();
+            const hasSubmitted = localStorage.getItem(todayKey) === 'true';
+            
+            if (hasSubmitted) {
+                // Just show leaderboard
+                await showLeaderboard(null, false, null, true);
+            } else {
+                // Submit score
+                await submitScore();
+            }
+        }
+        
+        async function submitScore() {
+            const submitBtn = document.getElementById('submitScoreBtn');
+            if (!submitBtn) return;
+            
+            // Calculate total score
+            let totalScience = 0;
+            let totalFaith = 0;
+            let totalGold = 0;
+            let totalProduction = 0;
+            let totalCulture = 0;
+            
+            for (let row = 0; row < GRID_HEIGHT; row++) {
+                for (let col = 0; col < GRID_WIDTH; col++) {
+                    const adjacency = calculateAdjacency(row, col);
+                    if (adjacency) {
+                        totalScience += adjacency.science;
+                        totalFaith += adjacency.faith;
+                        totalGold += adjacency.gold;
+                        totalProduction += adjacency.production;
+                        totalCulture += adjacency.culture;
+                    }
+                }
+            }
+            
+            const totalScore = totalScience + totalCulture + totalProduction + totalFaith + (totalGold * 0.5);
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            
+            try {
+                const response = await fetch('/submit-score', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ score: totalScore })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Mark as submitted for today
+                    const todayKey = getTodayKey();
+                    localStorage.setItem(todayKey, 'true');
+                    
+                    // Update button text
+                    submitBtn.textContent = 'View Leaderboard';
+                    submitBtn.disabled = false;
+                    
+                    // Show leaderboard
+                    await showLeaderboard(data.rank, data.inTop20, totalScore);
+                } else {
+                    alert('Failed to submit score: ' + (data.error || 'Unknown error'));
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Score';
+                }
+            } catch (error) {
+                console.error('Error submitting score:', error);
+                alert('Failed to submit score. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Score';
+            }
+        }
+        
+        async function showLeaderboard(rank, inTop20, totalScore, viewOnly = false) {
+            const modal = document.getElementById('leaderboardModal');
+            const rankInfo = document.getElementById('rankInfo');
+            const nameInputSection = document.getElementById('nameInputSection');
+            const nameInput = document.getElementById('playerName');
+            const charCount = document.getElementById('charCount');
+            const leaderboardList = document.getElementById('leaderboardList');
+            
+            // Update rank info
+            if (rank !== null) {
+                rankInfo.textContent = `Your rank: #${rank}`;
+            } else {
+                rankInfo.textContent = '';
+            }
+            
+            // Show name input if in top 20 and not view-only
+            if (inTop20 && !viewOnly) {
+                nameInputSection.style.display = 'block';
+                nameInput.value = '';
+                charCount.textContent = '0';
+                
+                // Character count update
+                nameInput.addEventListener('input', () => {
+                    charCount.textContent = nameInput.value.length;
+                });
+            } else {
+                nameInputSection.style.display = 'none';
+            }
+            
+            // Fetch and display leaderboard
+            try {
+                const response = await fetch('/leaderboard');
+                const data = await response.json();
+                
+                if (data.success) {
+                    leaderboardList.innerHTML = '';
+                    data.leaderboard.forEach((entry, index) => {
+                        const li = document.createElement('li');
+                        li.className = `leaderboard-item rank-${index + 1}`;
+                        li.innerHTML = `
+                            <span class="rank">#${index + 1}</span>
+                            <span class="name">${entry.name || 'Anonymous'}</span>
+                            <span class="score">
+                                <img src="assets/yields/Score.webp" alt="Score" class="score-icon">
+                                ${entry.score}
+                            </span>
+                        `;
+                        leaderboardList.appendChild(li);
+                    });
+                } else {
+                    leaderboardList.innerHTML = '<li>Failed to load leaderboard</li>';
+                }
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+                leaderboardList.innerHTML = '<li>Failed to load leaderboard</li>';
+            }
+            
+            modal.classList.add('active');
+            
+            // If in top 20, wait for name submission
+            if (inTop20) {
+                const submitName = async () => {
+                    const name = nameInput.value.trim();
+                    if (name.length === 0) {
+                        alert('Please enter your name');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch('/submit-score', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ 
+                                score: totalScore,
+                                name: name 
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        if (data.success) {
+                            // Reload leaderboard
+                            const leaderboardResponse = await fetch('/leaderboard');
+                            const leaderboardData = await leaderboardResponse.json();
+                            if (leaderboardData.success) {
+                                leaderboardList.innerHTML = '';
+                                leaderboardData.leaderboard.forEach((entry, index) => {
+                                    const li = document.createElement('li');
+                                    li.className = `leaderboard-item rank-${index + 1}`;
+                                    li.innerHTML = `
+                                        <span class="rank">#${index + 1}</span>
+                                        <span class="name">${entry.name || 'Anonymous'}</span>
+                                        <span class="score">
+                                            <img src="assets/yields/Score.webp" alt="Score" class="score-icon">
+                                            ${entry.score}
+                                        </span>
+                                    `;
+                                    leaderboardList.appendChild(li);
+                                });
+                            }
+                            nameInputSection.style.display = 'none';
+                        } else {
+                            if (data.error === 'Name already taken') {
+                                alert('This name is already taken. Please choose a different name.');
+                            } else if (data.error === 'Name contains inappropriate content') {
+                                alert('This name contains inappropriate content. Please choose a different name.');
+                            } else {
+                                alert('Failed to submit name: ' + (data.error || 'Unknown error'));
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error submitting name:', error);
+                        alert('Failed to submit name. Please try again.');
+                    }
+                };
+                
+                nameInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        submitName();
+                    }
+                });
+                
+                // Add submit button for name
+                const existingSubmitBtn = nameInputSection.querySelector('.name-submit-btn');
+                if (existingSubmitBtn) {
+                    existingSubmitBtn.remove();
+                }
+                const submitNameBtn = document.createElement('button');
+                submitNameBtn.className = 'submit-score-btn name-submit-btn';
+                submitNameBtn.textContent = 'Submit Name';
+                submitNameBtn.style.marginTop = '8px';
+                submitNameBtn.onclick = submitName;
+                nameInputSection.appendChild(submitNameBtn);
+            }
+        }
+        
+        function closeLeaderboard() {
+            const modal = document.getElementById('leaderboardModal');
+            modal.classList.remove('active');
+            
+            // Update button text based on submission status
+            checkSubmissionStatus();
+            
+            const submitBtn = document.getElementById('submitScoreBtn');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+            }
+        }
+        
+        // Close modal when clicking outside
+        document.addEventListener('click', (e) => {
+            const modal = document.getElementById('leaderboardModal');
+            if (e.target === modal) {
+                closeLeaderboard();
+            }
+        });
 
         function initMapZoomPan() {
             const mapContainer = document.getElementById('mapContainer');
@@ -3390,8 +4139,26 @@
         }
         
         // Initialize on load
-        loadGameData();
+        // Load game data, then load daily challenge
+        loadGameData().then(() => {
+            loadDailyChallenge();
+        });
     </script>
+    
+    <!-- Leaderboard Modal -->
+    <div id="leaderboardModal" class="leaderboard-modal">
+        <div class="leaderboard-content">
+            <h2>Leaderboard</h2>
+            <div id="rankInfo" class="rank-info"></div>
+            <ul id="leaderboardList" class="leaderboard-list"></ul>
+            <div id="nameInputSection" class="name-input-section" style="display: none;">
+                <label for="playerName">Enter your name:</label>
+                <input type="text" id="playerName" maxlength="20" placeholder="Your name">
+                <div class="char-count"><span id="charCount">0</span>/20</div>
+            </div>
+            <button class="leaderboard-close-btn" onclick="closeLeaderboard()">Close</button>
+        </div>
+    </div>
 </body>
 </html>
 
