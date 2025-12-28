@@ -236,9 +236,30 @@
             margin-right: -8px;
         }
 
-        .hex.drag-over {
-            border: 3px solid #4a90e2;
-            border-radius: 4px;
+        .hex.valid-placement::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            background-color: rgba(144, 238, 144, 0.5);
+            z-index: 12;
+            pointer-events: none;
+        }
+
+        .hex.invalid-placement::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            background-color: rgba(255, 182, 193, 0.5);
+            z-index: 12;
+            pointer-events: none;
         }
 
         .hex-shape {
@@ -252,6 +273,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            z-index: 15;
         }
 
         .hex-base {
@@ -286,13 +308,13 @@
         }
 
         .hex-district {
-            width: 60%;
-            height: 60%;
-            object-fit: contain;
+            width: 90%;
+            height: 90%;
+            object-fit: cover;
             position: absolute;
-            top: 20%;
-            left: 20%;
-            z-index: 4;
+            top: 5%;
+            left: calc(5% - 1px);
+            z-index: 25000000;
             filter: drop-shadow(0 0 5px rgba(0,0,0,0.9));
         }
 
@@ -483,22 +505,16 @@
         let dragStartPanY = 0;
         let draggedItem = null;
 
-        // Load JSON data files
-        async function loadGameData() {
-            try {
-                const [adjacencyRes, placementRes, resourcesRes] = await Promise.all([
-                    fetch('adjacency_database.json'),
-                    fetch('placement_database.json'),
-                    fetch('resources_database.json')
-                ]);
-                
-                adjacencyData = await adjacencyRes.json();
-                placementData = await placementRes.json();
-                resourcesData = await resourcesRes.json();
-            } catch (error) {
-                console.error('Failed to load game data:', error);
-                alert('Failed to load game data files. Make sure adjacency_database.json, placement_database.json, and resources_database.json are available.');
-            }
+        // Load game data (embedded directly, no fetch needed)
+        function loadGameData() {
+            // Adjacency data is embedded below
+            adjacencyData = embeddedAdjacencyData;
+            
+            // Placement data is embedded below  
+            placementData = embeddedPlacementData;
+            
+            // Resources data is embedded below
+            resourcesData = embeddedResourcesData;
         }
 
         // Base36 encoding/decoding (same as map maker)
@@ -786,7 +802,60 @@
             }
             
             mapTransformWrapper.appendChild(grid);
+            
+            // Create a separate districts layer on top of everything
+            const districtsLayer = document.createElement('div');
+            districtsLayer.className = 'hex-grid';
+            districtsLayer.id = 'districtsLayer';
+            districtsLayer.style.position = 'absolute';
+            districtsLayer.style.top = '0';
+            districtsLayer.style.left = '0';
+            districtsLayer.style.pointerEvents = 'none';
+            districtsLayer.style.zIndex = '1000';
+            
+            // Create districts grid structure
+            for (let row = 0; row < GRID_HEIGHT; row++) {
+                const hexRow = document.createElement('div');
+                hexRow.className = 'hex-row';
+                if (row % 2 === 1) {
+                    hexRow.classList.add('offset');
+                }
+
+                for (let col = 0; col < GRID_WIDTH; col++) {
+                    const districtHex = document.createElement('div');
+                    districtHex.className = 'hex';
+                    districtHex.dataset.row = row;
+                    districtHex.dataset.col = col;
+                    districtHex.style.pointerEvents = 'none';
+                    
+                    const districtShape = document.createElement('div');
+                    districtShape.className = 'hex-shape';
+                    districtShape.id = `district-shape-${row}-${col}`;
+                    
+                    districtHex.appendChild(districtShape);
+                    hexRow.appendChild(districtHex);
+                }
+                
+                districtsLayer.appendChild(hexRow);
+            }
+            
+            mapTransformWrapper.appendChild(districtsLayer);
+            mapTransformWrapper.style.position = 'relative';
             mapContainer.appendChild(mapTransformWrapper);
+            
+            // Update visuals for all hexes after they're in the DOM
+            // First pass: render everything EXCEPT districts
+            for (let row = 0; row < GRID_HEIGHT; row++) {
+                for (let col = 0; col < GRID_WIDTH; col++) {
+                    updateHexVisualBase(row, col);
+                }
+            }
+            // Second pass: render districts in separate layer
+            for (let row = 0; row < GRID_HEIGHT; row++) {
+                for (let col = 0; col < GRID_WIDTH; col++) {
+                    updateHexVisualDistricts(row, col);
+                }
+            }
             
             // Add score panel
             const scorePanel = document.createElement('div');
@@ -823,16 +892,30 @@
             // Drag and drop handlers
             hex.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                hex.classList.add('drag-over');
+                
+                // Update validity highlight
+                if (draggedItem) {
+                    const key = `${row},${col}`;
+                    const tile = challengeData.tiles[key];
+                    const isValid = isValidPlacement(row, col, draggedItem.type, draggedItem.name, tile) && 
+                                   (availableItems[draggedItem.name] > 0 || placedItems[key]?.name === draggedItem.name);
+                    
+                    hex.classList.remove('valid-placement', 'invalid-placement');
+                    if (isValid) {
+                        hex.classList.add('valid-placement');
+                    } else {
+                        hex.classList.add('invalid-placement');
+                    }
+                }
             });
 
             hex.addEventListener('dragleave', () => {
-                hex.classList.remove('drag-over');
+                hex.classList.remove('valid-placement', 'invalid-placement');
             });
 
             hex.addEventListener('drop', (e) => {
                 e.preventDefault();
-                hex.classList.remove('drag-over');
+                hex.classList.remove('valid-placement', 'invalid-placement');
                 
                 if (draggedItem) {
                     placeItem(row, col, draggedItem.type, draggedItem.name);
@@ -846,12 +929,13 @@
                 removeItem(row, col);
             });
 
-            updateHexVisual(row, col);
             return hex;
         }
 
-        function updateHexVisual(row, col) {
-            const hex = document.querySelector(`.hex[data-row="${row}"][data-col="${col}"]`);
+        function updateHexVisualBase(row, col) {
+            const hexGrid = document.getElementById('hexGrid');
+            if (!hexGrid) return;
+            const hex = hexGrid.querySelector(`.hex[data-row="${row}"][data-col="${col}"]`);
             if (!hex) return;
 
             const hexShape = hex.querySelector('.hex-shape');
@@ -914,15 +998,9 @@
                 }
             }
 
-            // Add placed items
+            // Add placed items (but NOT districts yet - they go last)
             if (placed) {
-                if (placed.type === 'district') {
-                    const img = document.createElement('img');
-                    img.className = 'hex-district';
-                    img.src = `assets/districts/${placed.name}.webp`;
-                    img.alt = placed.name;
-                    hexShape.appendChild(img);
-                } else if (placed.type === 'improvement') {
+                if (placed.type === 'improvement') {
                     const img = document.createElement('img');
                     img.className = 'hex-improvement';
                     img.src = `assets/improvements/${placed.name}.webp`;
@@ -936,15 +1014,41 @@
                     hexShape.appendChild(img);
                 }
             }
+        }
 
-            // Add adjacency indicator
-            const adjacency = calculateAdjacency(row, col);
-            if (adjacency && adjacency.total > 0) {
-                const indicator = document.createElement('div');
-                indicator.className = 'adjacency-indicator';
-                indicator.textContent = `+${adjacency.total}`;
-                hexShape.appendChild(indicator);
+        function updateHexVisualDistricts(row, col) {
+            // Render districts in the separate districts layer
+            const districtShape = document.getElementById(`district-shape-${row}-${col}`);
+            if (!districtShape) return;
+
+            // Clear existing content
+            districtShape.innerHTML = '';
+
+            const key = `${row},${col}`;
+            const placed = placedItems[key];
+
+            // Add districts LAST so they appear on top of everything
+            if (placed && placed.type === 'district') {
+                const img = document.createElement('img');
+                img.className = 'hex-district';
+                img.src = `assets/districts/${placed.name}.webp`;
+                img.alt = placed.name;
+                districtShape.appendChild(img);
+                
+                // Add adjacency indicator for districts
+                const adjacency = calculateAdjacency(row, col);
+                if (adjacency && adjacency.total > 0) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'adjacency-indicator';
+                    indicator.textContent = `+${adjacency.total}`;
+                    districtShape.appendChild(indicator);
+                }
             }
+        }
+
+        function updateHexVisual(row, col) {
+            updateHexVisualBase(row, col);
+            updateHexVisualDistricts(row, col);
         }
 
         function populateSidebar() {
@@ -1037,6 +1141,7 @@
                 if (count > 0) {
                     draggedItem = { type, name };
                     item.classList.add('dragging');
+                    updatePlacementHighlights();
                 } else {
                     e.preventDefault();
                 }
@@ -1044,6 +1149,7 @@
             
             item.addEventListener('dragend', () => {
                 item.classList.remove('dragging');
+                clearPlacementHighlights();
                 draggedItem = null;
             });
             
@@ -1082,6 +1188,42 @@
             });
             updateAllScores();
             populateSidebar();
+        }
+
+        function updatePlacementHighlights() {
+            if (!draggedItem) return;
+            
+            const hexGrid = document.getElementById('hexGrid');
+            if (!hexGrid) return;
+            
+            for (let row = 0; row < GRID_HEIGHT; row++) {
+                for (let col = 0; col < GRID_WIDTH; col++) {
+                    const hex = hexGrid.querySelector(`.hex[data-row="${row}"][data-col="${col}"]`);
+                    if (!hex) continue;
+                    
+                    const key = `${row},${col}`;
+                    const tile = challengeData.tiles[key];
+                    const isValid = isValidPlacement(row, col, draggedItem.type, draggedItem.name, tile) && 
+                                   (availableItems[draggedItem.name] > 0 || placedItems[key]?.name === draggedItem.name);
+                    
+                    hex.classList.remove('valid-placement', 'invalid-placement');
+                    if (isValid) {
+                        hex.classList.add('valid-placement');
+                    } else {
+                        hex.classList.add('invalid-placement');
+                    }
+                }
+            }
+        }
+
+        function clearPlacementHighlights() {
+            const hexGrid = document.getElementById('hexGrid');
+            if (!hexGrid) return;
+            
+            const allHexes = hexGrid.querySelectorAll('.hex');
+            allHexes.forEach(hex => {
+                hex.classList.remove('valid-placement', 'invalid-placement');
+            });
         }
 
         function removeItem(row, col) {
@@ -1665,6 +1807,90 @@
             updateTransform();
         }
 
+        // Embedded game data (embedded directly to avoid CORS issues)
+        const embeddedAdjacencyData = {
+            "district_adjacency_bonuses": [
+                {
+                    "name": "Campus",
+                    "adjacency_bonuses": {
+                        "Mountain": {"bonus": 1, "type": "Science", "per": 1},
+                        "Rainforest": {"bonus": 1, "type": "Science", "per": 2},
+                        "Geothermal_Fissure": {"bonus": 2, "type": "Science", "per": 1},
+                        "Reef": {"bonus": 2, "type": "Science", "per": 1},
+                        "all_districts": {"bonus": 1, "type": "Science", "per": 2},
+                        "Government_Plaza": {"bonus": 1, "type": "Science", "per": 1}
+                    }
+                },
+                {
+                    "name": "Holy_Site",
+                    "adjacency_bonuses": {
+                        "Mountain": {"bonus": 1, "type": "Faith", "per": 1},
+                        "Woods": {"bonus": 1, "type": "Faith", "per": 2},
+                        "Natural_Wonder": {"bonus": 2, "type": "Faith", "per": 1},
+                        "all_districts": {"bonus": 1, "type": "Faith", "per": 2},
+                        "Government_Plaza": {"bonus": 1, "type": "Faith", "per": 1}
+                    }
+                },
+                {
+                    "name": "Commercial_Hub",
+                    "adjacency_bonuses": {
+                        "City_Center": {"bonus": 2, "type": "Gold", "per": 1},
+                        "River_Edge": {"bonus": 1, "type": "Gold", "per": 1},
+                        "Harbor": {"bonus": 2, "type": "Gold", "per": 1},
+                        "all_districts": {"bonus": 1, "type": "Gold", "per": 2},
+                        "Government_Plaza": {"bonus": 1, "type": "Gold", "per": 1}
+                    }
+                },
+                {
+                    "name": "Harbor",
+                    "adjacency_bonuses": {
+                        "Coastal_Resources": {"bonus": 1, "type": "Gold", "per": 1},
+                        "Commercial_Hub": {"bonus": 2, "type": "Gold", "per": 1},
+                        "City_Center": {"bonus": 2, "type": "Gold", "per": 1},
+                        "all_districts": {"bonus": 1, "type": "Gold", "per": 2},
+                        "Government_Plaza": {"bonus": 1, "type": "Gold", "per": 1}
+                    }
+                },
+                {
+                    "name": "Industrial_Zone",
+                    "adjacency_bonuses": {
+                        "Mine": {"bonus": 1, "type": "Production", "per": 2},
+                        "Lumber_Mill": {"bonus": 1, "type": "Production", "per": 2},
+                        "Quarry": {"bonus": 1, "type": "Production", "per": 1},
+                        "Strategic_Resource": {"bonus": 1, "type": "Production", "per": 1},
+                        "Aqueduct": {"bonus": 2, "type": "Production", "per": 1},
+                        "Dam": {"bonus": 2, "type": "Production", "per": 1},
+                        "Canal": {"bonus": 2, "type": "Production", "per": 1},
+                        "all_districts": {"bonus": 1, "type": "Production", "per": 2},
+                        "Government_Plaza": {"bonus": 1, "type": "Production", "per": 1}
+                    }
+                },
+                {
+                    "name": "Theater_Square",
+                    "adjacency_bonuses": {
+                        "Wonder": {"bonus": 2, "type": "Culture", "per": 1},
+                        "Entertainment_Complex": {"bonus": 2, "type": "Culture", "per": 1},
+                        "Water_Park": {"bonus": 2, "type": "Culture", "per": 1},
+                        "all_districts": {"bonus": 1, "type": "Culture", "per": 2},
+                        "Government_Plaza": {"bonus": 1, "type": "Culture", "per": 1}
+                    }
+                }
+            ],
+            "districts_with_adjacency": ["Campus", "Holy_Site", "Commercial_Hub", "Harbor", "Industrial_Zone", "Theater_Square"],
+            "districts_without_adjacency": ["Aerodrome", "Aqueduct", "Canal", "City_Center", "Dam", "Encampment", "Neighborhood", "Preserve", "Spaceport", "Entertainment_Complex", "Water_Park", "Government_Plaza", "Diplomatic_Quarter"]
+        };
+
+        const embeddedPlacementData = JSON.parse('{"districts":[{"name":"Aerodrome","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"Aqueduct","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":true},{"name":"Campus","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"Canal","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"City_Center","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"Commercial_Hub","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"Dam","allowed_terrain":["Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"Diplomatic_Quarter","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"Encampment","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":true,"must_be_adjacent_to_city_center":false},{"name":"Entertainment_Complex","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"Government_Plaza","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"Harbor","allowed_terrain":["Coast"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"Holy_Site","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"Industrial_Zone","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"Neighborhood","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"Preserve","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":true,"must_be_adjacent_to_city_center":false},{"name":"Spaceport","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"Theater_Square","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false},{"name":"Water_Park","allowed_terrain":["Coast"],"cant_be_adjacent_to_city_center":false,"must_be_adjacent_to_city_center":false}],"improvements":[{"name":"Camp","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"must_be_on_woods":false,"must_be_coastal":false,"only_buildable_on_resources":true,"resources_its_built_on":["Deer","Furs","Ivory","Truffles"]},{"name":"Farm","allowed_terrain":["Grassland","Plains","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"must_be_on_woods":false,"must_be_coastal":false,"only_buildable_on_resources":false,"resources_its_built_on":["Rice","Wheat","Maize"]},{"name":"Fishing_Boats","allowed_terrain":["Coast"],"must_be_on_woods":false,"must_be_coastal":false,"only_buildable_on_resources":true,"resources_its_built_on":["Fish","Amber","Pearls","Turtles","Whales"]},{"name":"Lumber_Mill","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills"],"must_be_on_woods":true,"must_be_coastal":false,"only_buildable_on_resources":false,"resources_its_built_on":[]},{"name":"Mine","allowed_terrain":["Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills"],"must_be_on_woods":false,"must_be_coastal":false,"only_buildable_on_resources":false,"resources_its_built_on":["Iron","Coal","Niter","Uranium","Salt","Diamonds","Jade","Mercury","Silver"]},{"name":"Offshore_Oil_Rig","allowed_terrain":["Coast","Ocean"],"must_be_on_woods":false,"must_be_coastal":false,"only_buildable_on_resources":true,"resources_its_built_on":["Oil"]},{"name":"Offshore_Wind_Farm","allowed_terrain":["Coast","Ocean"],"must_be_on_woods":false,"must_be_coastal":false,"only_buildable_on_resources":false,"resources_its_built_on":[]},{"name":"Oil_Well","allowed_terrain":["Grassland","Plains","Desert","Tundra","Desert_Floodplains"],"must_be_on_woods":false,"must_be_coastal":false,"only_buildable_on_resources":true,"resources_its_built_on":["Oil"]},{"name":"Pasture","allowed_terrain":["Grassland","Plains","Desert","Tundra","Desert_Hill","Grassland_Hill","Plains_Hill","Tundra_Hills"],"must_be_on_woods":false,"must_be_coastal":false,"only_buildable_on_resources":true,"resources_its_built_on":["Horses","Cattle","Sheep"]},{"name":"Plantation","allowed_terrain":["Grassland","Plains","Desert","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"must_be_on_woods":false,"must_be_coastal":false,"only_buildable_on_resources":true,"resources_its_built_on":["Bananas","Citrus","Cotton","Dyes","Incense","Silk","Spices","Sugar","Tea","Tobacco","Wine","Coffee","Cocoa","Olives"]},{"name":"Quarry","allowed_terrain":["Grassland","Plains","Desert","Tundra","Desert_Hill","Grassland_Hill","Plains_Hill","Tundra_Hills"],"must_be_on_woods":false,"must_be_coastal":false,"only_buildable_on_resources":true,"resources_its_built_on":["Stone","Marble","Gypsum"]},{"name":"Seaside_Resort","allowed_terrain":["Desert","Plains","Grassland"],"must_be_on_woods":false,"must_be_coastal":true,"only_buildable_on_resources":false,"resources_its_built_on":[]},{"name":"Ski_Resort","allowed_terrain":["Mountain_Desert","Mountain_Grassland","Mountain_Plains","Mountain_Snow","Mountain_Tundra"],"must_be_on_woods":false,"must_be_coastal":false,"only_buildable_on_resources":false,"resources_its_built_on":[]},{"name":"Solar_Farm","allowed_terrain":["Desert","Plains","Grassland","Tundra"],"must_be_on_woods":false,"must_be_coastal":false,"only_buildable_on_resources":false,"resources_its_built_on":[]},{"name":"Wind_Farm","allowed_terrain":["Snow_Hill","Desert_Hill","Grassland_Hill","Plains_Hill","Tundra_Hills"],"must_be_on_woods":false,"must_be_coastal":false,"only_buildable_on_resources":false,"resources_its_built_on":[]}],"wonders":[{"name":"Angkor_Wat","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"allowed_features":[],"required_feature_adjacency":[],"required_resource_adjacency":[],"required_district_adjacency":["Aqueduct"]},{"name":"Bolshoi_Theatre","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"allowed_features":[],"required_feature_adjacency":[],"required_resource_adjacency":[],"required_district_adjacency":["Theater_Square"]},{"name":"Casa_de_Contratacion","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"allowed_features":[],"required_feature_adjacency":[],"required_resource_adjacency":[],"required_district_adjacency":["Government_Plaza"]},{"name":"Colosseum","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"allowed_features":[],"required_feature_adjacency":[],"required_resource_adjacency":[],"required_district_adjacency":["Entertainment_Complex"]},{"name":"Colossus","allowed_terrain":["Coast"],"allowed_features":[],"required_feature_adjacency":[],"required_resource_adjacency":[],"required_district_adjacency":["Harbor"]},{"name":"Etemenanki","allowed_terrain":["Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"allowed_features":["Marsh"],"required_feature_adjacency":[],"required_resource_adjacency":[],"required_district_adjacency":[]},{"name":"Great_Zimbabwe","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"allowed_features":[],"required_feature_adjacency":[],"required_resource_adjacency":["Cattle"],"required_district_adjacency":["Commercial_Hub"]},{"name":"Oracle","allowed_terrain":["Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills"],"allowed_features":[],"required_feature_adjacency":[],"required_resource_adjacency":[],"required_district_adjacency":["Campus"]},{"name":"Pyramids","allowed_terrain":["Desert","Desert_Floodplains"],"allowed_features":[],"required_feature_adjacency":[],"required_resource_adjacency":[],"required_district_adjacency":[]},{"name":"Stonehenge","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow"],"allowed_features":[],"required_feature_adjacency":[],"required_resource_adjacency":["Stone"],"required_district_adjacency":[]},{"name":"Temple_of_Artemis","allowed_terrain":["Grassland","Plains","Desert","Tundra","Snow","Desert_Hill","Grassland_Hill","Plains_Hill","Snow_Hill","Tundra_Hills","Desert_Floodplains","Grassland_Floodplains","Plains_Floodplains"],"allowed_features":[],"required_feature_adjacency":["Camp"],"required_resource_adjacency":[],"required_district_adjacency":[]},{"name":"University_of_Sankore","allowed_terrain":["Desert","Desert_Floodplains"],"allowed_features":[],"required_feature_adjacency":[],"required_resource_adjacency":[],"required_district_adjacency":["Campus"]}]}');
+
+        const embeddedResourcesData = JSON.parse('{"bonus_resources":[{"name":"Bananas","improvement":"Plantation","is_coastal":false},{"name":"Cattle","improvement":"Pasture","is_coastal":false},{"name":"Fish","improvement":"Fishing_Boats","is_coastal":true},{"name":"Rice","improvement":"Farm","is_coastal":false},{"name":"Sheep","improvement":"Pasture","is_coastal":false},{"name":"Stone","improvement":"Quarry","is_coastal":false},{"name":"Wheat","improvement":"Farm","is_coastal":false},{"name":"Deer","improvement":"Camp","is_coastal":false},{"name":"Maize","improvement":"Farm","is_coastal":false}],"luxury_resources":[{"name":"Amber","improvement":"Fishing_Boats","is_coastal":true},{"name":"Citrus","improvement":"Plantation","is_coastal":false},{"name":"Cocoa","improvement":"Plantation","is_coastal":false},{"name":"Coffee","improvement":"Plantation","is_coastal":false},{"name":"Cotton","improvement":"Plantation","is_coastal":false},{"name":"Diamonds","improvement":"Mine","is_coastal":false},{"name":"Dyes","improvement":"Plantation","is_coastal":false},{"name":"Furs","improvement":"Camp","is_coastal":false},{"name":"Gypsum","improvement":"Quarry","is_coastal":false},{"name":"Incense","improvement":"Plantation","is_coastal":false},{"name":"Ivory","improvement":"Camp","is_coastal":false},{"name":"Jade","improvement":"Mine","is_coastal":false},{"name":"Marble","improvement":"Quarry","is_coastal":false},{"name":"Mercury","improvement":"Mine","is_coastal":false},{"name":"Olives","improvement":"Plantation","is_coastal":false},{"name":"Pearls","improvement":"Fishing_Boats","is_coastal":true},{"name":"Salt","improvement":"Mine","is_coastal":false},{"name":"Silk","improvement":"Plantation","is_coastal":false},{"name":"Silver","improvement":"Mine","is_coastal":false},{"name":"Spices","improvement":"Plantation","is_coastal":false},{"name":"Sugar","improvement":"Plantation","is_coastal":false},{"name":"Tea","improvement":"Plantation","is_coastal":false},{"name":"Tobacco","improvement":"Plantation","is_coastal":false},{"name":"Truffles","improvement":"Camp","is_coastal":false},{"name":"Turtles","improvement":"Fishing_Boats","is_coastal":true},{"name":"Wine","improvement":"Plantation","is_coastal":false},{"name":"Whales","improvement":"Fishing_Boats","is_coastal":true}],"strategic_resources":[{"name":"Horses","improvement":"Pasture","is_coastal":false},{"name":"Iron","improvement":"Mine","is_coastal":false},{"name":"Niter","improvement":"Mine","is_coastal":false},{"name":"Coal","improvement":"Mine","is_coastal":false},{"name":"Oil","improvement":"Oil_Well","water_improvement":"Offshore_Oil_Rig","is_coastal":false},{"name":"Uranium","improvement":"Mine","is_coastal":false}]}');
+
+        // Load game data (embedded directly, no fetch needed)
+        function loadGameData() {
+            adjacencyData = embeddedAdjacencyData;
+            placementData = embeddedPlacementData;
+            resourcesData = embeddedResourcesData;
+        }
+        
         // Initialize on load
         loadGameData();
     </script>
