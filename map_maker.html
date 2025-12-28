@@ -1969,8 +1969,18 @@
             const allocations = [];
             if (Object.keys(mapData.allocations.districts).length > 0 || Object.keys(mapData.allocations.improvements).length > 0 || Object.keys(mapData.allocations.wonders).length > 0) {
                 const distAllocs = Object.entries(mapData.allocations.districts)
-                    .filter(([name, count]) => count > 0)
-                    .map(([name, count]) => `d:${name}:${count}`);
+                    .filter(([name, count]) => {
+                        if (checkboxDistricts.includes(name)) {
+                            return count === true;
+                        }
+                        return count > 0;
+                    })
+                    .map(([name, count]) => {
+                        if (checkboxDistricts.includes(name)) {
+                            return `d:${name}:c`;
+                        }
+                        return `d:${name}:${count}`;
+                    });
                 const imprAllocs = Object.entries(mapData.allocations.improvements)
                     .filter(([name, count]) => count > 0)
                     .map(([name, count]) => `i:${name}:${count}`);
