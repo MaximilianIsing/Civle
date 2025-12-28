@@ -1,0 +1,2427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civle Map Maker</title>
+    <style>
+        @font-face {
+            font-family: 'Montserrat';
+            src: url('assets/font/Montserrat-Regular.ttf') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Montserrat';
+            src: url('assets/font/Montserrat-Medium.ttf') format('truetype');
+            font-weight: 500;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Montserrat';
+            src: url('assets/font/Montserrat-Bold.ttf') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Montserrat';
+            src: url('assets/font/Montserrat-ExtraBold.ttf') format('truetype');
+            font-weight: 800;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Montserrat';
+            src: url('assets/font/Montserrat-Thin.ttf') format('truetype');
+            font-weight: 100;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2d2d2d;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #444;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-logo {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .grid-size-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        .grid-size-controls label {
+            color: #fff;
+        }
+
+        .grid-size-controls input[type="number"] {
+            background: #2d2d2d;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 3px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .grid-size-controls input[type="number"]:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+
+        button {
+            padding: 8px 16px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #357abd;
+        }
+
+        button:active {
+            background: #2968a3;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #2d2d2d;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 2px solid #444;
+        }
+
+        .allocations-sidebar {
+            width: 300px;
+            background: #2d2d2d;
+            padding: 20px;
+            overflow-y: auto;
+            border-left: 2px solid #444;
+        }
+
+        /* Custom scrollbar */
+        .sidebar::-webkit-scrollbar,
+        .allocations-sidebar::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .sidebar::-webkit-scrollbar-track,
+        .allocations-sidebar::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb,
+        .allocations-sidebar::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover,
+        .allocations-sidebar::-webkit-scrollbar-thumb:hover {
+            background: #5a5a5a;
+        }
+
+        .sidebar h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #4a90e2;
+        }
+
+        .selection-group {
+            margin-bottom: 15px;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #3a3a3a;
+            border: 2px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            user-select: none;
+        }
+
+        .dropdown-header:hover {
+            background: #4a4a4a;
+        }
+
+        .dropdown-header h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #4a90e2;
+        }
+
+        .caret {
+            transition: transform 0.2s;
+            font-size: 12px;
+            color: #4a90e2;
+        }
+
+        .dropdown-header.collapsed .caret {
+            transform: rotate(-90deg);
+        }
+
+        .dropdown-content {
+            max-height: 400px;
+            overflow-y: auto;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .dropdown-content.collapsed {
+            max-height: 0;
+            overflow: hidden;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 4px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb:hover {
+            background: #5a5a5a;
+        }
+
+        .selection-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            background: #3a3a3a;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .selection-item:hover {
+            background: #4a4a4a;
+        }
+
+        .selection-item.selected {
+            border-color: #4a90e2;
+            background: #3a4a5a;
+        }
+
+        .selection-item img {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+
+        .selection-item span {
+            font-size: 14px;
+        }
+
+        .allocation-section {
+            margin-bottom: 20px;
+        }
+
+        .allocation-section h3 {
+            font-size: 16px;
+            color: #4a90e2;
+            margin-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .allocation-list {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .allocation-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .allocation-list::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        .allocation-list::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 4px;
+        }
+
+        .allocation-list::-webkit-scrollbar-thumb:hover {
+            background: #5a5a5a;
+        }
+
+        .allocation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            background: #3a3a3a;
+            border: 2px solid transparent;
+            border-radius: 4px;
+        }
+
+        .allocation-label {
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .allocation-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .allocation-btn {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .allocation-btn:hover {
+            background: #357abd;
+        }
+
+        .allocation-btn:active {
+            background: #2968a3;
+        }
+
+        .allocation-input {
+            width: 50px;
+            padding: 4px;
+            background: #2d2d2d;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 3px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .allocation-input:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+
+        .wonder-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            background: #3a3a3a;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .wonder-item:hover {
+            background: #4a4a4a;
+        }
+
+        .wonder-checkbox {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            cursor: pointer;
+            accent-color: #4a90e2;
+        }
+
+        .wonder-label {
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+            user-select: none;
+        }
+
+        .map-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+        }
+
+        .map-container.dragging {
+            cursor: grabbing;
+        }
+
+        .map-transform-wrapper {
+            transform-origin: center center;
+            transition: transform 0.1s ease-out;
+            will-change: transform;
+        }
+
+        .map-container.dragging .map-transform-wrapper {
+            transition: none;
+        }
+
+        .warnings-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: #8b0000;
+            border: 2px solid #ff4444;
+            border-radius: 8px;
+            padding: 15px;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .warnings-container.hidden {
+            display: none;
+        }
+
+        .warnings-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffaaaa;
+            margin-bottom: 10px;
+        }
+
+        .warning-item {
+            font-size: 13px;
+            color: #ffcccc;
+            margin: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .warning-item::before {
+            content: "⚠";
+            position: absolute;
+            left: 0;
+            color: #ffaaaa;
+        }
+
+        .hex-grid {
+            display: grid;
+            gap: 0;
+            line-height: 0;
+        }
+
+        .hex-row {
+            display: flex;
+            gap: 0;
+            margin-bottom: -26px;
+        }
+
+        .hex {
+            width: 80px;
+            height: 92.376px;
+            position: relative;
+            cursor: pointer;
+            margin: 0;
+            margin-right: -8px;
+        }
+
+        .hex:hover .hex-shape {
+            border-color: #4a90e2;
+            box-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
+        }
+
+        .hex-shape {
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            background: transparent;
+            border: none;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hex-base {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .hex-feature {
+            width: 70%;
+            height: 70%;
+            object-fit: contain;
+            position: absolute;
+            top: 15%;
+            left: 15%;
+            z-index: 2;
+        }
+
+        .hex-resource {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            position: absolute;
+            bottom: 8px;
+            right: 20px;
+            z-index: 3;
+            filter: drop-shadow(0 0 3px rgba(0,0,0,0.8));
+        }
+
+        .hex-rivers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            overflow: visible;
+        }
+
+        .river-edge-image {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            z-index: 11;
+        }
+
+
+        .status-bar {
+            background: #2d2d2d;
+            padding: 10px 20px;
+            border-top: 2px solid #444;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #888;
+            font-style: italic;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #4a90e2;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .file-label:hover {
+            background: #357abd;
+        }
+
+        /* Offset rows for hex grid - half the hex width for flush alignment */
+        .hex-row.offset {
+            margin-left: 36px;
+        }
+
+        .hex-shape {
+            margin: 0;
+        }
+
+        .hex-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1001;
+        }
+
+        .zoom-controls button {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #2d2d2d;
+            border: 2px solid #555;
+        }
+
+        .zoom-controls button:hover {
+            background: #3a3a3a;
+            border-color: #4a90e2;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="assets/logo/Logo128x128.png" alt="Civle Logo" class="header-logo">
+            <h1>Civle Challenge Maker</h1>
+        </div>
+        <div class="controls">
+            <div class="grid-size-controls">
+                <label for="gridWidth">Width:</label>
+                <input type="number" id="gridWidth" min="3" max="20" value="9" style="width: 50px; padding: 4px; margin: 0 5px;">
+                <label for="gridHeight">Height:</label>
+                <input type="number" id="gridHeight" min="3" max="20" value="6" style="width: 50px; padding: 4px; margin: 0 10px;">
+            </div>
+            <button onclick="saveMap()">Save Challenge</button>
+            <label for="loadFile" class="file-label">Load Challenge</label>
+            <input type="file" id="loadFile" accept=".civle,.json" onchange="loadMap(event)">
+            <button onclick="clearMap()">Clear Challenge</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="selection-group">
+                <div class="dropdown-header" onclick="toggleDropdown('terrain')">
+                    <h2>Terrain Base</h2>
+                    <span class="caret">▼</span>
+                </div>
+                <div class="dropdown-content" id="terrainDropdown">
+                    <div id="terrainList"></div>
+                </div>
+            </div>
+
+            <div class="selection-group">
+                <div class="dropdown-header" onclick="toggleDropdown('feature')">
+                    <h2>Features</h2>
+                    <span class="caret">▼</span>
+                </div>
+                <div class="dropdown-content" id="featureDropdown">
+                    <div id="featuresList"></div>
+                </div>
+            </div>
+
+            <div class="selection-group">
+                <div class="dropdown-header" onclick="toggleDropdown('resource')">
+                    <h2>Resources</h2>
+                    <span class="caret">▼</span>
+                </div>
+                <div class="dropdown-content" id="resourceDropdown">
+                    <div id="resourcesList"></div>
+                </div>
+            </div>
+
+            <div class="selection-group">
+                <div class="dropdown-header" onclick="toggleDropdown('river')">
+                    <h2>River Edges</h2>
+                    <span class="caret">▼</span>
+                </div>
+                <div class="dropdown-content" id="riverDropdown">
+                    <div class="selection-item" onclick="selectRiverMode('draw')" id="drawRiverBtn">
+                        <span>Draw River Edges</span>
+                    </div>
+                    <div class="selection-item" onclick="selectRiverMode('delete')" id="deleteRiverBtn">
+                        <span>Delete River Edges</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="map-container" id="mapContainer">
+            <div class="map-transform-wrapper" id="mapTransformWrapper">
+                <div class="hex-grid" id="hexGrid"></div>
+            </div>
+            <div class="zoom-controls">
+                <button id="zoomInBtn" title="Zoom In">+</button>
+                <button id="zoomOutBtn" title="Zoom Out">−</button>
+                <button id="resetZoomBtn" title="Reset Zoom">⌂</button>
+            </div>
+            <div class="warnings-container hidden" id="warningsContainer">
+                <div class="warnings-title">Warnings</div>
+                <div id="warningsList"></div>
+            </div>
+        </div>
+
+        <div class="allocations-sidebar">
+            <h2 style="font-size: 18px; margin-bottom: 15px; color: #4a90e2;">Challenge Allocations</h2>
+            <div class="allocation-section">
+                <h3>Districts</h3>
+                <div class="allocation-list" id="districtsAllocationsList"></div>
+            </div>
+            <div class="allocation-section">
+                <h3>Improvements</h3>
+                <div class="allocation-list" id="improvementsAllocationsList"></div>
+            </div>
+            <div class="allocation-section">
+                <h3>Wonders</h3>
+                <div class="allocation-list" id="wondersAllocationsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span id="status">Ready - Select an item from the sidebar to place on the map</span>
+        <span class="help-text">Right-click resets a tile</span>
+    </div>
+
+    <script>
+        let GRID_WIDTH = 9;
+        let GRID_HEIGHT = 6;
+
+        // Map data structure
+        let mapData = {
+            width: GRID_WIDTH,
+            height: GRID_HEIGHT,
+            tiles: {},
+            allocations: {
+                districts: {},
+                improvements: {},
+                wonders: {}
+            }
+        };
+
+        // River edge image mapping (edge index -> image filename)
+        // Edge indices: 0=Top-right, 1=Right, 2=Bottom-right, 3=Bottom-left, 4=Left, 5=Top-left
+        const riverEdgeImages = {
+            0: 'Top_Right',     // Edge 0: Top-right
+            1: 'Right',         // Edge 1: Right
+            2: 'Bottom_Right',  // Edge 2: Bottom-right
+            3: 'Bottom_Left',   // Edge 3: Bottom-left
+            4: 'Left',          // Edge 4: Left
+            5: 'Top_Left'       // Edge 5: Top-left
+        };
+
+        // Districts and improvements data (from placement_database.json structure)
+        const districtsData = [
+            'Government_Plaza', 'Diplomatic_Quarter',
+            'Aerodrome', 'Aqueduct', 'Campus', 'Canal', 'City_Center', 'Commercial_Hub', 'Dam',
+            'Encampment', 'Entertainment_Complex', 'Harbor',
+            'Holy_Site', 'Industrial_Zone', 'Neighborhood', 'Preserve', 'Spaceport', 'Theater_Square', 'Water_Park'
+        ];
+        const checkboxDistricts = ['Diplomatic_Quarter', 'Government_Plaza'];
+        const improvementsData = [
+            'Camp', 'Farm', 'Fishing_Boats', 'Lumber_Mill', 'Mine', 'Offshore_Oil_Rig', 'Offshore_Wind_Farm',
+            'Oil_Well', 'Pasture', 'Plantation', 'Quarry', 'Seaside_Resort', 'Ski_Resort', 'Solar_Farm', 'Wind_Farm'
+        ];
+        const wondersData = [
+            'Angkor_Wat', 'Bolshoi_Theatre', 'Casa_de_Contratacion', 'Colosseum', 'Colossus', 'Etemenanki',
+            'Great_Zimbabwe', 'Oracle', 'Pyramids', 'Stonehenge', 'Temple_of_Artemis', 'University_of_Sankore'
+        ];
+
+        // Current selections
+        let selectedTerrain = null;
+        let selectedFeature = null;
+        let selectedResource = null;
+        let riverMode = null; // 'draw' or 'delete' or null
+        
+        // Zoom and pan state
+        let mapZoom = 1.0;
+        let mapPanX = 0;
+        let mapPanY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let dragStartPanX = 0;
+        let dragStartPanY = 0;
+
+        // Terrain, features, and resources data
+        const terrainBases = [
+            { name: 'Desert', path: 'assets/terrain/base/flat/Desert.webp' },
+            { name: 'Grassland', path: 'assets/terrain/base/flat/Grassland.webp' },
+            { name: 'Plains', path: 'assets/terrain/base/flat/Plains.webp' },
+            { name: 'Snow', path: 'assets/terrain/base/flat/Snow.webp' },
+            { name: 'Tundra', path: 'assets/terrain/base/flat/Tundra.webp' },
+            { name: 'Desert_Hill', path: 'assets/terrain/base/hills/Desert_Hill.webp' },
+            { name: 'Grassland_Hill', path: 'assets/terrain/base/hills/Grassland_Hill.webp' },
+            { name: 'Plains_Hill', path: 'assets/terrain/base/hills/Plains_Hill.webp' },
+            { name: 'Snow_Hill', path: 'assets/terrain/base/hills/Snow_Hill.webp' },
+            { name: 'Tundra_Hills', path: 'assets/terrain/base/hills/Tundra_Hills.webp' },
+            { name: 'Desert_Floodplains', path: 'assets/terrain/base/floodplains/Desert_Floodplains.webp' },
+            { name: 'Grassland_Floodplains', path: 'assets/terrain/base/floodplains/Grassland_Floodplains.webp' },
+            { name: 'Plains_Floodplains', path: 'assets/terrain/base/floodplains/Plains_Floodplains.webp' },
+            { name: 'Mountain_Desert', path: 'assets/terrain/base/mountain/Mountain_Desert.webp' },
+            { name: 'Mountain_Plains', path: 'assets/terrain/base/mountain/Mountain_Plains.webp' },
+            { name: 'Mountain_Snow', path: 'assets/terrain/base/mountain/Mountain_Snow.webp' },
+            { name: 'Mountain_Tundra', path: 'assets/terrain/base/mountain/Mountain_Tundra.webp' },
+            { name: 'Mountains_Grassland', path: 'assets/terrain/base/mountain/Mountains_Grassland.webp' },
+            { name: 'Coast', path: 'assets/terrain/base/water/Coast.webp' },
+            { name: 'Ocean', path: 'assets/terrain/base/water/Ocean.webp' },
+            { name: 'Reef', path: 'assets/terrain/base/water/Reef.webp' }
+        ];
+
+        const features = [
+            { name: 'Woods', path: 'assets/terrain/features/Woods.webp' },
+            { name: 'Rainforest', path: 'assets/terrain/features/Rainforest.webp' },
+            { name: 'Marsh', path: 'assets/terrain/features/Marsh.webp' },
+            { name: 'Geothermal_Fissure', path: 'assets/terrain/features/Geothermal_Fissure.webp' }
+        ];
+
+        const resources = [
+            'Aluminum', 'Amber', 'Bananas', 'Cattle', 'Citrus', 'Coal', 'Cocoa', 'Coffee',
+            'Copper', 'Cotton', 'Crabs', 'Deer', 'Diamonds', 'Dyes', 'Fish', 'Furs',
+            'Gypsum', 'Honey', 'Horses', 'Incense', 'Ivory', 'Jade', 'Maize', 'Marble',
+            'Mercury', 'Niter', 'Oil', 'Olives', 'Pearls', 'Rice', 'Salt', 'Sheep',
+            'Silk', 'Silver', 'Spices', 'Stone', 'Sugar', 'Tea', 'Tobacco', 'Truffles',
+            'Turtles', 'Uranium', 'Whales', 'Wheat', 'Wine'
+        ];
+
+        // Create lookup maps for optimized encoding
+        const terrainIndexMap = new Map();
+        terrainBases.forEach((t, i) => terrainIndexMap.set(t.name, i));
+        const terrainNameMap = new Map();
+        terrainBases.forEach((t, i) => terrainNameMap.set(i, t));
+
+        const featureIndexMap = new Map();
+        features.forEach((f, i) => featureIndexMap.set(f.name, i));
+        const featureNameMap = new Map();
+        features.forEach((f, i) => featureNameMap.set(i, f));
+
+        const resourceIndexMap = new Map();
+        resources.forEach((r, i) => resourceIndexMap.set(r, i));
+        const resourceNameMap = new Map();
+        resources.forEach((r, i) => resourceNameMap.set(i, r));
+
+        // Base36 encoding for compact index storage (0-9, a-z)
+        function toBase36(num) {
+            if (num === 0) return '0';
+            let result = '';
+            while (num > 0) {
+                result = (num % 36).toString(36) + result;
+                num = Math.floor(num / 36);
+            }
+            return result;
+        }
+
+        function fromBase36(str) {
+            return parseInt(str, 36);
+        }
+
+        // Initialize the UI
+        function init() {
+            populateSidebar();
+            populateAllocations();
+            createHexGrid();
+            checkWarnings();
+            initMapZoomPan();
+            initGridSizeControls();
+        }
+
+        function initGridSizeControls() {
+            const widthInput = document.getElementById('gridWidth');
+            const heightInput = document.getElementById('gridHeight');
+            
+            widthInput.onchange = () => {
+                const newWidth = parseInt(widthInput.value);
+                if (newWidth >= 3 && newWidth <= 20) {
+                    changeGridSize(newWidth, GRID_HEIGHT);
+                } else {
+                    widthInput.value = GRID_WIDTH;
+                }
+            };
+            
+            heightInput.onchange = () => {
+                const newHeight = parseInt(heightInput.value);
+                if (newHeight >= 3 && newHeight <= 20) {
+                    changeGridSize(GRID_WIDTH, newHeight);
+                } else {
+                    heightInput.value = GRID_HEIGHT;
+                }
+            };
+        }
+
+        function changeGridSize(newWidth, newHeight) {
+            // Store old dimensions
+            const oldWidth = GRID_WIDTH;
+            const oldHeight = GRID_HEIGHT;
+            
+            // Update grid size
+            GRID_WIDTH = newWidth;
+            GRID_HEIGHT = newHeight;
+            
+            // Update mapData dimensions
+            mapData.width = GRID_WIDTH;
+            mapData.height = GRID_HEIGHT;
+            
+            // Remove tiles that are now out of bounds
+            const tilesToRemove = [];
+            for (const key in mapData.tiles) {
+                const [row, col] = key.split(',').map(Number);
+                if (row >= newHeight || col >= newWidth) {
+                    tilesToRemove.push(key);
+                }
+            }
+            tilesToRemove.forEach(key => {
+                delete mapData.tiles[key];
+            });
+            
+            // Regenerate grid
+            createHexGrid();
+            
+            // Update visuals for all remaining tiles
+            for (let row = 0; row < GRID_HEIGHT; row++) {
+                for (let col = 0; col < GRID_WIDTH; col++) {
+                    updateHexVisual(row, col);
+                }
+            }
+            
+            checkWarnings();
+        }
+
+        function initMapZoomPan() {
+            const mapContainer = document.getElementById('mapContainer');
+            const mapTransformWrapper = document.getElementById('mapTransformWrapper');
+            const zoomInBtn = document.getElementById('zoomInBtn');
+            const zoomOutBtn = document.getElementById('zoomOutBtn');
+            const resetZoomBtn = document.getElementById('resetZoomBtn');
+
+            // Update transform
+            function updateTransform() {
+                mapTransformWrapper.style.transform = `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`;
+            }
+
+            // Zoom in
+            zoomInBtn.onclick = (e) => {
+                e.stopPropagation();
+                mapZoom = Math.min(mapZoom * 1.2, 3.0);
+                updateTransform();
+            };
+
+            // Zoom out
+            zoomOutBtn.onclick = (e) => {
+                e.stopPropagation();
+                mapZoom = Math.max(mapZoom / 1.2, 0.5);
+                updateTransform();
+            };
+
+            // Reset zoom and pan
+            resetZoomBtn.onclick = (e) => {
+                e.stopPropagation();
+                mapZoom = 1.0;
+                mapPanX = 0;
+                mapPanY = 0;
+                updateTransform();
+            };
+
+            // Mouse wheel zoom
+            mapContainer.addEventListener('wheel', (e) => {
+                // Only zoom if not holding a modifier key (to allow normal scrolling if needed)
+                if (!e.ctrlKey && !e.shiftKey && !e.altKey) {
+                    e.preventDefault();
+                    const rect = mapContainer.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+                    
+                    // Get current transform origin point in the container
+                    const containerCenterX = rect.width / 2;
+                    const containerCenterY = rect.height / 2;
+                    
+                    // Calculate mouse position relative to container center
+                    const deltaX = mouseX - containerCenterX;
+                    const deltaY = mouseY - containerCenterY;
+                    
+                    // Zoom
+                    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+                    const newZoom = Math.max(0.5, Math.min(3.0, mapZoom * zoomFactor));
+                    
+                    // Adjust pan to zoom towards mouse position
+                    const zoomChange = newZoom / mapZoom;
+                    mapPanX = mapPanX * zoomChange + (deltaX * (1 - zoomChange));
+                    mapPanY = mapPanY * zoomChange + (deltaY * (1 - zoomChange));
+                    mapZoom = newZoom;
+                    
+                    updateTransform();
+                }
+            }, { passive: false });
+
+            // Mouse drag for panning
+            mapContainer.addEventListener('mousedown', (e) => {
+                // Only start drag if left mouse button and clicking on container background (not on hexes or buttons)
+                // Check if the click target is a hex, button, or something inside them
+                const isHexClick = e.target.closest('.hex');
+                const isButtonClick = e.target.closest('button');
+                const isZoomControl = e.target.closest('.zoom-controls');
+                const isWarningBox = e.target.closest('.warnings-container');
+                
+                if (e.button === 0 && !isHexClick && !isButtonClick && !isZoomControl && !isWarningBox) {
+                    // Only start drag if clicking on the container itself or transform wrapper background
+                    if (e.target === mapContainer || e.target === mapTransformWrapper || e.target.id === 'hexGrid') {
+                        isDragging = true;
+                        mapContainer.classList.add('dragging');
+                        dragStartX = e.clientX;
+                        dragStartY = e.clientY;
+                        dragStartPanX = mapPanX;
+                        dragStartPanY = mapPanY;
+                        e.preventDefault();
+                    }
+                }
+            });
+
+            mapContainer.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const deltaX = e.clientX - dragStartX;
+                    const deltaY = e.clientY - dragStartY;
+                    mapPanX = dragStartPanX + deltaX;
+                    mapPanY = dragStartPanY + deltaY;
+                    updateTransform();
+                }
+            });
+
+            mapContainer.addEventListener('mouseup', (e) => {
+                if (isDragging && e.button === 0) {
+                    isDragging = false;
+                    mapContainer.classList.remove('dragging');
+                }
+            });
+
+            mapContainer.addEventListener('mouseleave', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    mapContainer.classList.remove('dragging');
+                }
+            });
+
+            // Prevent context menu while dragging
+            mapContainer.addEventListener('contextmenu', (e) => {
+                if (isDragging) {
+                    e.preventDefault();
+                }
+            });
+
+            // Initial transform
+            updateTransform();
+        }
+
+        function populateSidebar() {
+            const terrainList = document.getElementById('terrainList');
+            terrainBases.forEach(terrain => {
+                const item = createSelectionItem(terrain.name, terrain.path, 'terrain', () => {
+                    selectItem('terrain', terrain.name, terrain.path, item);
+                });
+                terrainList.appendChild(item);
+            });
+
+            const featuresList = document.getElementById('featuresList');
+            features.forEach(feature => {
+                const item = createSelectionItem(feature.name, feature.path, 'feature', () => {
+                    selectItem('feature', feature.name, feature.path, item);
+                });
+                featuresList.appendChild(item);
+            });
+
+            const resourcesList = document.getElementById('resourcesList');
+            resources.forEach(resource => {
+                const path = `assets/recources/${resource}.webp`;
+                const item = createSelectionItem(resource, path, 'resource', () => {
+                    selectItem('resource', resource, path, item);
+                });
+                resourcesList.appendChild(item);
+            });
+        }
+
+        function populateAllocations() {
+            const districtsList = document.getElementById('districtsAllocationsList');
+            districtsData.forEach(district => {
+                let item;
+                if (checkboxDistricts.includes(district)) {
+                    item = createDistrictCheckbox(district);
+                } else {
+                    item = createAllocationItem(district, 'district');
+                }
+                districtsList.appendChild(item);
+            });
+
+            const improvementsList = document.getElementById('improvementsAllocationsList');
+            improvementsData.forEach(improvement => {
+                const item = createAllocationItem(improvement, 'improvement');
+                improvementsList.appendChild(item);
+            });
+
+            const wondersList = document.getElementById('wondersAllocationsList');
+            wondersData.forEach(wonder => {
+                const item = createWonderCheckbox(wonder);
+                wondersList.appendChild(item);
+            });
+        }
+
+        function createAllocationItem(name, type) {
+            const item = document.createElement('div');
+            item.className = 'allocation-item';
+            item.dataset.name = name;
+            item.dataset.type = type;
+            
+            const label = document.createElement('span');
+            label.className = 'allocation-label';
+            label.textContent = name.replace(/_/g, ' ');
+            
+            const controls = document.createElement('div');
+            controls.className = 'allocation-controls';
+            
+            const minusBtn = document.createElement('button');
+            minusBtn.className = 'allocation-btn';
+            minusBtn.textContent = '-';
+            minusBtn.onclick = (e) => {
+                e.stopPropagation();
+                updateAllocation(name, type, -1);
+            };
+            
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'allocation-input';
+            input.min = '0';
+            input.value = mapData.allocations[type + 's'][name] || 0;
+            input.onchange = () => {
+                const value = parseInt(input.value) || 0;
+                if (value < 0) value = 0;
+                mapData.allocations[type + 's'][name] = value;
+                input.value = value;
+                checkWarnings();
+            };
+            
+            const plusBtn = document.createElement('button');
+            plusBtn.className = 'allocation-btn';
+            plusBtn.textContent = '+';
+            plusBtn.onclick = (e) => {
+                e.stopPropagation();
+                updateAllocation(name, type, 1);
+            };
+            
+            controls.appendChild(minusBtn);
+            controls.appendChild(input);
+            controls.appendChild(plusBtn);
+            
+            item.appendChild(label);
+            item.appendChild(controls);
+            
+            return item;
+        }
+
+        function createDistrictCheckbox(name) {
+            const item = document.createElement('div');
+            item.className = 'wonder-item';
+            item.dataset.name = name;
+            item.dataset.type = 'district';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'wonder-checkbox';
+            checkbox.checked = mapData.allocations.districts[name] || false;
+            checkbox.onchange = () => {
+                mapData.allocations.districts[name] = checkbox.checked;
+                checkWarnings();
+            };
+            
+            const label = document.createElement('label');
+            label.className = 'wonder-label';
+            label.textContent = name.replace(/_/g, ' ');
+            label.onclick = (e) => {
+                e.stopPropagation();
+                checkbox.checked = !checkbox.checked;
+                mapData.allocations.districts[name] = checkbox.checked;
+            };
+            
+            item.appendChild(checkbox);
+            item.appendChild(label);
+            
+            return item;
+        }
+
+        function createWonderCheckbox(name) {
+            const item = document.createElement('div');
+            item.className = 'wonder-item';
+            item.dataset.name = name;
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'wonder-checkbox';
+            checkbox.checked = mapData.allocations.wonders[name] || false;
+            checkbox.onchange = () => {
+                mapData.allocations.wonders[name] = checkbox.checked;
+                checkWarnings();
+            };
+            
+            const label = document.createElement('label');
+            label.className = 'wonder-label';
+            label.textContent = name.replace(/_/g, ' ');
+            label.onclick = (e) => {
+                e.stopPropagation();
+                checkbox.checked = !checkbox.checked;
+                mapData.allocations.wonders[name] = checkbox.checked;
+            };
+            
+            item.appendChild(checkbox);
+            item.appendChild(label);
+            
+            return item;
+        }
+
+        function updateAllocation(name, type, delta) {
+            const typeKey = type + 's';
+            if (!mapData.allocations[typeKey][name]) {
+                mapData.allocations[typeKey][name] = 0;
+            }
+            mapData.allocations[typeKey][name] += delta;
+            if (mapData.allocations[typeKey][name] < 0) {
+                mapData.allocations[typeKey][name] = 0;
+            }
+            
+            // Update the input value by finding the item with matching data attribute
+            const items = document.querySelectorAll('.allocation-item');
+            items.forEach(item => {
+                if (item.dataset.name === name && item.dataset.type === type) {
+                    const input = item.querySelector('.allocation-input');
+                    if (input) {
+                        input.value = mapData.allocations[typeKey][name];
+                    }
+                }
+            });
+            
+            checkWarnings();
+        }
+
+        function createSelectionItem(name, imagePath, type, onClick) {
+            const item = document.createElement('div');
+            item.className = 'selection-item';
+            item.onclick = onClick;
+            
+            const img = document.createElement('img');
+            img.src = imagePath;
+            img.alt = name;
+            img.onerror = () => { img.style.display = 'none'; };
+            
+            const span = document.createElement('span');
+            span.textContent = name.replace(/_/g, ' ');
+            
+            item.appendChild(img);
+            item.appendChild(span);
+            
+            return item;
+        }
+
+        function selectItem(type, name, path, element) {
+            // Clear ALL previous selections across all categories
+            clearAllSelections();
+
+            // Set new selection
+            if (type === 'terrain') {
+                selectedTerrain = { name, path };
+            } else if (type === 'feature') {
+                selectedFeature = { name, path };
+            } else if (type === 'resource') {
+                selectedResource = { name, path };
+            }
+
+            // Update UI - mark clicked item as selected
+            element.classList.add('selected');
+            updateStatus();
+        }
+
+        function clearAllSelections() {
+            // Clear all selections across all categories
+            selectedTerrain = null;
+            selectedFeature = null;
+            selectedResource = null;
+            riverMode = null;
+
+            // Remove selected class from all items
+            document.querySelectorAll('.selection-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+
+        function selectRiverMode(mode) {
+            // Clear all other selections
+            clearAllSelections();
+            
+            // Set river mode
+            if (riverMode === mode) {
+                // If clicking the same mode, toggle it off
+                riverMode = null;
+            } else {
+                riverMode = mode;
+            }
+            
+            // Update UI
+            const drawBtn = document.getElementById('drawRiverBtn');
+            const deleteBtn = document.getElementById('deleteRiverBtn');
+            drawBtn.classList.toggle('selected', riverMode === 'draw');
+            deleteBtn.classList.toggle('selected', riverMode === 'delete');
+            
+            updateStatus();
+        }
+
+        function toggleDropdown(type) {
+            const header = document.querySelector(`#${type}Dropdown`).previousElementSibling;
+            const content = document.getElementById(`${type}Dropdown`);
+            
+            header.classList.toggle('collapsed');
+            content.classList.toggle('collapsed');
+        }
+
+        function createHexGrid() {
+            const grid = document.getElementById('hexGrid');
+            grid.innerHTML = '';
+
+            for (let row = 0; row < GRID_HEIGHT; row++) {
+                const hexRow = document.createElement('div');
+                hexRow.className = 'hex-row';
+                if (row % 2 === 1) {
+                    hexRow.classList.add('offset');
+                }
+
+                for (let col = 0; col < GRID_WIDTH; col++) {
+                    const hex = createHex(row, col);
+                    hexRow.appendChild(hex);
+                }
+
+                grid.appendChild(hexRow);
+            }
+        }
+
+        function createHex(row, col) {
+            const hex = document.createElement('div');
+            hex.className = 'hex';
+            hex.dataset.row = row;
+            hex.dataset.col = col;
+
+            const hexShape = document.createElement('div');
+            hexShape.className = 'hex-shape';
+
+            // Add container for river edge images
+            const riversContainer = document.createElement('div');
+            riversContainer.className = 'hex-rivers';
+
+            hex.appendChild(hexShape);
+            hex.appendChild(riversContainer);
+            
+
+            hex.onclick = (e) => {
+                if (riverMode === 'draw' || riverMode === 'delete') {
+                    // River mode: click on edge to add or remove river
+                    toggleRiverEdge(row, col, e);
+                } else {
+                    placeItem(row, col);
+                }
+            };
+            hex.oncontextmenu = (e) => {
+                e.preventDefault();
+                clearTile(row, col);
+            };
+
+            // Update visual using the hexShape directly (not yet in DOM)
+            updateHexVisualWithShape(row, col, hexShape);
+            return hex;
+        }
+
+        // Helper function to get neighbor hex coordinates for a given edge
+        // For flat-top hex grid: even rows align vertically, odd rows offset right
+        // Edge mapping based on shared edge: when hex A has edge X, hex B that shares it has the opposite edge
+        function getNeighborForEdge(row, col, edge) {
+            const isOddRow = row % 2 === 1;
+            switch(edge) {
+                case 0: // Top-right edge -> connects to hex up-right, its bottom-left edge (edge 3)
+                    if (row === 0 || (col === GRID_WIDTH - 1 && isOddRow)) {
+                        return null;
+                    }
+                    if (isOddRow) {
+                        return { row: row - 1, col: col + 1, edge: 3 };
+                    } else {
+                        return { row: row - 1, col: col, edge: 3 };
+                    }
+
+                case 1: // Right edge -> connects to hex right, its left edge (edge 4)
+                    if (col === GRID_WIDTH - 1) {
+                        return null;
+                    }
+                    return { row: row, col: col + 1, edge: 4 };
+                    
+                case 2: // Bottom-right edge -> connects to hex down-right, its top-left edge (edge 5)
+                    if (row === GRID_HEIGHT - 1 || (col === GRID_WIDTH - 1 && isOddRow)) {
+                        return null;
+                    }
+                    if (isOddRow) {
+                        return { row: row + 1, col: col + 1, edge: 5 };
+                    } else {
+                        return { row: row + 1, col: col, edge: 5 };
+                    }
+                    
+                case 3: // Bottom-left edge -> connects to hex down-left, its top-right edge (edge 0)
+                    if (row === GRID_HEIGHT - 1 || (col === 0 && !isOddRow)) {
+                        return null;
+                    }
+                    if (isOddRow) {
+                        return { row: row - 1, col: col + 1, edge: 0 };
+                    } else {
+                        return { row: row - 1, col: col, edge: 0 };
+                    }
+                    
+                case 4: // Left edge -> connects to hex left, its right edge (edge 1)
+                    if(col === 0) {
+                        return null;
+                    }
+                    return { row: row, col: col - 1, edge: 1 };
+                    
+                case 5: // Top-left edge -> connects to hex up-left, its bottom-right edge (edge 2)
+                    if (row === 0 || (col === 0 && !isOddRow)) {
+                        return null;
+                    }
+                    if (isOddRow) {
+                        return { row: row - 1, col: col, edge: 2 };
+                    } else {
+                        return { row: row - 1, col: col - 1, edge: 2 };
+                    }
+                    
+                default: return null;
+            }
+        }
+
+        // Helper function to get or create river edges array for a tile
+        function getRiverEdges(row, col) {
+            const key = `${row},${col}`;
+            if (!mapData.tiles[key]) {
+                mapData.tiles[key] = {};
+            }
+            if (!mapData.tiles[key].rivers) {
+                mapData.tiles[key].rivers = [false, false, false, false, false, false]; // 6 edges
+            }
+            return mapData.tiles[key].rivers;
+        }
+
+        // Helper function to check if an edge has a river
+        function hasRiver(row, col, edge) {
+            const rivers = getRiverEdges(row, col);
+            return rivers[edge] === true;
+        }
+
+        // Helper function to set river edge on a hex
+        function setRiverEdge(row, col, edge, value) {
+            const rivers = getRiverEdges(row, col);
+            rivers[edge] = value;
+        }
+
+        function toggleRiverEdge(row, col, event) {
+            const hex = document.querySelector(`.hex[data-row="${row}"][data-col="${col}"]`);
+            if (!hex) {
+                return;
+            }
+
+            // Get click position relative to hex
+            const rect = hex.getBoundingClientRect();
+            const viewBoxWidth = 80;
+            const viewBoxHeight = 92.376;
+            
+            // Scale click coordinates to match viewBox
+            const scaleX = viewBoxWidth / rect.width;
+            const scaleY = viewBoxHeight / rect.height;
+            const x = (event.clientX - rect.left) * scaleX;
+            const y = (event.clientY - rect.top) * scaleY;
+            
+            const centerX = viewBoxWidth / 2;
+            const centerY = viewBoxHeight / 2;
+
+            // Calculate which edge was clicked by finding closest edge
+            // Hex vertices for flat-top hex
+            const vertices = [
+                [centerX, 0],                          // 0: Top
+                [viewBoxWidth, viewBoxHeight * 0.25],  // 1: Top-right
+                [viewBoxWidth, viewBoxHeight * 0.75],  // 2: Bottom-right
+                [centerX, viewBoxHeight],              // 3: Bottom
+                [0, viewBoxHeight * 0.75],             // 4: Bottom-left
+                [0, viewBoxHeight * 0.25]              // 5: Top-left
+            ];
+
+            // Find closest edge by calculating distance to each edge line
+            // Edge numbering: 0=Top-right, 1=Right, 2=Bottom-right, 3=Bottom-left, 4=Left, 5=Top-left
+            // Edge mapping: 0=vertex1→vertex0, 1=vertex1→vertex2, 2=vertex2→vertex3, 3=vertex3→vertex4, 4=vertex4→vertex5, 5=vertex5→vertex0
+            const edgeToVertices = [
+                [1, 0],  // Edge 0: Top-right (vertex 1 to 0)
+                [1, 2],  // Edge 1: Right (vertex 1 to 2)
+                [2, 3],  // Edge 2: Bottom-right (vertex 2 to 3)
+                [3, 4],  // Edge 3: Bottom-left (vertex 3 to 4)
+                [4, 5],  // Edge 4: Left (vertex 4 to 5)
+                [5, 0]   // Edge 5: Top-left (vertex 5 to 0)
+            ];
+            let minDist = Infinity;
+            let edge = -1;
+            
+            for (let i = 0; i < 6; i++) {
+                const [v1Idx, v2Idx] = edgeToVertices[i];
+                const v1 = vertices[v1Idx];
+                const v2 = vertices[v2Idx];
+                
+                // Calculate distance from point to line segment
+                const A = v2[1] - v1[1];
+                const B = v1[0] - v2[0];
+                const C = v2[0] * v1[1] - v1[0] * v2[1];
+                const dist = Math.abs(A * x + B * y + C) / Math.sqrt(A * A + B * B);
+                
+                if (dist < minDist) {
+                    minDist = dist;
+                    // Edge index i directly corresponds to river edge index
+                    edge = i;
+                }
+            }
+
+            if (edge >= 0 && minDist < 15) {
+                // The detected edge index should directly correspond to the river edge index
+                const detectedEdge = edge;
+                const hasRiverOnEdge = hasRiver(row, col, detectedEdge);
+                
+                if (riverMode === 'draw') {
+                    // Draw mode: add river if not present
+                    if (!hasRiverOnEdge) {
+                        // Set river on this hex
+                        setRiverEdge(row, col, detectedEdge, true);
+                        
+                        // Also set river on the neighboring hex (mirrored edge)
+                        const neighbor = getNeighborForEdge(row, col, detectedEdge);
+                        if (neighbor && neighbor.row >= 0 && neighbor.row < GRID_HEIGHT && 
+                            neighbor.col >= 0 && neighbor.col < GRID_WIDTH) {
+                            setRiverEdge(neighbor.row, neighbor.col, neighbor.edge, true);
+                            updateHexVisual(neighbor.row, neighbor.col);
+                        }
+                        
+                        updateHexVisual(row, col);
+                        checkWarnings();
+                    }
+                } else if (riverMode === 'delete') {
+                    // Delete mode: remove river if present
+                    if (hasRiverOnEdge) {
+                        // Remove river from this hex
+                        setRiverEdge(row, col, detectedEdge, false);
+                        
+                        // Also remove river from the neighboring hex (mirrored edge)
+                        const neighbor = getNeighborForEdge(row, col, detectedEdge);
+                        if (neighbor && neighbor.row >= 0 && neighbor.row < GRID_HEIGHT && 
+                            neighbor.col >= 0 && neighbor.col < GRID_WIDTH) {
+                            setRiverEdge(neighbor.row, neighbor.col, neighbor.edge, false);
+                            updateHexVisual(neighbor.row, neighbor.col);
+                        }
+                        
+                        updateHexVisual(row, col);
+                        checkWarnings();
+                    }
+                }
+            }
+        }
+
+        function placeItem(row, col) {
+            const key = `${row},${col}`;
+            if (!mapData.tiles[key]) {
+                mapData.tiles[key] = {};
+            }
+
+            if (selectedTerrain) {
+                mapData.tiles[key].terrain = selectedTerrain.name;
+                mapData.tiles[key].terrainPath = selectedTerrain.path;
+            }
+            if (selectedFeature) {
+                mapData.tiles[key].feature = selectedFeature.name;
+                mapData.tiles[key].featurePath = selectedFeature.path;
+            }
+            if (selectedResource) {
+                mapData.tiles[key].resource = selectedResource.name;
+                mapData.tiles[key].resourcePath = selectedResource.path;
+            }
+
+            updateHexVisual(row, col);
+            updateStatus();
+            checkWarnings();
+        }
+
+        function clearTile(row, col) {
+            const key = `${row},${col}`;
+            delete mapData.tiles[key];
+            updateHexVisual(row, col);
+            updateStatus();
+            checkWarnings();
+        }
+
+        function updateHexVisualWithShape(row, col, hexShape) {
+            const key = `${row},${col}`;
+            const tile = mapData.tiles[key];
+
+            // Remove existing images
+            hexShape.querySelectorAll('img').forEach(el => el.remove());
+
+            // Always add Blank.webp as base placeholder (shown by default)
+            const blankImg = document.createElement('img');
+            blankImg.className = 'hex-base';
+            blankImg.src = 'assets/terrain/base/other/Blank.webp';
+            blankImg.alt = 'Blank';
+            hexShape.appendChild(blankImg);
+
+            if (tile) {
+                if (tile.terrainPath) {
+                    // Replace blank with actual terrain
+                    blankImg.src = tile.terrainPath;
+                    blankImg.alt = tile.terrain;
+                }
+                // If no terrainPath, Blank.webp remains as the base (already added above)
+                if (tile.featurePath) {
+                    const img = document.createElement('img');
+                    img.className = 'hex-feature';
+                    img.src = tile.featurePath;
+                    img.alt = tile.feature;
+                    hexShape.appendChild(img);
+                }
+                if (tile.resourcePath) {
+                    const img = document.createElement('img');
+                    img.className = 'hex-resource';
+                    img.src = tile.resourcePath;
+                    img.alt = tile.resource;
+                    hexShape.appendChild(img);
+                }
+            }
+        }
+
+        function updateHexVisual(row, col) {
+            const hex = document.querySelector(`.hex[data-row="${row}"][data-col="${col}"]`);
+            if (!hex) return;
+
+            const hexShape = hex.querySelector('.hex-shape');
+            updateHexVisualWithShape(row, col, hexShape);
+            
+            // Update rivers - render river edge images for each edge that has a river
+            const riversContainer = hex.querySelector('.hex-rivers');
+            if (riversContainer) {
+                // Clear existing river images
+                riversContainer.innerHTML = '';
+                
+                const key = `${row},${col}`;
+                const tile = mapData.tiles[key];
+                
+                if (tile && tile.rivers) {
+                    // Check each edge (0-5) for rivers
+                    for (let edge = 0; edge < 6; edge++) {
+                        if (tile.rivers[edge] === true) {
+                            const imageName = riverEdgeImages[edge];
+                            if (imageName) {
+                                const img = document.createElement('img');
+                                img.className = 'river-edge-image';
+                                img.src = `assets/terrain/river_edges/${imageName}.png`;
+                                img.alt = `River edge ${edge}`;
+                                img.style.zIndex = (11 + edge); // Slight z-index offset for layering
+                                img.onerror = () => {
+                                    console.error('Failed to load river edge image:', imageName);
+                                };
+                                riversContainer.appendChild(img);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function updateStatus() {
+            const status = document.getElementById('status');
+            const selections = [];
+            if (selectedTerrain) selections.push(`Terrain: ${selectedTerrain.name}`);
+            if (selectedFeature) selections.push(`Feature: ${selectedFeature.name}`);
+            if (selectedResource) selections.push(`Resource: ${selectedResource.name}`);
+            
+            if (riverMode === 'draw') {
+                status.textContent = 'Draw River Edges Mode - Click on hex edges to add river edges';
+            } else if (riverMode === 'delete') {
+                status.textContent = 'Delete River Edges Mode - Click on hex edges to remove river edges';
+            } else if (selections.length > 0) {
+                status.textContent = `Selected: ${selections.join(' | ')} - Click on a hex to place`;
+            } else {
+                status.textContent = 'Ready - Select an item from the sidebar to place on the map';
+            }
+        }
+
+        function checkWarnings() {
+            const warnings = [];
+            
+            // Count city centers
+            let cityCenterCount = 0;
+            if (checkboxDistricts.includes('City_Center')) {
+                // City_Center is a checkbox, so check if it's checked
+                const cityCenterChecked = mapData.allocations.districts['City_Center'] === true;
+                if (cityCenterChecked) {
+                    cityCenterCount = 1; // Only one city center can exist
+                }
+            } else {
+                cityCenterCount = mapData.allocations.districts['City_Center'] || 0;
+            }
+            
+            // Check if any individual district type exceeds city centers
+            districtsData.forEach(district => {
+                if (district === 'City_Center') return; // Skip city center itself
+                
+                let districtCount = 0;
+                if (checkboxDistricts.includes(district)) {
+                    if (mapData.allocations.districts[district] === true) {
+                        districtCount = 1;
+                    }
+                } else {
+                    districtCount = mapData.allocations.districts[district] || 0;
+                }
+                
+                if (districtCount > cityCenterCount && cityCenterCount > 0) {
+                    const districtName = district.replace(/_/g, ' ');
+                    warnings.push(`More ${districtName} (${districtCount}) than city centers (${cityCenterCount})`);
+                }
+            });
+            
+            // Count coast tiles
+            let coastCount = 0;
+            for (let row = 0; row < GRID_HEIGHT; row++) {
+                for (let col = 0; col < GRID_WIDTH; col++) {
+                    const key = `${row},${col}`;
+                    const tile = mapData.tiles[key];
+                    if (tile && tile.terrain === 'Coast') {
+                        coastCount++;
+                    }
+                }
+            }
+            
+            // Count water parks and harbors
+            const waterParkCount = mapData.allocations.districts['Water_Park'] || 0;
+            const harborCount = mapData.allocations.districts['Harbor'] || 0;
+            const totalWaterDistricts = waterParkCount + harborCount;
+            
+            if (totalWaterDistricts > coastCount) {
+                warnings.push(`More water parks/harbors (${totalWaterDistricts}) than coast tiles (${coastCount})`);
+            }
+            
+            // Check for dam without floodplains
+            const damCount = mapData.allocations.districts['Dam'] || 0;
+            if (damCount > 0) {
+                let hasFloodplains = false;
+                for (let row = 0; row < GRID_HEIGHT; row++) {
+                    for (let col = 0; col < GRID_WIDTH; col++) {
+                        const key = `${row},${col}`;
+                        const tile = mapData.tiles[key];
+                        if (tile && tile.terrain && (
+                            tile.terrain.includes('Floodplains') || 
+                            tile.terrain === 'Desert_Floodplains' ||
+                            tile.terrain === 'Grassland_Floodplains' ||
+                            tile.terrain === 'Plains_Floodplains'
+                        )) {
+                            hasFloodplains = true;
+                            break;
+                        }
+                    }
+                    if (hasFloodplains) break;
+                }
+                if (!hasFloodplains) {
+                    warnings.push('Dam allocated but no floodplains tiles on map');
+                }
+            }
+            
+            // Check for canal with coast tiles
+            const canalCount = mapData.allocations.districts['Canal'] || 0;
+            if (canalCount > 0 && coastCount > 0) {
+                warnings.push('Canal allocated but coast tiles exist on map');
+            }
+            
+            // Check for blank tiles
+            let blankTileCount = 0;
+            for (let row = 0; row < GRID_HEIGHT; row++) {
+                for (let col = 0; col < GRID_WIDTH; col++) {
+                    const key = `${row},${col}`;
+                    const tile = mapData.tiles[key];
+                    if (!tile || !tile.terrain) {
+                        blankTileCount++;
+                    }
+                }
+            }
+            if (blankTileCount > 0) {
+                warnings.push(`There ${blankTileCount === 1 ? 'is' : 'are'} ${blankTileCount} blank tile${blankTileCount === 1 ? '' : 's'} on the map`);
+            }
+            
+            // Check tile placement rules
+            const seaResources = ['Fish', 'Amber', 'Pearls', 'Turtles', 'Whales', 'Crabs'];
+            const waterTerrains = ['Coast', 'Ocean', 'Reef'];
+            
+            for (let row = 0; row < GRID_HEIGHT; row++) {
+                for (let col = 0; col < GRID_WIDTH; col++) {
+                    const key = `${row},${col}`;
+                    const tile = mapData.tiles[key];
+                    if (!tile) continue;
+                    
+                    const terrain = tile.terrain;
+                    const feature = tile.feature;
+                    const resource = tile.resource;
+                    
+                    // Check if terrain is floodplains
+                    const isFloodplains = terrain && (
+                        terrain.includes('Floodplains') ||
+                        terrain === 'Desert_Floodplains' ||
+                        terrain === 'Grassland_Floodplains' ||
+                        terrain === 'Plains_Floodplains'
+                    );
+                    
+                    // Check if terrain is water
+                    const isWater = terrain && waterTerrains.includes(terrain);
+                    
+                    // Check if terrain is land (exists and is not water)
+                    const isLand = terrain && !isWater;
+                    
+                    // Check if terrain is Snow or Desert
+                    const isSnowOrDesert = terrain && (terrain === 'Snow' || terrain === 'Desert' || terrain === 'Desert_Floodplains');
+                    
+                    // Check if terrain is Plains (including Plains Hill)
+                    const isPlains = terrain && (terrain === 'Plains' || terrain === 'Plains_Floodplains' || terrain === 'Plains_Hill');
+                    
+                    // Check if terrain is Mountain
+                    const isMountain = terrain && (
+                        terrain === 'Mountain_Desert' ||
+                        terrain === 'Mountain_Plains' ||
+                        terrain === 'Mountain_Snow' ||
+                        terrain === 'Mountain_Tundra' ||
+                        terrain === 'Mountains_Grassland'
+                    );
+                    
+                    // 1. Woods or Rainforest on floodplains
+                    if (feature && (feature === 'Woods' || feature === 'Rainforest') && isFloodplains) {
+                        warnings.push(`${feature} on floodplains tile at (${row}, ${col})`);
+                    }
+                    
+                    // 2. Rainforest on non-Plains tile (must be Plains, Plains_Floodplains, or Plains_Hill)
+                    if (feature === 'Rainforest' && !isPlains) {
+                        warnings.push(`Rainforest on non-Plains tile at (${row}, ${col})`);
+                    }
+                    
+                    // 3. Woods on Snow or Desert tile
+                    if (feature === 'Woods' && isSnowOrDesert) {
+                        warnings.push(`Woods on Snow/Desert tile at (${row}, ${col})`);
+                    }
+                    
+                    // 4. Marsh on Snow or Desert tile
+                    if (feature === 'Marsh' && isSnowOrDesert) {
+                        warnings.push(`Marsh on Snow/Desert tile at (${row}, ${col})`);
+                    }
+                    
+                    // 5. Geothermal_Fissure on floodplains
+                    if (feature === 'Geothermal_Fissure' && isFloodplains) {
+                        warnings.push(`Geothermal Fissure on floodplains tile at (${row}, ${col})`);
+                    }
+                    
+                    // 6. Resource on mountain tile
+                    if (resource && isMountain) {
+                        warnings.push(`Resource (${resource}) on mountain tile at (${row}, ${col})`);
+                    }
+                    
+                    // 7. Any feature on water tile
+                    if (feature && isWater) {
+                        warnings.push(`${feature} on water tile at (${row}, ${col})`);
+                    }
+                    
+                    // 8. Non-sea resource on water tile
+                    if (resource && isWater && !seaResources.includes(resource)) {
+                        warnings.push(`Non-sea resource (${resource}) on water tile at (${row}, ${col})`);
+                    }
+                    
+                    // 9. Sea resource on land tile
+                    if (resource && seaResources.includes(resource) && isLand) {
+                        warnings.push(`Sea resource (${resource}) on land tile at (${row}, ${col})`);
+                    }
+                }
+            }
+            
+            // Update warnings display
+            const warningsContainer = document.getElementById('warningsContainer');
+            const warningsList = document.getElementById('warningsList');
+            
+            if (warnings.length > 0) {
+                warningsContainer.classList.remove('hidden');
+                warningsList.innerHTML = '';
+                warnings.forEach(warning => {
+                    const warningItem = document.createElement('div');
+                    warningItem.className = 'warning-item';
+                    warningItem.textContent = warning;
+                    warningsList.appendChild(warningItem);
+                });
+            } else {
+                warningsContainer.classList.add('hidden');
+            }
+        }
+
+        function saveMap() {
+            // Optimized compact format: "CIV1" + dimensions + tile data
+            let output = 'CIV1';
+            output += String.fromCharCode(48 + GRID_WIDTH); // '0' + width (single digit)
+            output += String.fromCharCode(48 + GRID_HEIGHT); // '0' + height (single digit)
+            
+            // Store only non-empty tiles: row,col:terrain,feature,resource
+            const tiles = [];
+            for (let row = 0; row < GRID_HEIGHT; row++) {
+                for (let col = 0; col < GRID_WIDTH; col++) {
+                    const key = `${row},${col}`;
+                    const tile = mapData.tiles[key];
+                    if (tile && (tile.terrain || tile.feature || tile.resource)) {
+                        const tIdx = tile.terrain ? terrainIndexMap.get(tile.terrain) : null;
+                        const fIdx = tile.feature ? featureIndexMap.get(tile.feature) : null;
+                        const rIdx = tile.resource ? resourceIndexMap.get(tile.resource) : null;
+                        
+                        // Format: row,col:t,f,r,rivers (using . for null/empty, comma-separated)
+                        // Rivers stored as base36 string: 6 characters, one per edge (0=no river, 1=river)
+                        let tileStr = `${row},${col}:`;
+                        tileStr += (tIdx !== null && tIdx !== undefined) ? toBase36(tIdx + 1) : '.';
+                        tileStr += ',';
+                        tileStr += (fIdx !== null && fIdx !== undefined) ? toBase36(fIdx + 1) : '.';
+                        tileStr += ',';
+                        tileStr += (rIdx !== null && rIdx !== undefined) ? toBase36(rIdx + 1) : '.';
+                        
+                        // Save rivers if present
+                        if (tile.rivers && Array.isArray(tile.rivers)) {
+                            let riversStr = '';
+                            for (let i = 0; i < 6; i++) {
+                                riversStr += tile.rivers[i] ? '1' : '0';
+                            }
+                            // Only add if there's at least one river
+                            if (riversStr !== '000000') {
+                                tileStr += ';' + parseInt(riversStr, 2).toString(36); // Convert binary to base36
+                            }
+                        }
+                        
+                        tiles.push(tileStr);
+                    }
+                }
+            }
+            
+            output += '|' + tiles.join('|');
+            
+            // Add allocations data
+            const allocations = [];
+            if (Object.keys(mapData.allocations.districts).length > 0 || Object.keys(mapData.allocations.improvements).length > 0 || Object.keys(mapData.allocations.wonders).length > 0) {
+                const distAllocs = Object.entries(mapData.allocations.districts)
+                    .filter(([name, count]) => count > 0)
+                    .map(([name, count]) => `d:${name}:${count}`);
+                const imprAllocs = Object.entries(mapData.allocations.improvements)
+                    .filter(([name, count]) => count > 0)
+                    .map(([name, count]) => `i:${name}:${count}`);
+                const wondAllocs = Object.entries(mapData.allocations.wonders)
+                    .filter(([name, checked]) => checked)
+                    .map(([name]) => `w:${name}`);
+                allocations.push(...distAllocs, ...imprAllocs, ...wondAllocs);
+            }
+            if (allocations.length > 0) {
+                output += '||' + allocations.join(',');
+            }
+            
+            const dataBlob = new Blob([output], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'civle_map.civle';
+            link.click();
+            URL.revokeObjectURL(url);
+            updateStatus('Map saved successfully!');
+        }
+
+        function loadMap(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = e.target.result;
+                    
+                    // Check if it's the new format
+                    if (data.startsWith('CIV1')) {
+                        // New optimized format
+                        const width = data.charCodeAt(4) - 48;
+                        const height = data.charCodeAt(5) - 48;
+                        
+                        // Check if dimensions changed (before updating)
+                        const dimensionsChanged = width !== GRID_WIDTH || height !== GRID_HEIGHT;
+                        
+                        // Update grid size to match loaded map
+                        if (dimensionsChanged) {
+                            GRID_WIDTH = width;
+                            GRID_HEIGHT = height;
+                            document.getElementById('gridWidth').value = width;
+                            document.getElementById('gridHeight').value = height;
+                        }
+                        
+                        mapData = {
+                            width: GRID_WIDTH,
+                            height: GRID_HEIGHT,
+                            tiles: {},
+                            allocations: {
+                                districts: {},
+                                improvements: {},
+                                wonders: {}
+                            }
+                        };
+                        
+                        const tilesData = data.substring(7); // Skip "CIV1" + 2 chars
+                        const parts = tilesData.split('||');
+                        const tilesStr = parts[0];
+                        
+                        if (tilesStr) {
+                            const tiles = tilesStr.split('|');
+                            tiles.forEach(tileStr => {
+                                if (!tileStr) return;
+                                const [pos, data] = tileStr.split(':');
+                                if (!pos || !data) return;
+                                
+                                const [rowStr, colStr] = pos.split(',');
+                                const row = parseInt(rowStr);
+                                const col = parseInt(colStr);
+                                
+                                const dataParts = data.split(';');
+                                let mainData = dataParts[0];
+                                
+                                // Parse terrain, feature, resource from the encoded string
+                                // New format: t,f,r (comma-separated)
+                                // Old format: tfr (single characters, no commas - backward compatibility)
+                                let tStr = '';
+                                let fStr = '';
+                                let rStr = '';
+                                
+                                if (mainData.includes(',') && mainData.split(',').length >= 3) {
+                                    // New format with commas
+                                    const fields = mainData.split(',');
+                                    tStr = fields[0] || '.';
+                                    fStr = fields[1] || '.';
+                                    rStr = fields[2] || '.';
+                                } else {
+                                    // Old format without commas (backward compatibility)
+                                    // Each field is a single character
+                                    tStr = mainData[0] || '.';
+                                    fStr = mainData[1] || '.';
+                                    rStr = mainData[2] || '.';
+                                }
+                                
+                                const key = `${row},${col}`;
+                                mapData.tiles[key] = {};
+                                
+                                if (tStr && tStr !== '.') {
+                                    const tIdx = fromBase36(tStr) - 1;
+                                    const terrain = terrainNameMap.get(tIdx);
+                                    if (terrain) {
+                                        mapData.tiles[key].terrain = terrain.name;
+                                        mapData.tiles[key].terrainPath = terrain.path;
+                                    }
+                                }
+                                
+                                if (fStr && fStr !== '.') {
+                                    const fIdx = fromBase36(fStr) - 1;
+                                    const feature = featureNameMap.get(fIdx);
+                                    if (feature) {
+                                        mapData.tiles[key].feature = feature.name;
+                                        mapData.tiles[key].featurePath = feature.path;
+                                    }
+                                }
+                                
+                                if (rStr && rStr !== '.') {
+                                    const rIdx = fromBase36(rStr) - 1;
+                                    const resource = resourceNameMap.get(rIdx);
+                                    if (resource) {
+                                        mapData.tiles[key].resource = resource;
+                                        mapData.tiles[key].resourcePath = `assets/recources/${resource}.webp`;
+                                    }
+                                }
+                                
+                                // Load rivers if present (stored after ; as base36 binary)
+                                if (dataParts.length > 1 && dataParts[1]) {
+                                    const riversBin = parseInt(dataParts[1], 36).toString(2).padStart(6, '0');
+                                    mapData.tiles[key].rivers = [];
+                                    for (let i = 0; i < 6; i++) {
+                                        mapData.tiles[key].rivers[i] = riversBin[i] === '1';
+                                    }
+                                }
+                                
+                            });
+                        }
+                        
+                        // Regenerate grid if dimensions changed
+                        if (dimensionsChanged) {
+                            createHexGrid();
+                            // Reset zoom and pan
+                            mapZoom = 1.0;
+                            mapPanX = 0;
+                            mapPanY = 0;
+                            const mapTransformWrapper = document.getElementById('mapTransformWrapper');
+                            if (mapTransformWrapper) {
+                                mapTransformWrapper.style.transform = `translate(0px, 0px) scale(1.0)`;
+                            }
+                        }
+                        
+                        // Update all hex visuals to show rivers after loading
+                        for (let row = 0; row < GRID_HEIGHT; row++) {
+                            for (let col = 0; col < GRID_WIDTH; col++) {
+                                updateHexVisual(row, col);
+                            }
+                        }
+                        
+                        // Load allocations if present
+                        const allocationsStr = parts.length > 1 ? parts[1] : null;
+                        if (allocationsStr) {
+                            const allocations = allocationsStr.split(',');
+                            allocations.forEach(allocStr => {
+                                if (!allocStr) return;
+                                const parts = allocStr.split(':');
+                                const type = parts[0];
+                                const name = parts[1];
+                                
+                                if (type === 'd') {
+                                    if (checkboxDistricts.includes(name)) {
+                                        // Checkbox districts
+                                        mapData.allocations.districts[name] = parts[2] === 'c';
+                                    } else {
+                                        // Number input districts
+                                        mapData.allocations.districts[name] = parseInt(parts[2]) || 0;
+                                    }
+                                } else if (type === 'i') {
+                                    mapData.allocations.improvements[name] = parseInt(parts[2]) || 0;
+                                } else if (type === 'w') {
+                                    mapData.allocations.wonders[name] = true;
+                                }
+                            });
+                            
+                            // Regenerate allocations UI if dimensions changed (do this after loading data)
+                            if (dimensionsChanged) {
+                                const districtsList = document.getElementById('districtsAllocationsList');
+                                const improvementsList = document.getElementById('improvementsAllocationsList');
+                                const wondersList = document.getElementById('wondersAllocationsList');
+                                districtsList.innerHTML = '';
+                                improvementsList.innerHTML = '';
+                                wondersList.innerHTML = '';
+                                populateAllocations();
+                            }
+                            
+                            // Update UI with loaded allocations
+                            districtsData.forEach(district => {
+                                if (checkboxDistricts.includes(district)) {
+                                    // Update checkbox districts
+                                    const items = document.querySelectorAll('.wonder-item');
+                                    items.forEach(item => {
+                                        if (item.dataset.name === district && item.dataset.type === 'district') {
+                                            const checkbox = item.querySelector('.wonder-checkbox');
+                                            if (checkbox) {
+                                                checkbox.checked = mapData.allocations.districts[district] || false;
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    // Update number input districts
+                                    const items = document.querySelectorAll('.allocation-item');
+                                    items.forEach(item => {
+                                        if (item.dataset.name === district && item.dataset.type === 'district') {
+                                            const input = item.querySelector('.allocation-input');
+                                            if (input) {
+                                                input.value = mapData.allocations.districts[district] || 0;
+                                            }
+                                        }
+                                    });
+                                }
+                            });
+                            
+                            improvementsData.forEach(improvement => {
+                                const items = document.querySelectorAll('.allocation-item');
+                                items.forEach(item => {
+                                    if (item.dataset.name === improvement && item.dataset.type === 'improvement') {
+                                        const input = item.querySelector('.allocation-input');
+                                        if (input) {
+                                            input.value = mapData.allocations.improvements[improvement] || 0;
+                                        }
+                                    }
+                                });
+                            });
+                            
+                            // Update wonder checkboxes
+                            wondersData.forEach(wonder => {
+                                const items = document.querySelectorAll('.wonder-item');
+                                items.forEach(item => {
+                                    if (item.dataset.name === wonder) {
+                                        const checkbox = item.querySelector('.wonder-checkbox');
+                                        if (checkbox) {
+                                            checkbox.checked = mapData.allocations.wonders[wonder] || false;
+                                        }
+                                    }
+                                });
+                            });
+                        }
+                    } else {
+                        // Try old JSON format for backward compatibility
+                        const loadedData = JSON.parse(data);
+                        
+                        // Check if dimensions changed (before updating)
+                        const dimensionsChanged = loadedData.width !== GRID_WIDTH || loadedData.height !== GRID_HEIGHT;
+                        
+                        // Update grid size to match loaded map
+                        if (dimensionsChanged) {
+                            GRID_WIDTH = loadedData.width;
+                            GRID_HEIGHT = loadedData.height;
+                            document.getElementById('gridWidth').value = GRID_WIDTH;
+                            document.getElementById('gridHeight').value = GRID_HEIGHT;
+                            createHexGrid();
+                            // Reset zoom and pan
+                            mapZoom = 1.0;
+                            mapPanX = 0;
+                            mapPanY = 0;
+                            const mapTransformWrapper = document.getElementById('mapTransformWrapper');
+                            if (mapTransformWrapper) {
+                                mapTransformWrapper.style.transform = `translate(0px, 0px) scale(1.0)`;
+                            }
+                        }
+                        
+                        mapData = loadedData;
+                        
+                        // Ensure allocations structure exists
+                        if (!mapData.allocations) {
+                            mapData.allocations = {
+                                districts: {},
+                                improvements: {},
+                                wonders: {}
+                            };
+                        }
+                        
+                        // Regenerate allocations UI if dimensions changed
+                        if (loadedData.width !== GRID_WIDTH || loadedData.height !== GRID_HEIGHT) {
+                            const districtsList = document.getElementById('districtsAllocationsList');
+                            const improvementsList = document.getElementById('improvementsAllocationsList');
+                            const wondersList = document.getElementById('wondersAllocationsList');
+                            districtsList.innerHTML = '';
+                            improvementsList.innerHTML = '';
+                            wondersList.innerHTML = '';
+                            populateAllocations();
+                        }
+                        
+                        // Regenerate allocations UI if dimensions changed (do this after setting mapData)
+                        if (dimensionsChanged) {
+                            const districtsList = document.getElementById('districtsAllocationsList');
+                            const improvementsList = document.getElementById('improvementsAllocationsList');
+                            const wondersList = document.getElementById('wondersAllocationsList');
+                            districtsList.innerHTML = '';
+                            improvementsList.innerHTML = '';
+                            wondersList.innerHTML = '';
+                            populateAllocations();
+                        }
+                        
+                        // Update UI with loaded allocations
+                        districtsData.forEach(district => {
+                            if (checkboxDistricts.includes(district)) {
+                                // Update checkbox districts
+                                const items = document.querySelectorAll('.wonder-item');
+                                items.forEach(item => {
+                                    if (item.dataset.name === district && item.dataset.type === 'district') {
+                                        const checkbox = item.querySelector('.wonder-checkbox');
+                                        if (checkbox) {
+                                            checkbox.checked = mapData.allocations.districts[district] || false;
+                                        }
+                                    }
+                                });
+                            } else {
+                                // Update number input districts
+                                const items = document.querySelectorAll('.allocation-item');
+                                items.forEach(item => {
+                                    if (item.dataset.name === district && item.dataset.type === 'district') {
+                                        const input = item.querySelector('.allocation-input');
+                                        if (input) {
+                                            input.value = mapData.allocations.districts[district] || 0;
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                        
+                        improvementsData.forEach(improvement => {
+                            const items = document.querySelectorAll('.allocation-item');
+                            items.forEach(item => {
+                                if (item.dataset.name === improvement && item.dataset.type === 'improvement') {
+                                    const input = item.querySelector('.allocation-input');
+                                    if (input) {
+                                        input.value = mapData.allocations.improvements[improvement] || 0;
+                                    }
+                                }
+                            });
+                        });
+                        
+                        // Update wonder checkboxes
+                        wondersData.forEach(wonder => {
+                            const items = document.querySelectorAll('.wonder-item');
+                            items.forEach(item => {
+                                if (item.dataset.name === wonder) {
+                                    const checkbox = item.querySelector('.wonder-checkbox');
+                                    if (checkbox) {
+                                        checkbox.checked = mapData.allocations.wonders[wonder] || false;
+                                    }
+                                }
+                            });
+                        });
+                    }
+
+                    // Refresh all hex visuals
+                    for (let row = 0; row < GRID_HEIGHT; row++) {
+                        for (let col = 0; col < GRID_WIDTH; col++) {
+                            updateHexVisual(row, col);
+                        }
+                    }
+
+                    checkWarnings();
+                    updateStatus('Map loaded successfully!');
+                } catch (error) {
+                    alert('Error loading map: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearMap() {
+            if (confirm('Are you sure you want to clear the entire challenge?')) {
+                mapData.tiles = {};
+                mapData.allocations = {
+                    districts: {},
+                    improvements: {},
+                    wonders: {}
+                };
+                
+                // Clear all hex visuals
+                for (let row = 0; row < GRID_HEIGHT; row++) {
+                    for (let col = 0; col < GRID_WIDTH; col++) {
+                        updateHexVisual(row, col);
+                    }
+                }
+                
+                // Reset allocation inputs
+                districtsData.forEach(district => {
+                    if (checkboxDistricts.includes(district)) {
+                        // Reset checkbox districts
+                        const items = document.querySelectorAll('.wonder-item');
+                        items.forEach(item => {
+                            if (item.dataset.name === district && item.dataset.type === 'district') {
+                                const checkbox = item.querySelector('.wonder-checkbox');
+                                if (checkbox) {
+                                    checkbox.checked = false;
+                                }
+                            }
+                        });
+                    } else {
+                        // Reset number input districts
+                        const items = document.querySelectorAll('.allocation-item');
+                        items.forEach(item => {
+                            if (item.dataset.name === district && item.dataset.type === 'district') {
+                                const input = item.querySelector('.allocation-input');
+                                if (input) {
+                                    input.value = 0;
+                                }
+                            }
+                        });
+                    }
+                });
+                
+                improvementsData.forEach(improvement => {
+                    const items = document.querySelectorAll('.allocation-item');
+                    items.forEach(item => {
+                        if (item.dataset.name === improvement && item.dataset.type === 'improvement') {
+                            const input = item.querySelector('.allocation-input');
+                            if (input) {
+                                input.value = 0;
+                            }
+                        }
+                    });
+                });
+                
+                // Reset wonder checkboxes
+                wondersData.forEach(wonder => {
+                    const items = document.querySelectorAll('.wonder-item');
+                    items.forEach(item => {
+                        if (item.dataset.name === wonder) {
+                            const checkbox = item.querySelector('.wonder-checkbox');
+                            if (checkbox) {
+                                checkbox.checked = false;
+                            }
+                        }
+                    });
+                });
+                
+                updateStatus('Challenge cleared');
+            }
+        }
+
+        // Initialize on load
+        init();
+        // Check warnings after initialization
+        setTimeout(checkWarnings, 100);
+    </script>
+</body>
+</html>
+

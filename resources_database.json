@@ -1,0 +1,219 @@
+{
+  "bonus_resources": [
+    {
+      "name": "Bananas",
+      "improvement": "Plantation",
+      "is_coastal": false
+    },
+    {
+      "name": "Cattle",
+      "improvement": "Pasture",
+      "is_coastal": false
+    },
+    {
+      "name": "Fish",
+      "improvement": "Fishing_Boats",
+      "is_coastal": true
+    },
+    {
+      "name": "Rice",
+      "improvement": "Farm",
+      "is_coastal": false
+    },
+    {
+      "name": "Sheep",
+      "improvement": "Pasture",
+      "is_coastal": false
+    },
+    {
+      "name": "Stone",
+      "improvement": "Quarry",
+      "is_coastal": false
+    },
+    {
+      "name": "Wheat",
+      "improvement": "Farm",
+      "is_coastal": false
+    },
+    {
+      "name": "Deer",
+      "improvement": "Camp",
+      "is_coastal": false
+    },
+    {
+      "name": "Maize",
+      "improvement": "Farm",
+      "is_coastal": false
+    }
+  ],
+  "luxury_resources": [
+    {
+      "name": "Amber",
+      "improvement": "Fishing_Boats",
+      "is_coastal": true
+    },
+    {
+      "name": "Citrus",
+      "improvement": "Plantation",
+      "is_coastal": false
+    },
+    {
+      "name": "Cocoa",
+      "improvement": "Plantation",
+      "is_coastal": false
+    },
+    {
+      "name": "Coffee",
+      "improvement": "Plantation",
+      "is_coastal": false
+    },
+    {
+      "name": "Cotton",
+      "improvement": "Plantation",
+      "is_coastal": false
+    },
+    {
+      "name": "Diamonds",
+      "improvement": "Mine",
+      "is_coastal": false
+    },
+    {
+      "name": "Dyes",
+      "improvement": "Plantation",
+      "is_coastal": false
+    },
+    {
+      "name": "Furs",
+      "improvement": "Camp",
+      "is_coastal": false
+    },
+    {
+      "name": "Gypsum",
+      "improvement": "Quarry",
+      "is_coastal": false
+    },
+    {
+      "name": "Incense",
+      "improvement": "Plantation",
+      "is_coastal": false
+    },
+    {
+      "name": "Ivory",
+      "improvement": "Camp",
+      "is_coastal": false
+    },
+    {
+      "name": "Jade",
+      "improvement": "Mine",
+      "is_coastal": false
+    },
+    {
+      "name": "Marble",
+      "improvement": "Quarry",
+      "is_coastal": false
+    },
+    {
+      "name": "Mercury",
+      "improvement": "Mine",
+      "is_coastal": false
+    },
+    {
+      "name": "Olives",
+      "improvement": "Plantation",
+      "is_coastal": false
+    },
+    {
+      "name": "Pearls",
+      "improvement": "Fishing_Boats",
+      "is_coastal": true
+    },
+    {
+      "name": "Salt",
+      "improvement": "Mine",
+      "is_coastal": false
+    },
+    {
+      "name": "Silk",
+      "improvement": "Plantation",
+      "is_coastal": false
+    },
+    {
+      "name": "Silver",
+      "improvement": "Mine",
+      "is_coastal": false
+    },
+    {
+      "name": "Spices",
+      "improvement": "Plantation",
+      "is_coastal": false
+    },
+    {
+      "name": "Sugar",
+      "improvement": "Plantation",
+      "is_coastal": false
+    },
+    {
+      "name": "Tea",
+      "improvement": "Plantation",
+      "is_coastal": false
+    },
+    {
+      "name": "Tobacco",
+      "improvement": "Plantation",
+      "is_coastal": false
+    },
+    {
+      "name": "Truffles",
+      "improvement": "Camp",
+      "is_coastal": false
+    },
+    {
+      "name": "Turtles",
+      "improvement": "Fishing_Boats",
+      "is_coastal": true
+    },
+    {
+      "name": "Wine",
+      "improvement": "Plantation",
+      "is_coastal": false
+    },
+    {
+      "name": "Whales",
+      "improvement": "Fishing_Boats",
+      "is_coastal": true
+    }
+  ],
+  "strategic_resources": [
+    {
+      "name": "Horses",
+      "improvement": "Pasture",
+      "is_coastal": false
+    },
+    {
+      "name": "Iron",
+      "improvement": "Mine",
+      "is_coastal": false
+    },
+    {
+      "name": "Niter",
+      "improvement": "Mine",
+      "is_coastal": false
+    },
+    {
+      "name": "Coal",
+      "improvement": "Mine",
+      "is_coastal": false
+    },
+    {
+      "name": "Oil",
+      "improvement": "Oil_Well",
+      "water_improvement": "Offshore_Oil_Rig",
+      "is_coastal": false
+    },
+    {
+      "name": "Uranium",
+      "improvement": "Mine",
+      "is_coastal": false
+    }
+  ]
+}
