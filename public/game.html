@@ -580,9 +580,9 @@
         async function loadGameData() {
             try {
                 const [adjacencyResponse, placementResponse, resourcesResponse] = await Promise.all([
-                    fetch('adjacency_database.json'),
-                    fetch('placement_database.json'),
-                    fetch('resources_database.json')
+                    fetch('../data/adjacency_database.json'),
+                    fetch('../data/placement_database.json'),
+                    fetch('../data/resources_database.json')
                 ]);
                 
                 if (!adjacencyResponse.ok || !placementResponse.ok || !resourcesResponse.ok) {
@@ -605,9 +605,9 @@
                           'Python 3: python -m http.server 8000\n' +
                           'Python 2: python -m SimpleHTTPServer 8000\n' +
                           'Node.js: npx http-server\n\n' +
-                          'Then open http://localhost:8000/game.html in your browser.');
+                          'Then open http://localhost:8000/public/game.html in your browser.');
                 } else {
-                    alert('Failed to load game data files. Make sure adjacency_database.json, placement_database.json, and resources_database.json are in the same directory.\n\nError: ' + error.message);
+                    alert('Failed to load game data files. Make sure the data folder contains adjacency_database.json, placement_database.json, and resources_database.json.\n\nError: ' + error.message);
                 }
             }
         }
