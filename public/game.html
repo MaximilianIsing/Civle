@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Civle Game</title>
+    <link rel="icon" type="image/png" href="assets/logo/Logo320x320.png">
+    <script>
+        // Update title with today's date (EST timezone)
+        (function() {
+            const now = new Date();
+            const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const month = String(estDate.getMonth() + 1).padStart(2, '0');
+            const day = String(estDate.getDate()).padStart(2, '0');
+            document.title = `Civle ${month}/${day}`;
+        })();
+    </script>
     <style>
         @font-face {
             font-family: 'Montserrat';
@@ -63,17 +74,17 @@
         .header-left {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 16px;
         }
-
+        
         .header-logo {
-            width: 40px;
-            height: 40px;
+            width: 60px;
+            height: 60px;
             object-fit: contain;
         }
-
+        
         .header h1 {
-            font-size: 37px;
+            font-size: 48px;
             font-weight: 700;
             margin: 0;
             letter-spacing: 0.01em;
@@ -218,6 +229,58 @@
 
         .available-item .count.zero {
             color: #818384;
+        }
+        
+        .placement-tooltip {
+            position: fixed;
+            background: #3a3a3c;
+            border: 1px solid #565758;
+            border-radius: 6px;
+            padding: 12px;
+            color: #ffffff;
+            font-size: 13px;
+            max-width: 300px;
+            z-index: 10002;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            line-height: 1.5;
+        }
+        
+        .placement-tooltip h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        
+        .placement-tooltip .requirement-section {
+            margin-bottom: 8px;
+        }
+        
+        .placement-tooltip .requirement-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .placement-tooltip .requirement-label {
+            font-weight: 600;
+            color: #818384;
+        }
+        
+        .placement-tooltip .requirement-value {
+            color: #ffffff;
+        }
+        
+        .placement-tooltip .resource-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        
+        .placement-tooltip .resource-tooltip-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
         }
 
         .map-container {
@@ -780,11 +843,8 @@
 <body>
     <div class="header">
         <div class="header-left">
+            <img src="assets/logo/Logo320x320.png" alt="Civle Logo" class="header-logo">
             <h1>CIVLE</h1>
-        </div>
-        <div class="controls">
-            <label for="loadChallenge" class="file-label">⚙️</label>
-            <input type="file" id="loadChallenge" accept=".civle,.json" onchange="loadChallenge(event)" style="display: none;">
         </div>
     </div>
 
@@ -2166,6 +2226,47 @@
             }
         }
 
+        function formatPlacementRequirements(itemData, type) {
+            if (!itemData) return '';
+            
+            let html = `<h4>${itemData.name.replace(/_/g, ' ')}</h4>`;
+            
+            // Only show description if available
+            if (itemData.description) {
+                // Convert markdown-style bold (**text**) to HTML
+                let description = itemData.description
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+                html += `<div class="requirement-section"><span class="requirement-value">${description}</span></div>`;
+            }
+            
+            // For districts, show adjacency bonuses
+            if (type === 'district' && adjacencyData) {
+                const districtBonus = adjacencyData.district_adjacency_bonuses.find(d => d.name === itemData.name);
+                if (districtBonus && districtBonus.adjacency_bonuses) {
+                    html += `<div class="requirement-section" style="margin-top: 12px;"><strong>Adjacency Bonuses:</strong><ul style="margin: 8px 0 0 0; padding-left: 20px; list-style-type: disc;">`;
+                    Object.entries(districtBonus.adjacency_bonuses).forEach(([source, bonus]) => {
+                        const yieldType = bonus.type;
+                        const yieldIcon = `assets/yields/${yieldType}.webp`;
+                        const perText = bonus.per > 1 ? ` (per ${bonus.per})` : '';
+                        html += `<li style="margin-bottom: 4px;"><img src="${yieldIcon}" alt="${yieldType}" class="yield-icon" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">+${bonus.bonus} ${yieldType} from ${source.replace(/_/g, ' ')}${perText}</li>`;
+                    });
+                    html += `</ul></div>`;
+                }
+            }
+            
+            // For improvements with only_buildable_on_resources: true, show resource images
+            if (type === 'improvement' && itemData.only_buildable_on_resources && itemData.resources_its_built_on && itemData.resources_its_built_on.length > 0) {
+                html += `<div class="requirement-section resource-images">`;
+                itemData.resources_its_built_on.forEach(resource => {
+                    html += `<img src="assets/recources/${resource}.webp" alt="${resource}" class="resource-tooltip-icon" title="${resource}">`;
+                });
+                html += `</div>`;
+            }
+            
+            return html;
+        }
+
         function createAvailableItem(name, type, count) {
             const item = document.createElement('div');
             item.className = 'available-item';
@@ -2204,7 +2305,60 @@
             item.appendChild(span);
             item.appendChild(countSpan);
             
+            // Add tooltip for placement requirements
+            let tooltip = null;
+            item.addEventListener('mouseenter', (e) => {
+                if (!placementData) return;
+                
+                let itemData = null;
+                if (type === 'district') {
+                    itemData = placementData.districts.find(d => d.name === name);
+                } else if (type === 'improvement') {
+                    itemData = placementData.improvements.find(i => i.name === name);
+                } else if (type === 'wonder') {
+                    itemData = placementData.wonders.find(w => w.name === name);
+                }
+                
+                if (!itemData) return;
+                
+                tooltip = document.createElement('div');
+                tooltip.className = 'placement-tooltip';
+                tooltip.innerHTML = formatPlacementRequirements(itemData, type);
+                document.body.appendChild(tooltip);
+                
+                // Position tooltip
+                const rect = item.getBoundingClientRect();
+                tooltip.style.left = (rect.right + 10) + 'px';
+                tooltip.style.top = (rect.top + window.scrollY) + 'px';
+                
+                // Adjust if tooltip goes off screen
+                setTimeout(() => {
+                    if (tooltip) {
+                        const tooltipRect = tooltip.getBoundingClientRect();
+                        if (tooltipRect.right > window.innerWidth) {
+                            tooltip.style.left = (rect.left - tooltipRect.width - 10) + 'px';
+                        }
+                        if (tooltipRect.bottom > window.innerHeight) {
+                            tooltip.style.top = (window.innerHeight - tooltipRect.height - 10) + 'px';
+                        }
+                    }
+                }, 0);
+            });
+            
+            item.addEventListener('mouseleave', () => {
+                if (tooltip) {
+                    tooltip.remove();
+                    tooltip = null;
+                }
+            });
+            
             item.addEventListener('dragstart', (e) => {
+                // Hide tooltip when dragging starts
+                if (tooltip) {
+                    tooltip.remove();
+                    tooltip = null;
+                }
+                
                 if (count > 0) {
                     draggedItem = { type, name };
                     item.classList.add('dragging');
