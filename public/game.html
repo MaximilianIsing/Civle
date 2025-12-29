@@ -1895,6 +1895,10 @@
                             assignDistrictOwnership(targetKey, row, col, districtName, { row: draggedDistrict.row, col: draggedDistrict.col });
                             assignDistrictOwnership(sourceKey, draggedDistrict.row, draggedDistrict.col, districtName, { row, col });
                             
+                            // Validate and delete invalid adjacent wonders at both locations
+                            validateAndDeleteInvalidWonders(draggedDistrict.row, draggedDistrict.col);
+                            validateAndDeleteInvalidWonders(row, col);
+                            
                             // Update visuals for both locations and their neighbors
                             updateHexVisual(draggedDistrict.row, draggedDistrict.col);
                             const oldNeighbors = getNeighbors(draggedDistrict.row, draggedDistrict.col);
@@ -2135,6 +2139,12 @@
                                 }
                             }
                             
+                            // Validate and delete invalid adjacent wonders at old location
+                            validateAndDeleteInvalidWonders(draggedDistrict.row, draggedDistrict.col);
+                            
+                            // Validate and delete invalid adjacent wonders at new location
+                            validateAndDeleteInvalidWonders(row, col);
+                            
                             // Update visuals for old location and its neighbors
                             updateHexVisual(draggedDistrict.row, draggedDistrict.col);
                             const oldNeighbors = getNeighbors(draggedDistrict.row, draggedDistrict.col);
@@ -2195,6 +2205,12 @@
                             }
                             placedItems[key] = { type: 'improvement', name: improvementName };
                             availableItems[improvementName] = (availableItems[improvementName] || 0) - 1;
+                            
+                            // Validate and delete invalid adjacent wonders at old location
+                            validateAndDeleteInvalidWonders(draggedImprovement.row, draggedImprovement.col);
+                            
+                            // Validate and delete invalid adjacent wonders at new location
+                            validateAndDeleteInvalidWonders(row, col);
                             
                             // Update visuals for old location and its neighbors (to update adjacent district adjacencies)
                             updateHexVisual(draggedImprovement.row, draggedImprovement.col);
@@ -2850,6 +2866,53 @@
             populateSidebar();
         }
 
+        function validateAndDeleteInvalidWonders(checkRow, checkCol) {
+            // Get all neighbors of the position
+            const neighbors = getNeighbors(checkRow, checkCol);
+            const wondersToCheck = new Set();
+            
+            // Check all neighbors for wonders
+            for (const neighbor of neighbors) {
+                const neighborKey = `${neighbor.row},${neighbor.col}`;
+                const neighborPlaced = placedItems[neighborKey];
+                if (neighborPlaced && neighborPlaced.type === 'wonder') {
+                    wondersToCheck.add(neighborKey);
+                }
+            }
+            
+            // Validate each wonder and delete if invalid
+            const wondersToDelete = [];
+            for (const wonderKey of wondersToCheck) {
+                const [wonderRow, wonderCol] = wonderKey.split(',').map(Number);
+                const wonder = placedItems[wonderKey];
+                if (wonder) {
+                    const wonderTile = challengeData.tiles[wonderKey];
+                    // Validate this wonder against placement rules
+                    if (!isValidPlacement(wonderRow, wonderCol, 'wonder', wonder.name, wonderTile)) {
+                        wondersToDelete.push(wonderKey);
+                    }
+                }
+            }
+            
+            // Delete invalid wonders
+            for (const wonderKey of wondersToDelete) {
+                const wonder = placedItems[wonderKey];
+                if (wonder) {
+                    // Add back to available items
+                    availableItems[wonder.name] = (availableItems[wonder.name] || 0) + 1;
+                    // Delete the wonder
+                    delete placedItems[wonderKey];
+                    // Update visuals for the deleted wonder location
+                    const [wonderRow, wonderCol] = wonderKey.split(',').map(Number);
+                    updateHexVisual(wonderRow, wonderCol);
+                    const wonderNeighbors = getNeighbors(wonderRow, wonderCol);
+                    wonderNeighbors.forEach(neighbor => {
+                        updateHexVisual(neighbor.row, neighbor.col);
+                    });
+                }
+            }
+        }
+
         function removeItem(row, col) {
             const key = `${row},${col}`;
             if (!placedItems[key]) return;
@@ -2898,6 +2961,9 @@
             // Delete the item itself
             delete placedItems[key];
             availableItems[oldItem.name] = (availableItems[oldItem.name] || 0) + 1;
+            
+            // Validate and delete invalid adjacent wonders
+            validateAndDeleteInvalidWonders(row, col);
             
             // Update visuals for this hex and all neighbors
             updateHexVisual(row, col);
