@@ -17,6 +17,54 @@ const MIME_TYPES = {
     '.woff2': 'font/woff2'
 };
 
+// Function to get date string in EST timezone
+function getESTDateString(date = new Date()) {
+    const estDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const month = String(estDate.getMonth() + 1).padStart(2, '0');
+    const day = String(estDate.getDate()).padStart(2, '0');
+    return `${month}-${day}`;
+}
+
+// Function to clean up old score files (keep only today and yesterday)
+function cleanupOldScores() {
+    try {
+        const scoresDir = './storage/scores';
+        if (!fs.existsSync(scoresDir)) {
+            return; // Directory doesn't exist, nothing to clean
+        }
+
+        // Get today and yesterday's date strings
+        const now = new Date();
+        const today = getESTDateString(now);
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = getESTDateString(yesterday);
+
+        // Read all files in scores directory
+        const files = fs.readdirSync(scoresDir);
+        
+        files.forEach(file => {
+            // Only process JSON files that match the date format (MM-DD.json)
+            if (file.endsWith('.json') && /^\d{2}-\d{2}\.json$/.test(file)) {
+                const fileDate = file.replace('.json', '');
+                
+                // Delete if file is not today or yesterday
+                if (fileDate !== today && fileDate !== yesterdayStr) {
+                    const filePath = `${scoresDir}/${file}`;
+                    try {
+                        fs.unlinkSync(filePath);
+                        console.log(`Deleted old score file: ${file}`);
+                    } catch (err) {
+                        console.error(`Error deleting score file ${file}:`, err);
+                    }
+                }
+            }
+        });
+    } catch (err) {
+        console.error('Error cleaning up old scores:', err);
+    }
+}
+
 const server = http.createServer((req, res) => {
     // Parse URL and query string
     const url = new URL(req.url, `http://${req.headers.host}`);
@@ -52,14 +100,14 @@ const server = http.createServer((req, res) => {
                 }
                 
                 // Get current date in EST timezone
-                const now = new Date();
-                const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-                const month = String(estDate.getMonth() + 1).padStart(2, '0');
-                const day = String(estDate.getDate()).padStart(2, '0');
-                const dateString = `${month}-${day}`;
+                const dateString = getESTDateString();
                 
-                // Ensure scores directory exists
-                const scoresDir = './scores';
+                // Ensure storage/scores directory exists
+                const storageDir = './storage';
+                const scoresDir = './storage/scores';
+                if (!fs.existsSync(storageDir)) {
+                    fs.mkdirSync(storageDir, { recursive: true });
+                }
                 if (!fs.existsSync(scoresDir)) {
                     fs.mkdirSync(scoresDir, { recursive: true });
                 }
@@ -192,13 +240,9 @@ const server = http.createServer((req, res) => {
             // If key matches, reset the leaderboard
             if (providedKey === endpointKey) {
                 // Get current date in EST timezone
-                const now = new Date();
-                const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-                const month = String(estDate.getMonth() + 1).padStart(2, '0');
-                const day = String(estDate.getDate()).padStart(2, '0');
-                const dateString = `${month}-${day}`;
+                const dateString = getESTDateString();
                 
-                const scoresFile = `./scores/${dateString}.json`;
+                const scoresFile = `./storage/scores/${dateString}.json`;
                 
                 // Delete the scores file if it exists
                 if (fs.existsSync(scoresFile)) {
@@ -224,13 +268,9 @@ const server = http.createServer((req, res) => {
     if (pathname === '/leaderboard' && req.method === 'GET') {
         try {
             // Get current date in EST timezone
-            const now = new Date();
-            const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-            const month = String(estDate.getMonth() + 1).padStart(2, '0');
-            const day = String(estDate.getDate()).padStart(2, '0');
-            const dateString = `${month}-${day}`;
+            const dateString = getESTDateString();
             
-            const scoresFile = `./scores/${dateString}.json`;
+            const scoresFile = `./storage/scores/${dateString}.json`;
             
             let leaderboard = [];
             if (fs.existsSync(scoresFile)) {
@@ -259,14 +299,14 @@ const server = http.createServer((req, res) => {
     // Handle first place screenshot submission
     if (pathname === '/submit-first-place-screenshot' && req.method === 'POST') {
         // Get current date in EST timezone
-        const now = new Date();
-        const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-        const month = String(estDate.getMonth() + 1).padStart(2, '0');
-        const day = String(estDate.getDate()).padStart(2, '0');
-        const dateString = `${month}-${day}`;
+        const dateString = getESTDateString();
         
-        // Ensure screenshots directory exists
-        const screenshotsDir = './screenshots';
+        // Ensure storage/screenshots directory exists
+        const storageDir = './storage';
+        const screenshotsDir = './storage/screenshots';
+        if (!fs.existsSync(storageDir)) {
+            fs.mkdirSync(storageDir, { recursive: true });
+        }
         if (!fs.existsSync(screenshotsDir)) {
             fs.mkdirSync(screenshotsDir, { recursive: true });
         }
@@ -343,13 +383,11 @@ const server = http.createServer((req, res) => {
         try {
             // Get yesterday's date in EST timezone
             const now = new Date();
-            const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-            estDate.setDate(estDate.getDate() - 1); // Yesterday
-            const month = String(estDate.getMonth() + 1).padStart(2, '0');
-            const day = String(estDate.getDate()).padStart(2, '0');
-            const dateString = `${month}-${day}`;
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const dateString = getESTDateString(yesterday);
             
-            const screenshotPath = `./screenshots/${dateString}.png`;
+            const screenshotPath = `./storage/screenshots/${dateString}.png`;
             const challengePath = `./day_challenges/${dateString}.civle`;
             
             let challengeData = null;
@@ -399,11 +437,7 @@ const server = http.createServer((req, res) => {
     if (pathname === '/daily-challenge') {
         try {
             // Get current date in EST timezone
-            const now = new Date();
-            const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-            const month = String(estDate.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
-            const day = String(estDate.getDate()).padStart(2, '0');
-            const dateString = `${month}-${day}`;
+            const dateString = getESTDateString();
             
             // Try to read the challenge file for today's date
             const challengePath = `./day_challenges/${dateString}.civle`;
@@ -493,5 +527,11 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}/`);
     console.log(`Open http://localhost:${PORT}/public/game.html in your browser`);
+    
+    // Clean up old scores on server startup
+    cleanupOldScores();
+    
+    // Also clean up old scores daily (every 24 hours)
+    setInterval(cleanupOldScores, 24 * 60 * 60 * 1000);
 });
 

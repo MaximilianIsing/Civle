@@ -1,7 +1,6 @@
 # Sensitive files
 endpoint_key.txt
-scores/
-screenshots/
+storage/
 
 # Dependencies
 node_modules/
