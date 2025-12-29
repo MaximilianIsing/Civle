@@ -1073,6 +1073,32 @@
         .leaderboard-close-btn:hover {
             background: #565758;
         }
+        
+        .countdown-section {
+            margin-top: 20px;
+            padding: 12px;
+            background: #1a1a1c;
+            border: 1px solid #565758;
+            border-radius: 4px;
+            text-align: center;
+            display: none;
+        }
+        
+        .countdown-section.visible {
+            display: block;
+        }
+        
+        .countdown-label {
+            font-size: 12px;
+            color: #818384;
+            margin-bottom: 6px;
+        }
+        
+        .countdown-time {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+        }
 
         .zoom-controls {
             position: absolute;
@@ -4740,8 +4766,13 @@
             
             modal.classList.add('active');
             
+            // Show countdown if name input is not shown (view-only or not in top 10)
+            if (nameInputSection.style.display === 'none') {
+                showCountdown();
+            }
+            
             // If in top 10, wait for name submission
-            if (inTop10) {
+            if (inTop10 && !viewOnly) {
                 const submitName = async () => {
                     const name = nameInput.value.trim();
                     if (name.length === 0) {
@@ -4782,6 +4813,8 @@
                                 });
                             }
                             nameInputSection.style.display = 'none';
+                            // Show countdown after name submission
+                            showCountdown();
                         } else {
                             if (data.error === 'Name already taken') {
                                 alert('This name is already taken. Please choose a different name.');
@@ -4817,9 +4850,127 @@
             }
         }
         
+        function getNextMidnightEST() {
+            // Get current time
+            const now = new Date();
+            
+            // Get current date components in EST
+            const estFormatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'America/New_York',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            
+            const parts = estFormatter.formatToParts(now);
+            const estYear = parseInt(parts.find(p => p.type === 'year').value);
+            const estMonth = parseInt(parts.find(p => p.type === 'month').value) - 1; // 0-indexed
+            const estDay = parseInt(parts.find(p => p.type === 'day').value);
+            const estHour = parseInt(parts.find(p => p.type === 'hour').value);
+            const estMinute = parseInt(parts.find(p => p.type === 'minute').value);
+            const estSecond = parseInt(parts.find(p => p.type === 'second').value);
+            
+            // Calculate milliseconds until next midnight EST
+            const hoursRemaining = 24 - estHour;
+            const minutesRemaining = 60 - estMinute;
+            const secondsRemaining = 60 - estSecond;
+            const msUntilMidnight = (hoursRemaining * 3600000) + ((minutesRemaining - 1) * 60000) + ((secondsRemaining - 1) * 1000) + 1000;
+            
+            // Now we need to find what JavaScript Date corresponds to "now + msUntilMidnight" in EST
+            // The challenge is that JavaScript Date uses local time, but we calculated in EST
+            // We'll use a binary search approach: try different dates until we find one that formats to midnight EST
+            
+            // Start with current time + calculated offset
+            let candidate = new Date(now.getTime() + msUntilMidnight);
+            
+            // Refine: check what time this candidate is in EST
+            let candidateParts = estFormatter.formatToParts(candidate);
+            let candidateHour = parseInt(candidateParts.find(p => p.type === 'hour').value);
+            let candidateMinute = parseInt(candidateParts.find(p => p.type === 'minute').value);
+            let candidateSecond = parseInt(candidateParts.find(p => p.type === 'second').value);
+            
+            // Adjust until we're at midnight EST (00:00:00)
+            while (candidateHour !== 0 || candidateMinute !== 0 || candidateSecond !== 0) {
+                if (candidateHour > 0 || candidateMinute > 0 || candidateSecond > 0) {
+                    // Too late, go back
+                    candidate = new Date(candidate.getTime() - 60000); // Go back 1 minute
+                } else {
+                    // Too early, go forward (shouldn't happen, but just in case)
+                    candidate = new Date(candidate.getTime() + 60000); // Go forward 1 minute
+                }
+                candidateParts = estFormatter.formatToParts(candidate);
+                candidateHour = parseInt(candidateParts.find(p => p.type === 'hour').value);
+                candidateMinute = parseInt(candidateParts.find(p => p.type === 'minute').value);
+                candidateSecond = parseInt(candidateParts.find(p => p.type === 'second').value);
+                
+                // Safety check to avoid infinite loop
+                if (Math.abs(candidate.getTime() - now.getTime()) > 48 * 3600000) {
+                    break;
+                }
+            }
+            
+            return candidate;
+        }
+        
+        function updateCountdown() {
+            const countdownSection = document.getElementById('countdownSection');
+            const countdownTime = document.getElementById('countdownTime');
+            
+            if (!countdownSection || !countdownTime) return;
+            
+            const now = new Date();
+            const nextMidnight = getNextMidnightEST();
+            const diff = nextMidnight - now;
+            
+            if (diff <= 0) {
+                countdownTime.textContent = '00:00:00';
+                // Refresh page after a short delay to get new challenge
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+                return;
+            }
+            
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            countdownTime.textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+        
+        function showCountdown() {
+            const countdownSection = document.getElementById('countdownSection');
+            if (countdownSection) {
+                countdownSection.classList.add('visible');
+                updateCountdown();
+                // Update countdown every second
+                if (window.countdownInterval) {
+                    clearInterval(window.countdownInterval);
+                }
+                window.countdownInterval = setInterval(updateCountdown, 1000);
+            }
+        }
+        
+        function hideCountdown() {
+            const countdownSection = document.getElementById('countdownSection');
+            if (countdownSection) {
+                countdownSection.classList.remove('visible');
+            }
+            if (window.countdownInterval) {
+                clearInterval(window.countdownInterval);
+                window.countdownInterval = null;
+            }
+        }
+        
         function closeLeaderboard() {
             const modal = document.getElementById('leaderboardModal');
             modal.classList.remove('active');
+            hideCountdown();
             
             // Update button text based on submission status
             checkSubmissionStatus();
@@ -5197,6 +5348,10 @@
                 <label for="playerName">Enter your name:</label>
                 <input type="text" id="playerName" maxlength="20" placeholder="Your name">
                 <div class="char-count"><span id="charCount">0</span>/20</div>
+            </div>
+            <div id="countdownSection" class="countdown-section">
+                <div class="countdown-label">Next Civle in:</div>
+                <div id="countdownTime" class="countdown-time">--:--:--</div>
             </div>
             <button class="leaderboard-close-btn" onclick="closeLeaderboard()">Close</button>
         </div>

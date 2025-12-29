@@ -152,6 +152,153 @@ GET /custom_game?key=your-secret-key
 
 ---
 
+### GET `/today_scores?key={key}`
+Returns all scores for the current day (EST timezone). This endpoint provides access to the complete list of scores, not just the top entries.
+
+**Query Parameters:**
+- `key` (required): Authentication key
+
+**Response:**
+```json
+{
+  "success": true,
+  "date": "12-31",
+  "scores": [
+    {
+      "score": 150,
+      "name": "PlayerName",
+      "timestamp": "2024-12-31T12:00:00.000Z"
+    },
+    {
+      "score": 140,
+      "name": null,
+      "timestamp": "2024-12-31T12:05:00.000Z"
+    },
+    ...
+  ]
+}
+```
+
+**Errors:**
+- **403 Forbidden**: Invalid key
+- **500 Internal Server Error**: Server error
+
+**Example:**
+```
+GET /today_scores?key=your-secret-key
+```
+
+**Notes:**
+- Returns all scores for today (up to 100 entries, as stored in the scores file)
+- Scores are sorted by score (descending), then by timestamp (ascending - older scores rank higher in ties)
+- Entries may have `name: null` if the player hasn't submitted a name yet
+
+---
+
+### GET `/yesterday_scores?key={key}`
+Returns all scores for yesterday (EST timezone). This endpoint provides access to the complete list of scores from the previous day.
+
+**Query Parameters:**
+- `key` (required): Authentication key
+
+**Response:**
+```json
+{
+  "success": true,
+  "date": "12-30",
+  "scores": [
+    {
+      "score": 150,
+      "name": "PlayerName",
+      "timestamp": "2024-12-30T12:00:00.000Z"
+    },
+    {
+      "score": 140,
+      "name": null,
+      "timestamp": "2024-12-30T12:05:00.000Z"
+    },
+    ...
+  ]
+}
+```
+
+**Errors:**
+- **403 Forbidden**: Invalid key
+- **500 Internal Server Error**: Server error
+
+**Example:**
+```
+GET /yesterday_scores?key=your-secret-key
+```
+
+**Notes:**
+- Returns all scores for yesterday (up to 100 entries, as stored in the scores file)
+- Scores are sorted by score (descending), then by timestamp (ascending - older scores rank higher in ties)
+- Entries may have `name: null` if the player hasn't submitted a name yet
+- Returns empty array if yesterday's score file doesn't exist
+
+---
+
+### GET `/num_today_submissions?key={key}`
+Returns the number of score submissions for the current day (EST timezone).
+
+**Query Parameters:**
+- `key` (required): Authentication key
+
+**Response:**
+```json
+{
+  "success": true,
+  "date": "12-31",
+  "count": 42
+}
+```
+
+**Errors:**
+- **403 Forbidden**: Invalid key
+- **500 Internal Server Error**: Server error
+
+**Example:**
+```
+GET /num_today_submissions?key=your-secret-key
+```
+
+**Notes:**
+- Returns the total count of submissions for today
+- Returns 0 if no scores exist for today
+
+---
+
+### GET `/num_yesterday_submissions?key={key}`
+Returns the number of score submissions for yesterday (EST timezone).
+
+**Query Parameters:**
+- `key` (required): Authentication key
+
+**Response:**
+```json
+{
+  "success": true,
+  "date": "12-30",
+  "count": 38
+}
+```
+
+**Errors:**
+- **403 Forbidden**: Invalid key
+- **500 Internal Server Error**: Server error
+
+**Example:**
+```
+GET /num_yesterday_submissions?key=your-secret-key
+```
+
+**Notes:**
+- Returns the total count of submissions for yesterday
+- Returns 0 if no scores exist for yesterday
+
+---
+
 ### GET `/reset_leaderboard?key={key}`
 Resets the leaderboard for the current day (EST timezone).
 
