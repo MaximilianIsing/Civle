@@ -73,6 +73,13 @@ const server = http.createServer((req, res) => {
     
     let filePath;
     
+    // Health check endpoint for Render
+    if (pathname === '/health' && req.method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }), 'utf-8');
+        return;
+    }
+    
     // Handle score submission endpoint
     if (pathname === '/submit-score' && req.method === 'POST') {
         let body = '';
@@ -546,8 +553,12 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}/`);
-    console.log(`Open http://localhost:${PORT}/public/game.html in your browser`);
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(`Server running at http://localhost:${PORT}/`);
+        console.log(`Open http://localhost:${PORT}/public/game.html in your browser`);
+    } else {
+        console.log(`Server started on port ${PORT}`);
+    }
     
     // Clean up old scores on server startup
     cleanupOldScores();
