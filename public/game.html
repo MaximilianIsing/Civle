@@ -4258,23 +4258,23 @@
             let improvementCounts = {};
             let mountainCount = 0;
             let rainforestCount = 0;
+            let woodsCount = 0;
             let geothermalFissureCount = 0;
             let reefCount = 0;
             let coastalResourceCount = 0;
             
             neighbors.forEach(neighbor => {
                 const neighborKey = `${neighbor.row},${neighbor.col}`;
-                // Skip if this is the excluded location (when moving a district)
-                if (excludeLocation && neighbor.row === excludeLocation.row && neighbor.col === excludeLocation.col) {
-                    return;
-                }
-                
                 const neighborPlaced = placedItems[neighborKey];
                 const neighborTile = challengeData.tiles[neighborKey];
                 
+                // Check if this is the excluded location (when moving a district)
+                const isExcludedLocation = excludeLocation && neighbor.row === excludeLocation.row && neighbor.col === excludeLocation.col;
+                
                 // Check neighbor terrain/features for adjacency bonuses
                 // Only count terrain/features if the tile doesn't have a district or improvement on it
-                if (neighborTile && !neighborPlaced) {
+                // OR if it's the excluded location (the district is being moved, so check underlying tile)
+                if (neighborTile && (!neighborPlaced || isExcludedLocation)) {
                     // Check for mountains
                     if (neighborTile.terrain && neighborTile.terrain.includes('Mountain')) {
                         mountainCount++;
@@ -4283,11 +4283,15 @@
                     if (neighborTile.feature === 'Rainforest') {
                         rainforestCount++;
                     }
+                    if (neighborTile.feature === 'Woods') {
+                        woodsCount++;
+                    }
                     // Check for reef
                     if (neighborTile.terrain === 'Reef') {
                         reefCount++;
                     }
                     // Check for coastal resources (resources on coast/ocean/reef tiles)
+                    // Coastal resources count even if there's a district on the tile (when moving)
                     if (neighborTile.resource && (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
                         coastalResourceCount++;
                     }
@@ -4296,9 +4300,14 @@
                 // Special case: Geothermal Fissures count even if there's a City_Center on the tile
                 // This is unique to geothermal fissures - other features don't count if there's a district
                 if (neighborTile && neighborTile.feature === 'Geothermal_Fissure') {
-                    if (!neighborPlaced || (neighborPlaced.type === 'district' && neighborPlaced.name === 'City_Center')) {
+                    if (!neighborPlaced || (neighborPlaced.type === 'district' && neighborPlaced.name === 'City_Center') || isExcludedLocation) {
                         geothermalFissureCount++;
                     }
+                }
+                
+                // Skip excluded location for district/improvement counting
+                if (isExcludedLocation) {
+                    return;
                 }
                 
                 if (neighborPlaced) {
@@ -4333,6 +4342,12 @@
                 const bonus = bonuses.Rainforest;
                 const amount = Math.floor(rainforestCount / bonus.per) * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
+            }
+            
+            if (bonuses.Woods && woodsCount > 0) {
+                const bonus = bonuses.Woods;
+                const amount = Math.floor(woodsCount / bonus.per) * bonus.bonus;
+                if (bonus.type === 'Faith') faith += amount;
             }
             
             if (bonuses.Geothermal_Fissure && geothermalFissureCount > 0) {
