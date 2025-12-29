@@ -720,9 +720,9 @@ const server = http.createServer((req, res) => {
     
     // Special handling for sitemap.xml and robots.txt
     if (pathname === '/sitemap.xml') {
-        contentType = 'application/xml';
+        contentType = 'application/xml; charset=utf-8';
     } else if (pathname === '/robots.txt') {
-        contentType = 'text/plain';
+        contentType = 'text/plain; charset=utf-8';
     }
     
     // Read and serve file
@@ -736,7 +736,12 @@ const server = http.createServer((req, res) => {
                 res.end(`Server Error: ${err.code}`, 'utf-8');
             }
         } else {
-            res.writeHead(200, { 'Content-Type': contentType });
+            const headers = { 'Content-Type': contentType };
+            // Add charset for XML files
+            if (pathname === '/sitemap.xml') {
+                headers['Content-Type'] = 'application/xml; charset=utf-8';
+            }
+            res.writeHead(200, headers);
             res.end(content, 'utf-8');
         }
     });
