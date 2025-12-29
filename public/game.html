@@ -765,6 +765,7 @@
             border: 1px solid #565758;
             border-radius: 4px;
         }
+        
 
         .yesterday-best-content .close-btn {
             margin-top: 16px;
@@ -973,7 +974,7 @@
         let resourcesData = null;
 
         // Zoom and pan state
-        let mapZoom = 1.0;
+        let mapZoom = 2.0;
         let mapPanX = 0;
         let mapPanY = 0;
         let isDragging = false;
@@ -4063,30 +4064,35 @@
             submitBtn.textContent = 'Submitting...';
             
             try {
-                const response = await fetch('/submit-score', {
+                // Capture screenshot before submitting (server will determine if it should be saved)
+                let screenshotData = null;
+                try {
+                    screenshotData = await captureScreenshot();
+                } catch (error) {
+                    console.error('Error capturing screenshot:', error);
+                    // Continue with submission even if screenshot fails
+                }
+                
+                // Send score and screenshot together (server determines if screenshot should be saved)
+                const requestBody = {
+                    score: totalScore,
+                    screenshot: screenshotData
+                };
+                
+                const scoreResponse = await fetch('/submit-score', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ score: totalScore })
+                    body: JSON.stringify(requestBody)
                 });
                 
-                const data = await response.json();
+                const data = await scoreResponse.json();
                 
                 if (data.success) {
                     // Mark as submitted for today
                     const todayKey = getTodayKey();
                     localStorage.setItem(todayKey, 'true');
-                    
-                    // If rank is 1, capture and send screenshot
-                    if (data.rank === 1) {
-                        try {
-                            await captureAndSendScreenshot();
-                        } catch (error) {
-                            console.error('Error capturing screenshot:', error);
-                            // Don't block submission if screenshot fails
-                        }
-                    }
                     
                     // Update button text
                     submitBtn.textContent = 'View Leaderboard';
@@ -4257,38 +4263,76 @@
             }
         }
 
-        async function captureAndSendScreenshot() {
-            const mapContainer = document.getElementById('mapContainer');
-            if (!mapContainer) return;
-
-            // Use html2canvas to capture the map container
-            const canvas = await html2canvas(mapContainer, {
-                backgroundColor: '#121213',
-                scale: 1,
-                logging: false
-            });
-
-            // Convert canvas to blob
-            canvas.toBlob(async (blob) => {
-                if (!blob) return;
-
-                // Send to server
-                const formData = new FormData();
-                formData.append('screenshot', blob, 'screenshot.png');
-
-                try {
-                    const response = await fetch('/submit-first-place-screenshot', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await response.json();
-                    if (!data.success) {
-                        console.error('Failed to upload screenshot:', data.error);
-                    }
-                } catch (error) {
-                    console.error('Error uploading screenshot:', error);
+        async function captureScreenshot() {
+            try {
+                const mapTransformWrapper = document.getElementById('mapTransformWrapper');
+                if (!mapTransformWrapper) {
+                    console.error('Map container not found');
+                    return null;
                 }
-            }, 'image/png');
+
+                // Capture using onclone to fix all transforms and dimensions
+                const canvas = await html2canvas(mapTransformWrapper, {
+                    scale: 2,
+                    backgroundColor: '#1a1a1b',
+                    useCORS: true,
+                    logging: false,
+                    allowTaint: false,
+                    onclone: (clonedDoc, element) => {
+                        // Reset transform on the wrapper
+                        const clonedWrapper = clonedDoc.getElementById('mapTransformWrapper');
+                        if (clonedWrapper) {
+                            clonedWrapper.style.transform = 'none';
+                            clonedWrapper.style.position = 'relative';
+                        }
+                        
+                        // Fix all district images - ensure they fit properly within their hex containers
+                        const districtImages = clonedDoc.querySelectorAll('.hex-district');
+                        districtImages.forEach(img => {
+                            // Get the parent container (district-shape)
+                            const parent = img.parentElement;
+                            if (parent) {
+                                // Make districts 15% wider and 5% taller, moved left a bit
+                                img.style.width = '100%'; // 85% + 15% = 100%
+                                img.style.height = '90%'; // 85% + 5% = 90%
+                                img.style.objectFit = 'contain'; // Fit within bounds without cropping
+                                img.style.top = '5%';
+                                img.style.left = '-2%'; // Moved left (reduced from 7.5%)
+                                img.style.position = 'absolute';
+                                img.style.margin = '0';
+                                img.style.padding = '0';
+                            }
+                        });
+                        
+                        // Ensure district-shape containers have proper dimensions
+                        const districtShapes = clonedDoc.querySelectorAll('#districtsLayer .hex-shape');
+                        districtShapes.forEach(shape => {
+                            const hex = shape.closest('.hex');
+                            if (hex) {
+                                shape.style.width = '100%';
+                                shape.style.height = '100%';
+                            }
+                        });
+                        
+                        // Fix all hex shapes to ensure proper dimensions
+                        const hexShapes = clonedDoc.querySelectorAll('.hex-shape');
+                        hexShapes.forEach(shape => {
+                            const hex = shape.closest('.hex');
+                            if (hex) {
+                                const computedStyle = window.getComputedStyle(hex);
+                                shape.style.width = computedStyle.width;
+                                shape.style.height = computedStyle.height;
+                            }
+                        });
+                    }
+                });
+
+                // Convert canvas to base64 and return
+                return canvas.toDataURL('image/png');
+            } catch (error) {
+                console.error('Error capturing screenshot:', error);
+                return null;
+            }
         }
 
         async function showYesterdayBest() {
@@ -4318,15 +4362,15 @@
                         html += '</div>';
                     }
                     
-                    // Show solution screenshot if available
-                    if (data.screenshotUrl) {
+                    // Show screenshot if available
+                    if (data.screenshot) {
                         html += '<div>';
                         html += '<h3 style="margin-bottom: 12px; font-size: 18px; font-weight: 600;">Best Solution</h3>';
-                        html += `<img src="${data.screenshotUrl}" alt="Yesterday's Best Setup" style="max-width: 100%; height: auto; border: 1px solid #565758; border-radius: 4px;">`;
+                        html += `<img src="${data.screenshot}" alt="Best Solution" style="max-width: 100%; height: auto; border: 1px solid #565758; border-radius: 4px;">`;
                         html += '</div>';
                     }
                     
-                    if (!data.challenge && !data.screenshotUrl) {
+                    if (!data.challenge && !data.screenshot) {
                         html = '<p>No setup available for yesterday.</p>';
                     }
                     
@@ -4391,7 +4435,7 @@
 
             resetZoomBtn.onclick = (e) => {
                 e.stopPropagation();
-                mapZoom = 1.0;
+                mapZoom = 2.0; // Increased from 1.0 to zoom in more by default
                 mapPanX = 0;
                 mapPanY = 0;
                 updateTransform();
