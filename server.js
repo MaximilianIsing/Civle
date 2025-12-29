@@ -3,6 +3,12 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = process.env.PORT || 8000;
+
+// Use persistent disk path if available (Render deployment), otherwise use relative path
+// On Render, the persistent disk is mounted at /opt/render/project/src/storage
+const STORAGE_DIR = fs.existsSync('/opt/render/project/src/storage') 
+    ? '/opt/render/project/src/storage'
+    : './storage';
 const MIME_TYPES = {
     '.html': 'text/html',
     '.js': 'text/javascript',
@@ -29,7 +35,7 @@ function getESTDateString(date = new Date()) {
 function cleanupOldScores() {
     try {
         // Clean up scores
-        const scoresDir = './storage/scores';
+        const scoresDir = path.join(STORAGE_DIR, 'scores');
         if (fs.existsSync(scoresDir)) {
             const now = new Date();
             const today = getESTDateString(now);
@@ -54,7 +60,7 @@ function cleanupOldScores() {
         }
 
         // Clean up screenshots
-        const screenshotsDir = './storage/screenshots';
+        const screenshotsDir = path.join(STORAGE_DIR, 'screenshots');
         if (fs.existsSync(screenshotsDir)) {
             const now = new Date();
             const today = getESTDateString(now);
@@ -132,8 +138,8 @@ const server = http.createServer((req, res) => {
                 const dateString = getESTDateString();
                 
                 // Ensure storage/scores directory exists
-                const storageDir = './storage';
-                const scoresDir = './storage/scores';
+                const storageDir = STORAGE_DIR;
+                const scoresDir = path.join(STORAGE_DIR, 'scores');
                 if (!fs.existsSync(storageDir)) {
                     fs.mkdirSync(storageDir, { recursive: true });
                 }
@@ -248,7 +254,7 @@ const server = http.createServer((req, res) => {
                 if (rank === 1 && screenshot) {
                     try {
                         const dateString = getESTDateString();
-                        const screenshotsDir = './storage/screenshots';
+                        const screenshotsDir = path.join(STORAGE_DIR, 'screenshots');
                         if (!fs.existsSync(screenshotsDir)) {
                             fs.mkdirSync(screenshotsDir, { recursive: true });
                         }
@@ -288,7 +294,7 @@ const server = http.createServer((req, res) => {
                 if (name && rank === 1) {
                     try {
                         const dateString = getESTDateString();
-                        const screenshotsDir = './storage/screenshots';
+                        const screenshotsDir = path.join(STORAGE_DIR, 'screenshots');
                         
                         // Find existing screenshot file for this date (might not have name yet)
                         const files = fs.readdirSync(screenshotsDir);
@@ -347,7 +353,7 @@ const server = http.createServer((req, res) => {
                 // Get current date in EST timezone
                 const dateString = getESTDateString();
                 
-                const scoresFile = `./storage/scores/${dateString}.json`;
+                const scoresFile = path.join(STORAGE_DIR, 'scores', `${dateString}.json`);
                 
                 // Delete the scores file if it exists
                 if (fs.existsSync(scoresFile)) {
@@ -421,7 +427,7 @@ const server = http.createServer((req, res) => {
                 const dateString = getESTDateString(yesterday);
                 
                 // Ensure screenshots directory exists
-                const screenshotsDir = './storage/screenshots';
+                const screenshotsDir = path.join(STORAGE_DIR, 'screenshots');
                 if (!fs.existsSync(screenshotsDir)) {
                     fs.mkdirSync(screenshotsDir, { recursive: true });
                 }
@@ -507,7 +513,7 @@ const server = http.createServer((req, res) => {
             const dateString = getESTDateString(yesterday);
             
             const challengePath = `./day_challenges/${dateString}.civle`;
-            const screenshotsDir = './storage/screenshots';
+            const screenshotsDir = path.join(STORAGE_DIR, 'screenshots');
             
             let challengeData = null;
             let screenshotUrl = null;
@@ -658,7 +664,9 @@ const server = http.createServer((req, res) => {
     } else {
         // Handle storage/screenshots requests
         if (pathname.startsWith('/storage/screenshots/')) {
-            filePath = '.' + pathname;
+            // Extract filename from path
+            const filename = pathname.replace('/storage/screenshots/', '');
+            filePath = path.join(STORAGE_DIR, 'screenshots', filename);
         }
         // Handle data folder requests (JSON files)
         else if (pathname.startsWith('/data/')) {
