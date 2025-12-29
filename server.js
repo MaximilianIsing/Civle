@@ -14,6 +14,7 @@ const STORAGE_DIR = (process.env.NODE_ENV === 'production' || fs.existsSync('/st
 // Ensure storage directories exist
 const scoresDir = path.join(STORAGE_DIR, 'scores');
 const screenshotsDir = path.join(STORAGE_DIR, 'screenshots');
+const reportsDir = path.join(STORAGE_DIR, 'reports');
 if (!fs.existsSync(STORAGE_DIR)) {
     fs.mkdirSync(STORAGE_DIR, { recursive: true });
 }
@@ -22,6 +23,9 @@ if (!fs.existsSync(scoresDir)) {
 }
 if (!fs.existsSync(screenshotsDir)) {
     fs.mkdirSync(screenshotsDir, { recursive: true });
+}
+if (!fs.existsSync(reportsDir)) {
+    fs.mkdirSync(reportsDir, { recursive: true });
 }
 const MIME_TYPES = {
     '.html': 'text/html',
@@ -120,6 +124,69 @@ const server = http.createServer((req, res) => {
     if (pathname === '/health' && req.method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }), 'utf-8');
+        return;
+    }
+    
+    // Handle bug report endpoint
+    if (pathname === '/report-bug' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body);
+                const description = data.description || '';
+                
+                if (!description || description.trim().length === 0) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, error: 'Description required' }), 'utf-8');
+                    return;
+                }
+                
+                // Ensure reports directory exists
+                const reportsDir = path.join(STORAGE_DIR, 'reports');
+                if (!fs.existsSync(reportsDir)) {
+                    fs.mkdirSync(reportsDir, { recursive: true });
+                }
+                
+                const reportsFile = path.join(reportsDir, 'bug_reports.json');
+                
+                // Read existing reports or create new array
+                let reports = [];
+                if (fs.existsSync(reportsFile)) {
+                    try {
+                        const fileContent = fs.readFileSync(reportsFile, 'utf8');
+                        reports = JSON.parse(fileContent);
+                    } catch (err) {
+                        console.error('Error reading bug reports file:', err);
+                        reports = [];
+                    }
+                }
+                
+                // Add new report
+                const report = {
+                    description: description.trim(),
+                    timestamp: new Date().toISOString(),
+                    userAgent: req.headers['user-agent'] || 'Unknown'
+                };
+                
+                reports.push(report);
+                
+                // Write back to file
+                fs.writeFileSync(reportsFile, JSON.stringify(reports, null, 2));
+                
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ 
+                    success: true,
+                    message: 'Bug report submitted successfully'
+                }), 'utf-8');
+            } catch (err) {
+                console.error('Error submitting bug report:', err);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Server error' }), 'utf-8');
+            }
+        });
         return;
     }
     

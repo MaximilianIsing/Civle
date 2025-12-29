@@ -169,13 +169,13 @@
             align-items: center;
             gap: 16px;
         }
-        
+
         .header-logo {
             width: 60px;
             height: 60px;
             object-fit: contain;
         }
-        
+
         .header h1 {
             font-size: 48px;
             font-weight: 700;
@@ -288,6 +288,8 @@
             padding: 24px;
             overflow-y: auto;
             border-right: 1px solid #3a3a3c;
+            display: flex;
+            flex-direction: column;
         }
 
         .sidebar::-webkit-scrollbar {
@@ -736,7 +738,7 @@
             font-size: 13px;
             color: #ffffff;
         }
-        
+
         .score-total {
             margin-top: 12px;
             padding-top: 12px;
@@ -1072,6 +1074,132 @@
         
         .leaderboard-close-btn:hover {
             background: #565758;
+        }
+        
+        .bug-report-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .bug-report-modal.active {
+            display: flex;
+        }
+        
+        .bug-report-content {
+            background: #121213;
+            border: 1px solid #565758;
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            color: #ffffff;
+        }
+        
+        .bug-report-content h2 {
+            margin: 0 0 16px 0;
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+        }
+        
+        .bug-report-content textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            background: #3a3a3c;
+            color: #ffffff;
+            border: 1px solid #565758;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 0;
+            box-sizing: border-box;
+        }
+        
+        .bug-report-content textarea:focus {
+            outline: none;
+            border-color: #818384;
+        }
+        
+        .bug-report-content textarea::placeholder {
+            color: #818384;
+        }
+        
+        .bug-report-message {
+            margin-top: 16px;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+            border: 1px solid;
+            line-height: 1.5;
+        }
+        
+        .bug-report-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 0;
+        }
+        
+        .bug-report-btn {
+            padding: 10px 20px;
+            background: #3a3a3c;
+            color: #ffffff;
+            border: 1px solid #565758;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.1s;
+        }
+        
+        .bug-report-btn:hover {
+            background: #565758;
+        }
+        
+        .bug-report-btn.submit {
+            background: #6aaa64;
+            border-color: #6aaa64;
+        }
+        
+        .bug-report-btn.submit:hover {
+            background: #5c9a56;
+        }
+        
+        .bug-report-btn.submit:active {
+            background: #4d8a46;
+        }
+        
+        .bug-report-btn.submit:disabled {
+            background: #3a3a3c;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .bug-report-message.success {
+            background: #1a3a1a;
+            color: #6aaa64;
+            border-color: #6aaa64;
+            display: block;
+        }
+        
+        .bug-report-message.error {
+            background: #3a1a1a;
+            color: #d32f2f;
+            border-color: #d32f2f;
+            display: block;
         }
         
         .countdown-section {
@@ -2602,7 +2730,12 @@
             const sidebar = document.getElementById('sidebar');
             sidebar.innerHTML = '';
             
-            sidebar.innerHTML = '<h2>Available Items</h2>';
+            const contentWrapper = document.createElement('div');
+            contentWrapper.style.flex = '1';
+            contentWrapper.style.display = 'flex';
+            contentWrapper.style.flexDirection = 'column';
+            
+            contentWrapper.innerHTML = '<h2>Available Items</h2>';
             
             // Districts
             const districtsSection = document.createElement('div');
@@ -2616,7 +2749,7 @@
                 }
             });
             
-            sidebar.appendChild(districtsSection);
+            contentWrapper.appendChild(districtsSection);
             
             // Improvements
             const improvementsSection = document.createElement('div');
@@ -2635,7 +2768,7 @@
             });
             
             if (hasImprovements) {
-            sidebar.appendChild(improvementsSection);
+            contentWrapper.appendChild(improvementsSection);
             }
             
             // Wonders
@@ -2655,8 +2788,50 @@
             });
             
             if (hasWonders) {
-            sidebar.appendChild(wondersSection);
+            contentWrapper.appendChild(wondersSection);
             }
+            
+            sidebar.appendChild(contentWrapper);
+            
+            // Privacy Policy and Report Bug Links - positioned at absolute bottom
+            const footerLinks = document.createElement('div');
+            footerLinks.style.paddingTop = '20px';
+            footerLinks.style.borderTop = '1px solid #3a3a3c';
+            footerLinks.style.marginTop = 'auto';
+            footerLinks.style.display = 'flex';
+            footerLinks.style.justifyContent = 'space-between';
+            footerLinks.style.alignItems = 'center';
+            
+            const privacyLink = document.createElement('a');
+            privacyLink.href = 'https://maximilianising.github.io/Civle/privacy-policy.html';
+            privacyLink.target = '_blank';
+            privacyLink.rel = 'noopener noreferrer';
+            privacyLink.textContent = 'Privacy Policy';
+            privacyLink.style.color = '#818384';
+            privacyLink.style.fontSize = '12px';
+            privacyLink.style.textDecoration = 'none';
+            privacyLink.style.transition = 'color 0.2s';
+            privacyLink.onmouseover = function() { this.style.color = '#ffffff'; };
+            privacyLink.onmouseout = function() { this.style.color = '#818384'; };
+            
+            const reportBugLink = document.createElement('a');
+            reportBugLink.href = '#';
+            reportBugLink.textContent = 'Report Bug';
+            reportBugLink.style.color = '#818384';
+            reportBugLink.style.fontSize = '12px';
+            reportBugLink.style.textDecoration = 'none';
+            reportBugLink.style.transition = 'color 0.2s';
+            reportBugLink.style.cursor = 'pointer';
+            reportBugLink.onmouseover = function() { this.style.color = '#ffffff'; };
+            reportBugLink.onmouseout = function() { this.style.color = '#818384'; };
+            reportBugLink.onclick = function(e) {
+                e.preventDefault();
+                showBugReportModal();
+            };
+            
+            footerLinks.appendChild(privacyLink);
+            footerLinks.appendChild(reportBugLink);
+            sidebar.appendChild(footerLinks);
         }
 
         function formatPlacementRequirements(itemData, type) {
@@ -4518,7 +4693,7 @@
                     <div class="score-item">
                         <span class="yield-label">
                             <img src="assets/yields/Science.webp" alt="Science" class="yield-icon">
-                            <span>Science:</span>
+                        <span>Science:</span>
                         </span>
                         <span>+${totalScience}</span>
                     </div>
@@ -4570,7 +4745,7 @@
                         <div class="score-item">
                             <span class="yield-label">
                                 <img src="assets/yields/Score.webp" alt="Score" class="yield-icon">
-                                <span>Total Score:</span>
+                            <span>Total Score:</span>
                             </span>
                             <span>${totalScience + totalCulture + totalProduction + totalFaith + (totalGold * 0.5)}</span>
                         </div>
@@ -4967,6 +5142,85 @@
             }
         }
         
+        function showBugReportModal() {
+            const modal = document.getElementById('bugReportModal');
+            const textarea = document.getElementById('bugReportText');
+            const message = document.getElementById('bugReportMessage');
+            const submitBtn = document.querySelector('.bug-report-btn.submit');
+            if (modal) {
+                modal.classList.add('active');
+                if (textarea) textarea.value = '';
+                if (message) {
+                    message.className = 'bug-report-message';
+                    message.textContent = '';
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                }
+            }
+        }
+        
+        function closeBugReportModal() {
+            const modal = document.getElementById('bugReportModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+        
+        async function submitBugReport() {
+            const textarea = document.getElementById('bugReportText');
+            const message = document.getElementById('bugReportMessage');
+            const submitBtn = document.querySelector('.bug-report-btn.submit');
+            
+            if (!textarea || !message) return;
+            
+            const bugDescription = textarea.value.trim();
+            
+            if (bugDescription.length === 0) {
+                message.className = 'bug-report-message error';
+                message.textContent = 'Please describe the bug before submitting.';
+                return;
+            }
+            
+            if (submitBtn) submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/report-bug', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        description: bugDescription
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    message.className = 'bug-report-message success';
+                    message.textContent = 'Bug report submitted successfully. Thank you!';
+                    textarea.value = '';
+                    // Keep button disabled after successful submission
+                    if (submitBtn) submitBtn.disabled = true;
+                    setTimeout(() => {
+                        closeBugReportModal();
+                    }, 2000);
+                } else {
+                    message.className = 'bug-report-message error';
+                    message.textContent = 'Failed to submit bug report: ' + (data.error || 'Unknown error');
+                    // Re-enable button on error so user can try again
+                    if (submitBtn) submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error submitting bug report:', error);
+                message.className = 'bug-report-message error';
+                message.textContent = 'Failed to submit bug report. Please try again.';
+                // Re-enable button on error so user can try again
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        }
+        
         function closeLeaderboard() {
             const modal = document.getElementById('leaderboardModal');
             modal.classList.remove('active');
@@ -5320,7 +5574,7 @@
                 mobileMessage.classList.add('active');
             }
         } else {
-            // Initialize on load
+        // Initialize on load
             // Load game data, then load daily challenge
             loadGameData().then(() => {
                 loadDailyChallenge();
@@ -5354,6 +5608,19 @@
                 <div id="countdownTime" class="countdown-time">--:--:--</div>
             </div>
             <button class="leaderboard-close-btn" onclick="closeLeaderboard()">Close</button>
+        </div>
+    </div>
+
+    <!-- Bug Report Modal -->
+    <div id="bugReportModal" class="bug-report-modal">
+        <div class="bug-report-content">
+            <h2>Report a Bug</h2>
+            <textarea id="bugReportText" placeholder="Please describe the bug you encountered..."></textarea>
+            <div id="bugReportMessage" class="bug-report-message"></div>
+            <div class="bug-report-buttons">
+                <button class="bug-report-btn" onclick="closeBugReportModal()">Cancel</button>
+                <button class="bug-report-btn submit" onclick="submitBugReport()">Submit</button>
+            </div>
         </div>
     </div>
 
