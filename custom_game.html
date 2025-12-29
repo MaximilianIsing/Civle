@@ -3,18 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Civle Game</title>
+    <title>Civle Custom Game</title>
     <link rel="icon" type="image/png" href="assets/logo/Logo320x320.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
-        // Update title with today's date (EST timezone)
-        (function() {
-            const now = new Date();
-            const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-            const month = String(estDate.getMonth() + 1).padStart(2, '0');
-            const day = String(estDate.getDate()).padStart(2, '0');
-            document.title = `Civle ${month}/${day}`;
-        })();
+        // Custom game - no date in title
     </script>
     <style>
         @font-face {
@@ -942,15 +935,16 @@
             <h1>CIVLE</h1>
         </div>
         <div class="header-right">
-            <button id="yesterdayBestBtn" class="yesterday-best-btn">Yesterday's Best Setup</button>
         </div>
     </div>
 
     <div class="main-container">
         <div class="sidebar" id="sidebar">
             <div class="empty-state">
-                <h2>Loading Today's Challenge...</h2>
-                <p>Please wait while we load the daily challenge</p>
+                <h2>Upload Challenge</h2>
+                <p>Please upload a challenge file to begin playing.</p>
+                <input type="file" id="challengeFileInput" accept=".civle" style="display: none;" onchange="loadChallenge(event)">
+                <button class="submit-score-btn" onclick="document.getElementById('challengeFileInput').click()" style="margin-top: 20px; width: 100%;">Upload Challenge File</button>
             </div>
         </div>
 
@@ -2266,6 +2260,19 @@
         function populateSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.innerHTML = '';
+            
+            // If no challenge is loaded, show upload prompt
+            if (!challengeData || Object.keys(availableItems).length === 0) {
+                sidebar.innerHTML = `
+                    <div class="empty-state">
+                        <h2>Upload Challenge</h2>
+                        <p>Please upload a challenge file to begin playing.</p>
+                        <input type="file" id="challengeFileInput" accept=".civle" style="display: none;" onchange="loadChallenge(event)">
+                        <button class="submit-score-btn" onclick="document.getElementById('challengeFileInput').click()" style="margin-top: 20px; width: 100%;">Upload Challenge File</button>
+                    </div>
+                `;
+                return;
+            }
             
             sidebar.innerHTML = '<h2>Available Items</h2>';
             
@@ -3981,16 +3988,14 @@
                             <span>${totalScience + totalCulture + totalProduction + totalFaith + (totalGold * 0.5)}</span>
                         </div>
                     </div>
-                    <button id="submitScoreBtn" class="submit-score-btn">Submit Score</button>
+                    <input type="file" id="challengeFileInput" accept=".civle" style="display: none;" onchange="loadChallenge(event)">
+                    <button id="uploadChallengeBtn" class="submit-score-btn" onclick="document.getElementById('challengeFileInput').click()">Upload Challenge File</button>
                 `;
                 
-                // Check if user has already submitted today
-                checkSubmissionStatus();
-                
-                // Add event listener for submit button
-                const submitBtn = document.getElementById('submitScoreBtn');
-                if (submitBtn) {
-                    submitBtn.onclick = handleScoreButtonClick;
+                // Add event listener for upload button
+                const uploadBtn = document.getElementById('uploadChallengeBtn');
+                if (uploadBtn) {
+                    // Button click is handled by onclick attribute above
                 }
             }
         }
@@ -4396,12 +4401,7 @@
         });
 
         // Add event listener for yesterday's best button
-        document.addEventListener('DOMContentLoaded', () => {
-            const yesterdayBtn = document.getElementById('yesterdayBestBtn');
-            if (yesterdayBtn) {
-                yesterdayBtn.addEventListener('click', showYesterdayBest);
-            }
-        });
+        // Removed yesterday's best setup button for custom game
 
         function initMapZoomPan() {
             const mapContainer = document.getElementById('mapContainer');
@@ -4538,9 +4538,10 @@
         }
         
         // Initialize on load
-        // Load game data, then load daily challenge
+        // Load game data (don't auto-load daily challenge for custom game)
         loadGameData().then(() => {
-            loadDailyChallenge();
+            // Show upload prompt in sidebar
+            populateSidebar();
         });
     </script>
     
