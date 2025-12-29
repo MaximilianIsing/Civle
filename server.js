@@ -34,7 +34,9 @@ const MIME_TYPES = {
     '.webp': 'image/webp',
     '.ttf': 'font/ttf',
     '.woff': 'font/woff',
-    '.woff2': 'font/woff2'
+    '.woff2': 'font/woff2',
+    '.xml': 'application/xml',
+    '.txt': 'text/plain'
 };
 
 // Function to get date string in EST timezone
@@ -676,8 +678,16 @@ const server = http.createServer((req, res) => {
             return;
         }
     } else {
+        // Handle sitemap.xml
+        if (pathname === '/sitemap.xml') {
+            filePath = './public/sitemap.xml';
+        }
+        // Handle robots.txt
+        else if (pathname === '/robots.txt') {
+            filePath = './public/robots.txt';
+        }
         // Handle storage/screenshots requests
-        if (pathname.startsWith('/storage/screenshots/')) {
+        else if (pathname.startsWith('/storage/screenshots/')) {
             // Extract filename from path
             const filename = pathname.replace('/storage/screenshots/', '');
             filePath = path.join(STORAGE_DIR, 'screenshots', filename);
@@ -704,9 +714,16 @@ const server = http.createServer((req, res) => {
         }
     }
     
-    // Get file extension
+    // Get file extension and determine content type
     const ext = path.extname(filePath).toLowerCase();
-    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+    let contentType = MIME_TYPES[ext] || 'application/octet-stream';
+    
+    // Special handling for sitemap.xml and robots.txt
+    if (pathname === '/sitemap.xml') {
+        contentType = 'application/xml';
+    } else if (pathname === '/robots.txt') {
+        contentType = 'text/plain';
+    }
     
     // Read and serve file
     fs.readFile(filePath, (err, content) => {
