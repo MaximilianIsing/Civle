@@ -163,7 +163,7 @@
       "resources_its_built_on": ["Fish", "Amber", "Pearls", "Turtles", "Whales"]
     },
     {
-      "name": "Lumber_Mill",a
+      "name": "Lumber_Mill",
       "description": "A standard improvement, may be placed on any recourceless (or clearable) tile with woods. Ignores terrain.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills"],
       "must_be_on_woods": true,

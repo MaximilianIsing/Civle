@@ -256,6 +256,145 @@ const server = http.createServer((req, res) => {
         return;
     }
     
+    // Handle first place screenshot submission
+    if (pathname === '/submit-first-place-screenshot' && req.method === 'POST') {
+        // Get current date in EST timezone
+        const now = new Date();
+        const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+        const month = String(estDate.getMonth() + 1).padStart(2, '0');
+        const day = String(estDate.getDate()).padStart(2, '0');
+        const dateString = `${month}-${day}`;
+        
+        // Ensure screenshots directory exists
+        const screenshotsDir = './screenshots';
+        if (!fs.existsSync(screenshotsDir)) {
+            fs.mkdirSync(screenshotsDir, { recursive: true });
+        }
+        
+        const screenshotPath = `${screenshotsDir}/${dateString}.png`;
+        
+        // Delete old screenshot if it exists (only one first place setup per day)
+        if (fs.existsSync(screenshotPath)) {
+            fs.unlinkSync(screenshotPath);
+        }
+        
+        // Read multipart form data
+        const chunks = [];
+        req.on('data', chunk => {
+            chunks.push(chunk);
+        });
+        req.on('end', () => {
+            try {
+                const buffer = Buffer.concat(chunks);
+                
+                // Parse multipart form data manually
+                const contentType = req.headers['content-type'] || '';
+                const boundaryMatch = contentType.match(/boundary=(.+)$/);
+                if (!boundaryMatch) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, error: 'Invalid content type' }), 'utf-8');
+                    return;
+                }
+                
+                const boundary = '--' + boundaryMatch[1];
+                const parts = buffer.toString('binary').split(boundary);
+                
+                for (let part of parts) {
+                    if (part.includes('Content-Type: image/png') || part.includes('Content-Type: image/png')) {
+                        // Extract image data - find the double CRLF that separates headers from body
+                        const headerEnd = part.indexOf('\r\n\r\n');
+                        if (headerEnd !== -1) {
+                            const imageStart = headerEnd + 4;
+                            // Find the end of this part (before the next boundary or end marker)
+                            let imageEnd = part.length;
+                            const nextBoundary = part.indexOf('\r\n--', imageStart);
+                            if (nextBoundary !== -1) {
+                                imageEnd = nextBoundary;
+                            }
+                            
+                            if (imageStart < imageEnd) {
+                                const imageData = part.substring(imageStart, imageEnd);
+                                const imageBuffer = Buffer.from(imageData, 'binary');
+                                
+                                // Save screenshot
+                                fs.writeFileSync(screenshotPath, imageBuffer);
+                                
+                                res.writeHead(200, { 'Content-Type': 'application/json' });
+                                res.end(JSON.stringify({ success: true }), 'utf-8');
+                                return;
+                            }
+                        }
+                    }
+                }
+                
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'No image data found' }), 'utf-8');
+            } catch (err) {
+                console.error('Error saving screenshot:', err);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Server error' }), 'utf-8');
+            }
+        });
+        return;
+    }
+    
+    // Handle yesterday's best setup endpoint
+    if (pathname === '/yesterday-best-setup' && req.method === 'GET') {
+        try {
+            // Get yesterday's date in EST timezone
+            const now = new Date();
+            const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            estDate.setDate(estDate.getDate() - 1); // Yesterday
+            const month = String(estDate.getMonth() + 1).padStart(2, '0');
+            const day = String(estDate.getDate()).padStart(2, '0');
+            const dateString = `${month}-${day}`;
+            
+            const screenshotPath = `./screenshots/${dateString}.png`;
+            const challengePath = `./day_challenges/${dateString}.civle`;
+            
+            let challengeData = null;
+            let screenshotData = null;
+            
+            // Read challenge if it exists
+            if (fs.existsSync(challengePath)) {
+                challengeData = fs.readFileSync(challengePath, 'utf8');
+            }
+            
+            // Read screenshot if it exists
+            if (fs.existsSync(screenshotPath)) {
+                screenshotData = fs.readFileSync(screenshotPath);
+            }
+            
+            // Return JSON with both challenge and screenshot
+            if (challengeData || screenshotData) {
+                const response = {
+                    success: true,
+                    challenge: challengeData,
+                    hasScreenshot: screenshotData !== null
+                };
+                
+                // If screenshot exists, convert to base64 data URL
+                if (screenshotData) {
+                    response.screenshotUrl = `data:image/png;base64,${screenshotData.toString('base64')}`;
+                }
+                
+                res.writeHead(200, { 
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache'
+                });
+                res.end(JSON.stringify(response), 'utf-8');
+            } else {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'No setup available for yesterday' }), 'utf-8');
+            }
+        } catch (err) {
+            console.error('Error loading yesterday\'s best setup:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Server error' }), 'utf-8');
+        }
+        return;
+    }
+    
     // Handle daily challenge endpoint
     if (pathname === '/daily-challenge') {
         try {
