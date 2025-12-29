@@ -1961,24 +1961,75 @@
                                     }
                                 }
                                 
-                                // Check all Canals that might be affected by the city center move
-                                // A Canal can be valid if it has a city center on one of its opposite tiles
-                                // Check all Canals within 4 tiles of both old and new city center locations
+                                // Check Canals that might be affected by the city center move
+                                // Only check canals where the moved city center is on one of their opposite tiles
                                 const canalsToCheck = new Set();
                                 
-                                // Check all placed items for Canals within range
+                                // Helper function to check if a city center is on one of a canal's opposite tiles
+                                function isCityCenterOnCanalOppositeTiles(canalRow, canalCol, cityRow, cityCol) {
+                                    const canalNeighbors = getNeighbors(canalRow, canalCol);
+                                    
+                                    // Check all neighbors for water tiles
+                                    for (const neighbor of canalNeighbors) {
+                                        const neighborKey = `${neighbor.row},${neighbor.col}`;
+                                        const neighborTile = challengeData.tiles[neighborKey];
+                                        
+                                        // Check if neighbor is a water tile
+                                        if (neighborTile && neighborTile.terrain && 
+                                            (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
+                                            
+                                            // Calculate the direction from canal to this water tile
+                                            const dr = neighbor.row - canalRow;
+                                            const dc = neighbor.col - canalCol;
+                                            const isOddRow = canalRow % 2 === 1;
+                                            
+                                            // Determine direction index (0-5)
+                                            let directionIndex = -1;
+                                            
+                                            if (isOddRow) {
+                                                if (dr === 0 && dc === 1) directionIndex = 0;
+                                                else if (dr === -1 && dc === 1) directionIndex = 1;
+                                                else if (dr === -1 && dc === 0) directionIndex = 2;
+                                                else if (dr === 0 && dc === -1) directionIndex = 3;
+                                                else if (dr === 1 && dc === 0) directionIndex = 4;
+                                                else if (dr === 1 && dc === 1) directionIndex = 5;
+                                            } else {
+                                                if (dr === 0 && dc === 1) directionIndex = 0;
+                                                else if (dr === -1 && dc === 0) directionIndex = 1;
+                                                else if (dr === -1 && dc === -1) directionIndex = 2;
+                                                else if (dr === 0 && dc === -1) directionIndex = 3;
+                                                else if (dr === 1 && dc === -1) directionIndex = 4;
+                                                else if (dr === 1 && dc === 0) directionIndex = 5;
+                                            }
+                                            
+                                            // If we found the direction, check the opposite 3 tiles
+                                            if (directionIndex >= 0) {
+                                                const oppositeDirections = [
+                                                    (directionIndex + 2) % 6,
+                                                    (directionIndex + 3) % 6,
+                                                    (directionIndex + 4) % 6
+                                                ];
+                                                
+                                                // Check if city center is on any of the opposite tiles
+                                                for (const oppDir of oppositeDirections) {
+                                                    const oppNeighbor = getNeighborAtDirection(canalRow, canalCol, oppDir);
+                                                    if (oppNeighbor && oppNeighbor.row === cityRow && oppNeighbor.col === cityCol) {
+                                                        return true;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    return false;
+                                }
+                                
+                                // Check all canals to see if the moved city center is on one of their opposite tiles
                                 for (const [canalKey, canalPlaced] of Object.entries(placedItems)) {
                                     if (canalPlaced.type === 'district' && canalPlaced.name === 'Canal') {
                                         const [canalRow, canalCol] = canalKey.split(',').map(Number);
                                         
-                                        // Check distance to old city center location
-                                        const distanceToOld = getHexDistance(canalRow, canalCol, draggedDistrict.row, draggedDistrict.col);
-                                        // Check distance to new city center location
-                                        const distanceToNew = getHexDistance(canalRow, canalCol, row, col);
-                                        
-                                        // A city center could be on one of the opposite tiles if it's within 4 tiles
-                                        // (water tile is 1 tile away, opposite tiles are 3 tiles from water = 4 tiles from canal)
-                                        if (distanceToOld <= 4 || distanceToNew <= 4) {
+                                        // Check if old city center location is on one of this canal's opposite tiles
+                                        if (isCityCenterOnCanalOppositeTiles(canalRow, canalCol, draggedDistrict.row, draggedDistrict.col)) {
                                             canalsToCheck.add(canalKey);
                                         }
                                     }
@@ -2767,6 +2818,108 @@
                         updateHexVisual(districtRow, districtCol);
                         const districtNeighbors = getNeighbors(districtRow, districtCol);
                         districtNeighbors.forEach(neighbor => {
+                            updateHexVisual(neighbor.row, neighbor.col);
+                        });
+                    }
+                }
+                
+                // Check Canals that might be affected by the city center deletion
+                // Only check canals where the deleted city center is on one of their opposite tiles
+                const canalsToCheck = new Set();
+                
+                // Helper function to check if a city center is on one of a canal's opposite tiles
+                function isCityCenterOnCanalOppositeTiles(canalRow, canalCol, cityRow, cityCol) {
+                    const canalNeighbors = getNeighbors(canalRow, canalCol);
+                    
+                    // Check all neighbors for water tiles
+                    for (const neighbor of canalNeighbors) {
+                        const neighborKey = `${neighbor.row},${neighbor.col}`;
+                        const neighborTile = challengeData.tiles[neighborKey];
+                        
+                        // Check if neighbor is a water tile
+                        if (neighborTile && neighborTile.terrain && 
+                            (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
+                            
+                            // Calculate the direction from canal to this water tile
+                            const dr = neighbor.row - canalRow;
+                            const dc = neighbor.col - canalCol;
+                            const isOddRow = canalRow % 2 === 1;
+                            
+                            // Determine direction index (0-5)
+                            let directionIndex = -1;
+                            
+                            if (isOddRow) {
+                                if (dr === 0 && dc === 1) directionIndex = 0;
+                                else if (dr === -1 && dc === 1) directionIndex = 1;
+                                else if (dr === -1 && dc === 0) directionIndex = 2;
+                                else if (dr === 0 && dc === -1) directionIndex = 3;
+                                else if (dr === 1 && dc === 0) directionIndex = 4;
+                                else if (dr === 1 && dc === 1) directionIndex = 5;
+                            } else {
+                                if (dr === 0 && dc === 1) directionIndex = 0;
+                                else if (dr === -1 && dc === 0) directionIndex = 1;
+                                else if (dr === -1 && dc === -1) directionIndex = 2;
+                                else if (dr === 0 && dc === -1) directionIndex = 3;
+                                else if (dr === 1 && dc === -1) directionIndex = 4;
+                                else if (dr === 1 && dc === 0) directionIndex = 5;
+                            }
+                            
+                            // If we found the direction, check the opposite 3 tiles
+                            if (directionIndex >= 0) {
+                                const oppositeDirections = [
+                                    (directionIndex + 2) % 6,
+                                    (directionIndex + 3) % 6,
+                                    (directionIndex + 4) % 6
+                                ];
+                                
+                                // Check if city center is on any of the opposite tiles
+                                for (const oppDir of oppositeDirections) {
+                                    const oppNeighbor = getNeighborAtDirection(canalRow, canalCol, oppDir);
+                                    if (oppNeighbor && oppNeighbor.row === cityRow && oppNeighbor.col === cityCol) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return false;
+                }
+                
+                // Check all canals to see if the deleted city center is on one of their opposite tiles
+                for (const [canalKey, canalPlaced] of Object.entries(placedItems)) {
+                    if (canalPlaced.type === 'district' && canalPlaced.name === 'Canal') {
+                        const [canalRow, canalCol] = canalKey.split(',').map(Number);
+                        
+                        // Check if deleted city center is on one of this canal's opposite tiles
+                        if (isCityCenterOnCanalOppositeTiles(canalRow, canalCol, row, col)) {
+                            canalsToCheck.add(canalKey);
+                        }
+                    }
+                }
+                
+                const canalsToDelete = [];
+                for (const canalKey of canalsToCheck) {
+                    const [canalRow, canalCol] = canalKey.split(',').map(Number);
+                    const canalTile = challengeData.tiles[canalKey];
+                    // Validate this Canal against placement rules
+                    if (!isValidPlacement(canalRow, canalCol, 'district', 'Canal', canalTile)) {
+                        canalsToDelete.push(canalKey);
+                    }
+                }
+                
+                // Delete Canals that no longer meet requirements
+                for (const canalKey of canalsToDelete) {
+                    const canal = placedItems[canalKey];
+                    if (canal) {
+                        // Add back to available items
+                        availableItems[canal.name] = (availableItems[canal.name] || 0) + 1;
+                        // Delete the Canal
+                        delete placedItems[canalKey];
+                        // Update visuals for the deleted Canal location
+                        const [canalRow, canalCol] = canalKey.split(',').map(Number);
+                        updateHexVisual(canalRow, canalCol);
+                        const canalNeighbors = getNeighbors(canalRow, canalCol);
+                        canalNeighbors.forEach(neighbor => {
                             updateHexVisual(neighbor.row, neighbor.col);
                         });
                     }

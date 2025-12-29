@@ -11,24 +11,17 @@ const STORAGE_DIR = (process.env.NODE_ENV === 'production' || fs.existsSync('/st
     ? '/storage'
     : './storage';
 
-// Log which storage directory is being used (for debugging)
-console.log(`Using storage directory: ${STORAGE_DIR}`);
-console.log(`Storage directory exists: ${fs.existsSync(STORAGE_DIR)}`);
-
 // Ensure storage directories exist
 const scoresDir = path.join(STORAGE_DIR, 'scores');
 const screenshotsDir = path.join(STORAGE_DIR, 'screenshots');
 if (!fs.existsSync(STORAGE_DIR)) {
     fs.mkdirSync(STORAGE_DIR, { recursive: true });
-    console.log(`Created storage directory: ${STORAGE_DIR}`);
 }
 if (!fs.existsSync(scoresDir)) {
     fs.mkdirSync(scoresDir, { recursive: true });
-    console.log(`Created scores directory: ${scoresDir}`);
 }
 if (!fs.existsSync(screenshotsDir)) {
     fs.mkdirSync(screenshotsDir, { recursive: true });
-    console.log(`Created screenshots directory: ${screenshotsDir}`);
 }
 const MIME_TYPES = {
     '.html': 'text/html',
