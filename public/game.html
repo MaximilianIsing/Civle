@@ -3895,9 +3895,6 @@
                     if (neighborTile.feature === 'Rainforest') {
                         rainforestCount++;
                     }
-                    if (neighborTile.feature === 'Geothermal_Fissure') {
-                        geothermalFissureCount++;
-                    }
                     // Check for reef
                     if (neighborTile.terrain === 'Reef') {
                         reefCount++;
@@ -3905,6 +3902,14 @@
                     // Check for coastal resources (resources on coast/ocean/reef tiles)
                     if (neighborTile.resource && (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
                         coastalResourceCount++;
+                    }
+                }
+                
+                // Special case: Geothermal Fissures count even if there's a City_Center on the tile
+                // This is unique to geothermal fissures - other features don't count if there's a district
+                if (neighborTile && neighborTile.feature === 'Geothermal_Fissure') {
+                    if (!neighborPlaced || (neighborPlaced.type === 'district' && neighborPlaced.name === 'City_Center')) {
+                        geothermalFissureCount++;
                     }
                 }
                 
@@ -4478,9 +4483,6 @@
                     if (neighborTile.feature === 'Rainforest') {
                         rainforestCount++;
                     }
-                    if (neighborTile.feature === 'Geothermal_Fissure') {
-                        geothermalFissureCount++;
-                    }
                     // Check for reef
                     if (neighborTile.terrain === 'Reef') {
                         reefCount++;
@@ -4488,6 +4490,14 @@
                     // Check for coastal resources (resources on coast/ocean/reef tiles)
                     if (neighborTile.resource && (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
                         coastalResourceCount++;
+                    }
+                }
+                
+                // Special case: Geothermal Fissures count even if there's a City_Center on the tile
+                // This is unique to geothermal fissures - other features don't count if there's a district
+                if (neighborTile && neighborTile.feature === 'Geothermal_Fissure') {
+                    if (!neighborPlaced || (neighborPlaced.type === 'district' && neighborPlaced.name === 'City_Center')) {
+                        geothermalFissureCount++;
                     }
                 }
                 
@@ -5650,7 +5660,7 @@
             </ul>
             <p><strong>Tips:</strong></p>
             <ul>
-                <li>Hover over items in the sidebar to see their placement requirements and adjacent bonuses</li>
+                <li>Hover over items in the sidebar to see their placement requirements and adjacency bonuses</li>
                 <li>Drag placed districts to move or delete them</li>
                 <li>Right click on a district to delete it</li>
                 <li>Use the zoom controls to get a better view of the map</li>

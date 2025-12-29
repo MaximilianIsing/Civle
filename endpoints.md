@@ -108,6 +108,46 @@ Content-Type: application/json
 
 ---
 
+### POST `/report-bug`
+Submits a bug report to help improve the game.
+
+**Request Body:**
+```json
+{
+  "description": "Description of the bug encountered"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Bug report submitted successfully"
+}
+```
+
+**Errors:**
+- **400 Bad Request**: 
+  - `"Description required"` - No description provided
+- **500 Internal Server Error**: Server error
+
+**Example:**
+```
+POST /report-bug
+Content-Type: application/json
+
+{
+  "description": "The game crashes when placing a district on a hill tile"
+}
+```
+
+**Notes:**
+- Bug reports are stored in `storage/reports/bug_reports.json`
+- Each report includes the description, timestamp, and user agent
+- Bug reports are retained to help improve the game
+
+---
+
 ## Protected Endpoints
 
 These endpoints require a valid key from `endpoint_key.txt`.
