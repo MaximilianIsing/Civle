@@ -3464,13 +3464,23 @@
                 }
                 
                 // Check required feature adjacency
+                // Note: This can be either a tile feature (like "Marsh", "Rainforest") or an improvement name (like "Camp")
                 if (itemData.required_feature_adjacency && itemData.required_feature_adjacency.length > 0) {
                     const neighbors = getNeighbors(row, col);
                     let hasRequiredFeature = false;
                     for (const neighbor of neighbors) {
                         const neighborKey = `${neighbor.row},${neighbor.col}`;
                         const neighborTile = challengeData.tiles[neighborKey];
-                        if (neighborTile && itemData.required_feature_adjacency.includes(neighborTile.feature)) {
+                        const neighborPlaced = placedItems[neighborKey];
+                        
+                        // Check if it's a tile feature
+                        if (neighborTile && neighborTile.feature && itemData.required_feature_adjacency.includes(neighborTile.feature)) {
+                            hasRequiredFeature = true;
+                            break;
+                        }
+                        
+                        // Check if it's a placed improvement with that name
+                        if (neighborPlaced && neighborPlaced.type === 'improvement' && itemData.required_feature_adjacency.includes(neighborPlaced.name)) {
                             hasRequiredFeature = true;
                             break;
                         }
