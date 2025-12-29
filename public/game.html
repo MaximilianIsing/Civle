@@ -2060,6 +2060,11 @@
 
             // Tooltip handlers
             hex.addEventListener('mouseenter', (e) => {
+                // Don't show tooltip if dragging
+                if (draggedDistrict || draggedImprovement || draggedItem) {
+                    return;
+                }
+                
                 // Clear any existing timeout
                 if (tooltipTimeout) {
                     clearTimeout(tooltipTimeout);
@@ -2094,7 +2099,8 @@
                 } else if (!isTooltipVisible) {
                     // Set timeout to show tooltip after 1 second (only if not already visible)
                     tooltipTimeout = setTimeout(() => {
-                        if (hexTooltip) {
+                        // Double-check we're not dragging before showing
+                        if (!draggedDistrict && !draggedImprovement && !draggedItem && hexTooltip) {
                             currentTooltipRow = row;
                             currentTooltipCol = col;
                             const content = formatTooltipContent(row, col);
@@ -2771,12 +2777,117 @@
                 img.dataset.col = col;
                 img.style.pointerEvents = 'auto'; // Allow drag events
                 
+                // Add tooltip handlers to district image so it works when hovering over the district
+                img.addEventListener('mouseenter', (e) => {
+                    // Don't show tooltip if actually dragging
+                    if (draggedDistrict) {
+                        return;
+                    }
+                    
+                    // Clear any existing timeout
+                    if (tooltipTimeout) {
+                        clearTimeout(tooltipTimeout);
+                        tooltipTimeout = null;
+                    }
+                    
+                    // Store initial mouse position
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                    
+                    // Check if we're moving from another tile
+                    const wasOnDifferentTile = currentTooltipRow !== null && 
+                                              currentTooltipCol !== null && 
+                                              (currentTooltipRow !== row || currentTooltipCol !== col);
+                    const isTooltipVisible = hexTooltip && hexTooltip.classList.contains('visible');
+                    
+                    // If tooltip is visible and we're moving to a different tile, show instantly
+                    if (isTooltipVisible && wasOnDifferentTile) {
+                        if (hexTooltip) {
+                            currentTooltipRow = row;
+                            currentTooltipCol = col;
+                            const content = formatTooltipContent(row, col);
+                            if (content) {
+                                hexTooltip.innerHTML = content;
+                                hexTooltip.style.left = (e.clientX + 10) + 'px';
+                                hexTooltip.style.top = (e.clientY + 10) + 'px';
+                                hexTooltip.classList.add('visible');
+                            }
+                        }
+                    } else if (!isTooltipVisible) {
+                        // Set timeout to show tooltip after 1 second
+                        tooltipTimeout = setTimeout(() => {
+                            // Double-check we're not dragging before showing
+                            if (!draggedDistrict && hexTooltip) {
+                                currentTooltipRow = row;
+                                currentTooltipCol = col;
+                                const content = formatTooltipContent(row, col);
+                                if (content) {
+                                    hexTooltip.innerHTML = content;
+                                    hexTooltip.style.left = (lastMouseX + 10) + 'px';
+                                    hexTooltip.style.top = (lastMouseY + 10) + 'px';
+                                    hexTooltip.classList.add('visible');
+                                }
+                            }
+                        }, 1000);
+                    }
+                });
+                
+                img.addEventListener('mouseleave', (e) => {
+                    // Clear timeout if tooltip hasn't shown yet
+                    if (tooltipTimeout) {
+                        clearTimeout(tooltipTimeout);
+                        tooltipTimeout = null;
+                    }
+                    
+                    // Check if we're moving to another hex element or district image
+                    const relatedTarget = e.relatedTarget;
+                    const isMovingToHex = relatedTarget && (
+                        relatedTarget.classList.contains('hex') ||
+                        relatedTarget.classList.contains('hex-district') ||
+                        relatedTarget.closest('.hex') !== null
+                    );
+                    
+                    // Only hide tooltip if we're not moving to another hex/district
+                    if (!isMovingToHex) {
+                        if (hexTooltip) {
+                            hexTooltip.classList.remove('visible');
+                            currentTooltipRow = null;
+                            currentTooltipCol = null;
+                        }
+                    }
+                });
+                
+                img.addEventListener('mousemove', (e) => {
+                    // Update last known mouse position
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                    
+                    // Update tooltip position if it's visible
+                    if (hexTooltip && hexTooltip.classList.contains('visible') && 
+                        currentTooltipRow === row && currentTooltipCol === col) {
+                        hexTooltip.style.left = (e.clientX + 10) + 'px';
+                        hexTooltip.style.top = (e.clientY + 10) + 'px';
+                    }
+                });
+                
                 // Add drag handlers for districts
                 img.addEventListener('dragstart', (e) => {
                     draggedDistrict = { row, col, name: placed.name };
                     img.style.opacity = '0.5';
                     img.style.cursor = 'grabbing';
                     e.stopPropagation(); // Prevent event from bubbling
+                    
+                    // Hide tooltip when dragging starts
+                    if (hexTooltip) {
+                        hexTooltip.classList.remove('visible');
+                        currentTooltipRow = null;
+                        currentTooltipCol = null;
+                    }
+                    // Clear any pending tooltip timeout
+                    if (tooltipTimeout) {
+                        clearTimeout(tooltipTimeout);
+                        tooltipTimeout = null;
+                    }
                     
                     // Create a custom drag image with an opaque version of the district
                     const dragImg = new Image();
@@ -4911,9 +5022,11 @@
                     if (neighborTile.terrain === 'Reef') {
                         reefCount++;
                     }
-                    if (neighborTile.resource && (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
-                        coastalResourceCount++;
-                    }
+                }
+                
+                // Coastal resources count even if there's a district on the tile
+                if (neighborTile && neighborTile.resource && (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
+                    coastalResourceCount++;
                 }
                 
                 // Special case: Geothermal Fissures count even if there's a City_Center on the tile
@@ -4944,7 +5057,10 @@
             });
             
             // Add sources based on what bonuses exist
-            if (bonuses.District && districtCount > 0) {
+            // Check for all_districts bonus (per 2 districts)
+            if (bonuses.all_districts && districtCount > 0) {
+                sources.push({ type: 'District', count: districtCount, bonus: bonuses.all_districts, isAllDistricts: true });
+            } else if (bonuses.District && districtCount > 0) {
                 sources.push({ type: 'District', count: districtCount, bonus: bonuses.District });
             }
             if (bonuses.City_Center && cityCenterCount > 0) {
@@ -4989,8 +5105,19 @@
             if (bonuses.Reef && reefCount > 0) {
                 sources.push({ type: 'Reef', count: reefCount, bonus: bonuses.Reef });
             }
-            if (bonuses.Coastal_Resource && coastalResourceCount > 0) {
-                sources.push({ type: 'Coastal_Resource', count: coastalResourceCount, bonus: bonuses.Coastal_Resource });
+            if (bonuses.Coastal_Resources && coastalResourceCount > 0) {
+                // Get actual coastal resources for display
+                const coastalResources = [];
+                neighbors.forEach(neighbor => {
+                    const neighborKey = `${neighbor.row},${neighbor.col}`;
+                    const neighborTile = challengeData.tiles[neighborKey];
+                    if (neighborTile && neighborTile.resource && (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
+                        if (!coastalResources.includes(neighborTile.resource)) {
+                            coastalResources.push(neighborTile.resource);
+                        }
+                    }
+                });
+                sources.push({ type: 'Coastal_Resources', count: coastalResourceCount, bonus: bonuses.Coastal_Resources, resourceNames: coastalResources });
             }
             if (bonuses.Mine && improvementCounts.Mine) {
                 sources.push({ type: 'Mine', count: improvementCounts.Mine, bonus: bonuses.Mine });
@@ -5022,6 +5149,51 @@
             return sources;
         }
 
+        function getSourceIconPath(sourceType) {
+            // Districts - try to find if it's a district by checking if the file exists pattern
+            // Common districts: Campus, Theater_Square, Holy_Site, Encampment, Industrial_Zone, 
+            // Commercial_Hub, Harbor, Entertainment_Complex, Water_Park, Government_Plaza,
+            // Aqueduct, Dam, Canal, City_Center
+            const districtNames = ['Campus', 'Theater_Square', 'Holy_Site', 'Encampment', 'Industrial_Zone',
+                'Commercial_Hub', 'Harbor', 'Entertainment_Complex', 'Water_Park', 'Government_Plaza',
+                'Aqueduct', 'Dam', 'Canal', 'City_Center'];
+            if (districtNames.includes(sourceType)) {
+                return `assets/districts/${sourceType}.webp`;
+            }
+            // Generic "District" - no specific icon
+            if (sourceType === 'District') {
+                return null;
+            }
+            // Improvements
+            if (sourceType === 'Mine' || sourceType === 'Lumber_Mill' || sourceType === 'Quarry') {
+                return `assets/improvements/${sourceType}.webp`;
+            }
+            // Features
+            const feature = features.find(f => f.name === sourceType);
+            if (feature) {
+                return feature.path;
+            }
+            // Terrain (Mountain, Reef)
+            if (sourceType === 'Mountain') {
+                // Use a generic mountain icon - check if we have one
+                const mountainTerrain = terrainBases.find(t => t.name.includes('Mountain'));
+                if (mountainTerrain) {
+                    return mountainTerrain.path;
+                }
+            }
+            if (sourceType === 'Reef') {
+                const reefTerrain = terrainBases.find(t => t.name === 'Reef');
+                if (reefTerrain) {
+                    return reefTerrain.path;
+                }
+            }
+            // Special cases - no icon available
+            if (sourceType === 'River_Edge' || sourceType === 'Strategic_Resource' || sourceType === 'Coastal_Resource' || sourceType === 'Wonder') {
+                return null; // No icon for these
+            }
+            return null;
+        }
+
         function formatTooltipContent(row, col) {
             const key = `${row},${col}`;
             const tile = challengeData.tiles[key];
@@ -5031,43 +5203,133 @@
                 // District tooltip
                 const districtName = placed.name;
                 const adjacencySources = getAdjacencySources(row, col);
+                const districtIconPath = `assets/districts/${districtName}.webp`;
                 
-                let html = `<h4>${districtName.replace(/_/g, ' ')}</h4>`;
+                let html = '<div class="tooltip-label">District:</div>';
+                html += `<div class="tooltip-value">${districtName.replace(/_/g, ' ')}</div>`;
                 
-                // Show underlying tile
-                if (tile) {
+                // Show district icon
+                html += '<div class="tooltip-section">';
+                html += `<img src="${districtIconPath}" alt="${districtName.replace(/_/g, ' ')}" class="tooltip-icon">`;
+                html += '</div>';
+                
+                // Show adjacency sources (only complete bonuses)
+                const completeSources = adjacencySources.filter(source => {
+                    // If bonus has a "per" requirement, only show if count meets the threshold
+                    if (source.bonus.per && source.bonus.per > 1) {
+                        return source.count >= source.bonus.per;
+                    }
+                    // Otherwise, show if count is at least 1
+                    return source.count >= 1;
+                });
+                
+                // Only show adjacency sources section if there are any
+                if (completeSources.length > 0) {
                     html += '<div class="tooltip-section">';
-                    html += '<div class="tooltip-label">On Tile:</div>';
-                    const tileParts = [];
-                    if (tile.terrain) tileParts.push(tile.terrain.replace(/_/g, ' '));
-                    if (tile.feature) tileParts.push(tile.feature.replace(/_/g, ' '));
-                    if (tile.resource) tileParts.push(tile.resource.replace(/_/g, ' '));
-                    html += `<div class="tooltip-value">${tileParts.length > 0 ? tileParts.join(', ') : 'None'}</div>`;
+                    html += '<div class="tooltip-label">Adjacency Sources:</div>';
+                    
+                    // Always use bulleted list
+                    const listTag = 'ul';
+                    const itemTag = 'li';
+                    const listStyle = 'list-style-type: disc; padding-left: 20px; margin: 8px 0 0 0;';
+                    const itemStyle = 'margin: 4px 0;';
+                    const contentStyle = 'display: flex; align-items: center; gap: 6px;';
+                    
+                    html += `<${listTag} style="${listStyle}">`;
+                    completeSources.forEach(source => {
+                        const yieldType = source.bonus.type;
+                        const yieldIcon = `assets/yields/${yieldType}.webp`;
+                        const bonusAmount = source.bonus.per && source.bonus.per > 1 
+                            ? Math.floor(source.count / source.bonus.per) * source.bonus.bonus
+                            : source.count * source.bonus.bonus;
+                        
+                        html += `<${itemTag} style="${itemStyle}">`;
+                        html += `<span style="${contentStyle}">`;
+                        html += `<span>+${bonusAmount}</span>`;
+                        html += `<img src="${yieldIcon}" alt="${yieldType}" style="width: 16px; height: 16px; object-fit: contain; margin: 0;">`;
+                        
+                        // For "all_districts" type, show icons of all adjacent districts
+                        if (source.isAllDistricts || (source.type === 'District' && source.bonus.per && source.bonus.per > 1)) {
+                            // Get actual adjacent districts (including City_Center)
+                            const neighbors = getNeighbors(row, col);
+                            const adjacentDistricts = [];
+                            neighbors.forEach(neighbor => {
+                                const neighborKey = `${neighbor.row},${neighbor.col}`;
+                                const neighborPlaced = placedItems[neighborKey];
+                                if (neighborPlaced && neighborPlaced.type === 'district') {
+                                    adjacentDistricts.push(neighborPlaced.name);
+                                }
+                            });
+                            
+                            if (adjacentDistricts.length > 0) {
+                                html += `<span style="margin-right: -2px;">(</span>`;
+                                adjacentDistricts.forEach((districtName, idx) => {
+                                    const districtIconPath = `assets/districts/${districtName}.webp`;
+                                    html += `<img src="${districtIconPath}" alt="${districtName.replace(/_/g, ' ')}" style="width: 16px; height: 16px; object-fit: contain; margin: 0;">`;
+                                    if (idx < adjacentDistricts.length - 1) {
+                                        html += `<span style="margin: -5px;">,</span>`;
+                                    }
+                                });
+                                html += `<span style="margin-left: -2px;">)</span>`;
+                            }
+                        } else if (source.type === 'Coastal_Resources' && source.resourceNames && source.resourceNames.length > 0) {
+                            // Show actual resource icons for coastal resources
+                            html += `<span style="margin-right: -2px;">(</span>`;
+                            source.resourceNames.forEach((resourceName, idx) => {
+                                const resourceIconPath = `assets/recources/${resourceName}.webp`;
+                                html += `<img src="${resourceIconPath}" alt="${resourceName.replace(/_/g, ' ')}" style="width: 16px; height: 16px; object-fit: contain; margin: 0;">`;
+                                if (idx < source.resourceNames.length - 1) {
+                                    html += `<span style="margin: -5px;">,</span>`;
+                                }
+                            });
+                            html += `<span style="margin-left: -2px;">)</span>`;
+                        } else {
+                            // Regular source icon
+                            const sourceIconPath = getSourceIconPath(source.type);
+                            if (sourceIconPath) {
+                                html += `<span style="margin-right: -2px;">(</span>`;
+                                html += `<img src="${sourceIconPath}" alt="${source.type.replace(/_/g, ' ')}" style="width: 16px; height: 16px; object-fit: contain; margin: 0;">`;
+                                html += `<span style="margin-left: -2px;">)</span>`;
+                            }
+                        }
+                        html += `</span></${itemTag}>`;
+                    });
+                    html += `</${listTag}>`;
                     html += '</div>';
                 }
                 
-                // Show adjacency sources
-                if (adjacencySources.length > 0) {
+                // Show underlying tile (same format as terrain tile tooltip)
+                if (tile) {
                     html += '<div class="tooltip-section">';
-                    html += '<div class="tooltip-label">Adjacency Sources:</div>';
-                    adjacencySources.forEach(source => {
-                        const yieldType = source.bonus.type;
-                        const yieldIcon = `assets/yields/${yieldType}.webp`;
-                        const yieldName = yieldType.charAt(0) + yieldType.slice(1).toLowerCase();
-                        let countText = '';
-                        if (source.bonus.per && source.bonus.per > 1) {
-                            const effectiveCount = Math.floor(source.count / source.bonus.per);
-                            countText = `${source.count} ${source.type.replace(/_/g, ' ')} (${effectiveCount} × ${source.bonus.bonus} ${yieldName})`;
-                        } else {
-                            countText = `${source.count} ${source.type.replace(/_/g, ' ')} (${source.count} × ${source.bonus.bonus} ${yieldName})`;
+                    html += '<div class="tooltip-label">Terrain Type & Features:</div>';
+                    
+                    // Show icons and text for terrain, feature, and resource
+                    const parts = [];
+                    if (tile.terrain) parts.push(tile.terrain.replace(/_/g, ' '));
+                    if (tile.feature) parts.push(tile.feature.replace(/_/g, ' '));
+                    if (tile.resource) parts.push(tile.resource.replace(/_/g, ' '));
+                    
+                    if (parts.length > 0) {
+                        // Show text first
+                        html += `<div class="tooltip-value">${parts.join(', ')}</div>`;
+                        // Show icons below text
+                        const hasIcons = tile.terrainPath || tile.featurePath || tile.resourcePath;
+                        if (hasIcons) {
+                            html += '<div class="tooltip-icons">';
+                            if (tile.terrainPath) {
+                                html += `<img src="${tile.terrainPath}" alt="${tile.terrain || 'Terrain'}" class="tooltip-icon" title="${tile.terrain ? tile.terrain.replace(/_/g, ' ') : 'Terrain'}">`;
+                            }
+                            if (tile.featurePath) {
+                                html += `<img src="${tile.featurePath}" alt="${tile.feature || 'Feature'}" class="tooltip-icon" title="${tile.feature ? tile.feature.replace(/_/g, ' ') : 'Feature'}">`;
+                            }
+                            if (tile.resourcePath) {
+                                html += `<img src="${tile.resourcePath}" alt="${tile.resource || 'Resource'}" class="tooltip-icon" title="${tile.resource ? tile.resource.replace(/_/g, ' ') : 'Resource'}">`;
+                            }
+                            html += '</div>';
                         }
-                        html += `<div class="adjacency-source">${countText}</div>`;
-                    });
-                    html += '</div>';
-                } else {
-                    html += '<div class="tooltip-section">';
-                    html += '<div class="tooltip-label">Adjacency Sources:</div>';
-                    html += '<div class="tooltip-value">None</div>';
+                    } else {
+                        html += '<div class="tooltip-value">None</div>';
+                    }
                     html += '</div>';
                 }
                 
@@ -5077,7 +5339,7 @@
                 if (!tile) return '';
                 
                 let html = '<div class="tooltip-section">';
-                html += '<div class="tooltip-label">Terrain Types & Features:</div>';
+                html += '<div class="tooltip-label"> Terrain Type & Features:</div>';
                 
                 // Show icons and text for terrain, feature, and resource
                 const parts = [];
