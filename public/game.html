@@ -3084,8 +3084,8 @@
                     }
                 }
                 
-                // Districts cannot be built on geothermal fissures
-                if (tile.feature === 'Geothermal_Fissure') {
+                // Districts cannot be built on geothermal fissures (except City_Center)
+                if (name !== 'City_Center' && tile.feature === 'Geothermal_Fissure') {
                     return false;
                 }
                 
