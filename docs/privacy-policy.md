@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last Updated: December 31, 2024**
+**Last Updated: December 28, 2025**
 
 ## Introduction
 
@@ -10,7 +10,7 @@ Civle ("we", "our", or "us") is committed to protecting your privacy. This Priva
 
 ### Information You Provide
 
-- **Player Names**: If you achieve a score in the top 10, you may optionally provide a player name to appear on the leaderboard. Names are limited to 20 characters and are subject to content moderation.
+- **Player Usernames**: If you achieve a score in the top 10, you may optionally provide a player username to appear on the leaderboard. Usernames are limited to 20 characters and are subject to content moderation.
 - **Scores**: Your game scores are automatically submitted when you complete a challenge.
 
 ### Automatically Collected Information
@@ -29,7 +29,7 @@ This information is stored locally on your device and is not transmitted to our 
 
 ## How We Use Your Information
 
-- **Leaderboard Display**: Player names and scores are displayed on the public leaderboard for the current day.
+- **Leaderboard Display**: Player usernames and scores are displayed on the public leaderboard for the current day.
 - **Historical Records**: Yesterday's top score and screenshot may be displayed as "Yesterday's Best Setup".
 - **Game Functionality**: Scores are used to rank players and determine leaderboard positions.
 
@@ -41,21 +41,21 @@ This information is stored locally on your device and is not transmitted to our 
 
 ## Data Sharing
 
-We do not sell, trade, or rent your personal information to third parties. Your player name and score may be visible to other players on the public leaderboard.
+We do not sell, trade, or rent your personal information to third parties. Your player username and score may be visible to other players on the public leaderboard.
 
 ## Content Moderation
 
-Player names are automatically checked against a list of inappropriate words. Names containing inappropriate content will be rejected.
+Player usernames are automatically checked against a list of inappropriate words. Usernames containing inappropriate content will be rejected.
 
 ## Your Rights
 
-- **Name Submission**: Providing a player name is optional. You can choose to submit scores anonymously.
-- **Name Uniqueness**: Each player name can only be used once per day. If a name is already taken, you must choose a different name.
-- **Data Access**: You can view the current leaderboard at any time, which shows all top 10 scores with names.
+- **Username Submission**: Providing a player username is optional. You can choose to submit scores anonymously.
+- **Username Uniqueness**: Each player username can only be used once per day. If a username is already taken, you must choose a different username.
+- **Data Access**: You can view the current leaderboard at any time, which shows all top 10 scores with usernames.
 
 ## Security
 
-We implement reasonable security measures to protect your information. However, no method of transmission over the Internet or electronic storage is 100% secure.
+We implement reasonable security measures to protect your information.
 
 ## Children's Privacy
 
@@ -67,7 +67,7 @@ We may update this Privacy Policy from time to time. The "Last Updated" date at 
 
 ## Contact Us
 
-If you have questions about this Privacy Policy, please contact us through the appropriate channels.
+If you have questions about this Privacy Policy, please contact us at maximilianbising@gmail.com.
 
 ## Third-Party Services
 
