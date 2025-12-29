@@ -2666,9 +2666,114 @@
                     img.style.pointerEvents = 'auto';
                     img.style.cursor = 'grab';
                     
+                    // Add tooltip handlers to improvement image
+                    img.addEventListener('mouseenter', (e) => {
+                        // Don't show tooltip if actually dragging
+                        if (draggedImprovement) {
+                            return;
+                        }
+                        
+                        // Clear any existing timeout
+                        if (tooltipTimeout) {
+                            clearTimeout(tooltipTimeout);
+                            tooltipTimeout = null;
+                        }
+                        
+                        // Store initial mouse position
+                        lastMouseX = e.clientX;
+                        lastMouseY = e.clientY;
+                        
+                        // Check if we're moving from another tile
+                        const wasOnDifferentTile = currentTooltipRow !== null && 
+                                                  currentTooltipCol !== null && 
+                                                  (currentTooltipRow !== row || currentTooltipCol !== col);
+                        const isTooltipVisible = hexTooltip && hexTooltip.classList.contains('visible');
+                        
+                        // If tooltip is visible and we're moving to a different tile, show instantly
+                        if (isTooltipVisible && wasOnDifferentTile) {
+                            if (hexTooltip) {
+                                currentTooltipRow = row;
+                                currentTooltipCol = col;
+                                const content = formatTooltipContent(row, col);
+                                if (content) {
+                                    hexTooltip.innerHTML = content;
+                                    hexTooltip.style.left = (e.clientX + 10) + 'px';
+                                    hexTooltip.style.top = (e.clientY + 10) + 'px';
+                                    hexTooltip.classList.add('visible');
+                                }
+                            }
+                        } else if (!isTooltipVisible) {
+                            // Set timeout to show tooltip after 1 second
+                            tooltipTimeout = setTimeout(() => {
+                                // Double-check we're not dragging before showing
+                                if (!draggedImprovement && hexTooltip) {
+                                    currentTooltipRow = row;
+                                    currentTooltipCol = col;
+                                    const content = formatTooltipContent(row, col);
+                                    if (content) {
+                                        hexTooltip.innerHTML = content;
+                                        hexTooltip.style.left = (lastMouseX + 10) + 'px';
+                                        hexTooltip.style.top = (lastMouseY + 10) + 'px';
+                                        hexTooltip.classList.add('visible');
+                                    }
+                                }
+                            }, 1000);
+                        }
+                    });
+                    
+                    img.addEventListener('mouseleave', (e) => {
+                        // Clear timeout if tooltip hasn't shown yet
+                        if (tooltipTimeout) {
+                            clearTimeout(tooltipTimeout);
+                            tooltipTimeout = null;
+                        }
+                        
+                        // Check if we're moving to another hex element or improvement image
+                        const relatedTarget = e.relatedTarget;
+                        const isMovingToHex = relatedTarget && (
+                            relatedTarget.classList.contains('hex') ||
+                            relatedTarget.classList.contains('hex-improvement') ||
+                            relatedTarget.closest('.hex') !== null
+                        );
+                        
+                        // Only hide tooltip if we're not moving to another hex/improvement
+                        if (!isMovingToHex) {
+                            if (hexTooltip) {
+                                hexTooltip.classList.remove('visible');
+                                currentTooltipRow = null;
+                                currentTooltipCol = null;
+                            }
+                        }
+                    });
+                    
+                    img.addEventListener('mousemove', (e) => {
+                        // Update last known mouse position
+                        lastMouseX = e.clientX;
+                        lastMouseY = e.clientY;
+                        
+                        // Update tooltip position if it's visible
+                        if (hexTooltip && hexTooltip.classList.contains('visible') && 
+                            currentTooltipRow === row && currentTooltipCol === col) {
+                            hexTooltip.style.left = (e.clientX + 10) + 'px';
+                            hexTooltip.style.top = (e.clientY + 10) + 'px';
+                        }
+                    });
+                    
                     img.addEventListener('dragstart', (e) => {
                         e.stopPropagation();
                         draggedImprovement = { row, col, name: placed.name };
+                        
+                        // Hide tooltip when dragging starts
+                        if (hexTooltip) {
+                            hexTooltip.classList.remove('visible');
+                            currentTooltipRow = null;
+                            currentTooltipCol = null;
+                        }
+                        // Clear any pending tooltip timeout
+                        if (tooltipTimeout) {
+                            clearTimeout(tooltipTimeout);
+                            tooltipTimeout = null;
+                        }
                         
                         // Make the image semi-transparent while dragging
                         img.style.opacity = '0.5';
@@ -5297,6 +5402,55 @@
                     html += `</${listTag}>`;
                     html += '</div>';
                 }
+                
+                // Show underlying tile (same format as terrain tile tooltip)
+                if (tile) {
+                    html += '<div class="tooltip-section">';
+                    html += '<div class="tooltip-label">Terrain Type & Features:</div>';
+                    
+                    // Show icons and text for terrain, feature, and resource
+                    const parts = [];
+                    if (tile.terrain) parts.push(tile.terrain.replace(/_/g, ' '));
+                    if (tile.feature) parts.push(tile.feature.replace(/_/g, ' '));
+                    if (tile.resource) parts.push(tile.resource.replace(/_/g, ' '));
+                    
+                    if (parts.length > 0) {
+                        // Show text first
+                        html += `<div class="tooltip-value">${parts.join(', ')}</div>`;
+                        // Show icons below text
+                        const hasIcons = tile.terrainPath || tile.featurePath || tile.resourcePath;
+                        if (hasIcons) {
+                            html += '<div class="tooltip-icons">';
+                            if (tile.terrainPath) {
+                                html += `<img src="${tile.terrainPath}" alt="${tile.terrain || 'Terrain'}" class="tooltip-icon" title="${tile.terrain ? tile.terrain.replace(/_/g, ' ') : 'Terrain'}">`;
+                            }
+                            if (tile.featurePath) {
+                                html += `<img src="${tile.featurePath}" alt="${tile.feature || 'Feature'}" class="tooltip-icon" title="${tile.feature ? tile.feature.replace(/_/g, ' ') : 'Feature'}">`;
+                            }
+                            if (tile.resourcePath) {
+                                html += `<img src="${tile.resourcePath}" alt="${tile.resource || 'Resource'}" class="tooltip-icon" title="${tile.resource ? tile.resource.replace(/_/g, ' ') : 'Resource'}">`;
+                            }
+                            html += '</div>';
+                        }
+                    } else {
+                        html += '<div class="tooltip-value">None</div>';
+                    }
+                    html += '</div>';
+                }
+                
+                return html;
+            } else if (placed && placed.type === 'improvement') {
+                // Improvement tooltip
+                const improvementName = placed.name;
+                const improvementIconPath = `assets/improvements/${improvementName}.webp`;
+                
+                let html = '<div class="tooltip-label">Improvement:</div>';
+                html += `<div class="tooltip-value">${improvementName.replace(/_/g, ' ')}</div>`;
+                
+                // Show improvement icon
+                html += '<div class="tooltip-section">';
+                html += `<img src="${improvementIconPath}" alt="${improvementName.replace(/_/g, ' ')}" class="tooltip-icon">`;
+                html += '</div>';
                 
                 // Show underlying tile (same format as terrain tile tooltip)
                 if (tile) {
