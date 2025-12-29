@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 const MIME_TYPES = {
     '.html': 'text/html',
     '.js': 'text/javascript',
@@ -233,8 +233,18 @@ const server = http.createServer((req, res) => {
     // Handle reset leaderboard endpoint
     if (pathname === '/reset_leaderboard' && req.method === 'GET') {
         try {
-            // Read the endpoint key from file
-            const endpointKey = fs.readFileSync('endpoint_key.txt', 'utf8').trim();
+            // Read the endpoint key from environment variable or file
+            let endpointKey;
+            if (process.env.ENDPOINT_KEY) {
+                endpointKey = process.env.ENDPOINT_KEY;
+            } else if (fs.existsSync('endpoint_key.txt')) {
+                endpointKey = fs.readFileSync('endpoint_key.txt', 'utf8').trim();
+            } else {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Endpoint key not configured' }), 'utf-8');
+                return;
+            }
+            
             const providedKey = queryParams.get('key');
             
             // If key matches, reset the leaderboard
@@ -461,8 +471,19 @@ const server = http.createServer((req, res) => {
     // Check if accessing map_maker with key
     else if (pathname === '/map_maker' || pathname === '/map_maker.html') {
         try {
-            // Read the endpoint key from file
-            const endpointKey = fs.readFileSync('endpoint_key.txt', 'utf8').trim();
+            // Read the endpoint key from environment variable or file
+            let endpointKey;
+            if (process.env.ENDPOINT_KEY) {
+                endpointKey = process.env.ENDPOINT_KEY;
+            } else if (fs.existsSync('endpoint_key.txt')) {
+                endpointKey = fs.readFileSync('endpoint_key.txt', 'utf8').trim();
+            } else {
+                // No key configured, deny access
+                res.writeHead(302, { 'Location': '/' });
+                res.end();
+                return;
+            }
+            
             const providedKey = queryParams.get('key');
             
             // If key matches, serve map_maker.html
@@ -475,7 +496,7 @@ const server = http.createServer((req, res) => {
                 return;
             }
         } catch (err) {
-            // If endpoint_key.txt doesn't exist or can't be read, deny access
+            // Error reading key, deny access
             res.writeHead(302, { 'Location': '/' });
             res.end();
             return;

@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: Civle
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+
+      - key: NODE_ENV
+        value: production
+    disk:
+      name: civle-storage
+      mountPath: /opt/render/project/src/storage
+      sizeGB: 1
+
