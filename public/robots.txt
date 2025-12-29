@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /custom_game
+Disallow: /map_maker
+Disallow: /storage/
+Disallow: /data/
+
+Sitemap: https://civle.cc/sitemap.xml
+
