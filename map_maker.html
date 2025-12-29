@@ -1791,12 +1791,6 @@
                 }
             }
             
-            // Check for canal with coast tiles
-            const canalCount = mapData.allocations.districts['Canal'] || 0;
-            if (canalCount > 0 && coastCount > 0) {
-                warnings.push('Canal allocated but coast tiles exist on map');
-            }
-            
             // Check for blank tiles
             let blankTileCount = 0;
             for (let row = 0; row < GRID_HEIGHT; row++) {

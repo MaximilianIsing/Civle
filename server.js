@@ -64,14 +64,18 @@ function cleanupOldScores() {
 
             const files = fs.readdirSync(screenshotsDir);
             files.forEach(file => {
-                if (file.endsWith('.png') && /^\d{2}-\d{2}\.png$/.test(file)) {
-                    const fileDate = file.replace('.png', '');
-                    if (fileDate !== today && fileDate !== yesterdayStr) {
-                        try {
-                            fs.unlinkSync(`${screenshotsDir}/${file}`);
-                            console.log(`Deleted old screenshot file: ${file}`);
-                        } catch (err) {
-                            console.error(`Error deleting screenshot file ${file}:`, err);
+                if (file.endsWith('.png')) {
+                    // Extract date from filename (format: MM-DD or MM-DD_(Name))
+                    const dateMatch = file.match(/^(\d{2}-\d{2})(?:_\(.*?\))?\.png$/);
+                    if (dateMatch) {
+                        const fileDate = dateMatch[1];
+                        if (fileDate !== today && fileDate !== yesterdayStr) {
+                            try {
+                                fs.unlinkSync(`${screenshotsDir}/${file}`);
+                                console.log(`Deleted old screenshot file: ${file}`);
+                            } catch (err) {
+                                console.error(`Error deleting screenshot file ${file}:`, err);
+                            }
                         }
                     }
                 }
@@ -237,8 +241,8 @@ const server = http.createServer((req, res) => {
                     }
                 }
                 
-                // Check if in top 20
-                const inTop20 = rank <= 20;
+                // Check if in top 10
+                const inTop10 = rank <= 10;
                 
                 // If rank is 1 and screenshot is provided, save it (server determines first place)
                 if (rank === 1 && screenshot) {
@@ -249,12 +253,26 @@ const server = http.createServer((req, res) => {
                             fs.mkdirSync(screenshotsDir, { recursive: true });
                         }
                         
-                        const screenshotPath = `${screenshotsDir}/${dateString}.png`;
-                        
-                        // Delete old screenshot if it exists (only one first place screenshot per day)
-                        if (fs.existsSync(screenshotPath)) {
-                            fs.unlinkSync(screenshotPath);
+                        // Build filename with player name if available
+                        let filename = dateString;
+                        if (name) {
+                            // Sanitize name for filename (remove invalid characters)
+                            const sanitizedName = name.replace(/[^a-zA-Z0-9_-]/g, '_');
+                            filename = `${dateString}_(${sanitizedName})`;
                         }
+                        const screenshotPath = `${screenshotsDir}/${filename}.png`;
+                        
+                        // Delete old screenshot files for this date (with or without name)
+                        const files = fs.readdirSync(screenshotsDir);
+                        files.forEach(file => {
+                            if (file.startsWith(dateString) && file.endsWith('.png')) {
+                                try {
+                                    fs.unlinkSync(`${screenshotsDir}/${file}`);
+                                } catch (err) {
+                                    // Ignore errors deleting old files
+                                }
+                            }
+                        });
                         
                         // Convert base64 to buffer and save
                         const base64Data = screenshot.replace(/^data:image\/png;base64,/, '');
@@ -266,11 +284,37 @@ const server = http.createServer((req, res) => {
                     }
                 }
                 
+                // If name is being added and this entry is rank 1, rename the screenshot file
+                if (name && rank === 1) {
+                    try {
+                        const dateString = getESTDateString();
+                        const screenshotsDir = './storage/screenshots';
+                        
+                        // Find existing screenshot file for this date (might not have name yet)
+                        const files = fs.readdirSync(screenshotsDir);
+                        const existingFile = files.find(file => 
+                            file.startsWith(dateString) && file.endsWith('.png') && !file.includes('_(')
+                        );
+                        
+                        if (existingFile) {
+                            // Rename to include name
+                            const sanitizedName = name.replace(/[^a-zA-Z0-9_-]/g, '_');
+                            const newFilename = `${dateString}_(${sanitizedName}).png`;
+                            const oldPath = `${screenshotsDir}/${existingFile}`;
+                            const newPath = `${screenshotsDir}/${newFilename}`;
+                            fs.renameSync(oldPath, newPath);
+                        }
+                    } catch (err) {
+                        console.error('Error renaming screenshot with name:', err);
+                        // Don't fail the name update if rename fails
+                    }
+                }
+                
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ 
                     success: true, 
                     rank: rank,
-                    inTop20: inTop20
+                    inTop10: inTop10
                 }), 'utf-8');
             } catch (err) {
                 console.error('Error submitting score:', err);
@@ -337,8 +381,8 @@ const server = http.createServer((req, res) => {
             if (fs.existsSync(scoresFile)) {
                 const fileContent = fs.readFileSync(scoresFile, 'utf8');
                 const scores = JSON.parse(fileContent);
-                // Get top 20
-                leaderboard = scores.slice(0, 20).map(entry => ({
+                // Get top 10
+                leaderboard = scores.slice(0, 10).map(entry => ({
                     name: entry.name || null,
                     score: entry.score
                 }));
@@ -366,28 +410,43 @@ const server = http.createServer((req, res) => {
             yesterday.setDate(yesterday.getDate() - 1);
             const dateString = getESTDateString(yesterday);
             
-            const screenshotPath = `./storage/screenshots/${dateString}.png`;
             const challengePath = `./day_challenges/${dateString}.civle`;
+            const screenshotsDir = './storage/screenshots';
             
             let challengeData = null;
             let screenshotUrl = null;
+            let playerName = null;
             
             // Read challenge if it exists
             if (fs.existsSync(challengePath)) {
                 challengeData = fs.readFileSync(challengePath, 'utf8');
             }
             
-            // Check if screenshot exists
-            if (fs.existsSync(screenshotPath)) {
-                screenshotUrl = `/storage/screenshots/${dateString}.png`;
+            // Find screenshot file for this date (with or without name in filename)
+            if (fs.existsSync(screenshotsDir)) {
+                const files = fs.readdirSync(screenshotsDir);
+                const screenshotFile = files.find(file => 
+                    file.startsWith(dateString) && file.endsWith('.png')
+                );
+                
+                if (screenshotFile) {
+                    screenshotUrl = `/storage/screenshots/${screenshotFile}`;
+                    
+                    // Extract player name from filename if present (format: MM-DD_(Name).png)
+                    const nameMatch = screenshotFile.match(/^\d{2}-\d{2}_\((.*?)\)\.png$/);
+                    if (nameMatch) {
+                        playerName = nameMatch[1].replace(/_/g, ' '); // Replace underscores with spaces
+                    }
+                }
             }
             
-            // Return JSON with both challenge and screenshot
+            // Return JSON with challenge, screenshot, and player name
             if (challengeData || screenshotUrl) {
                 const response = {
                     success: true,
                     challenge: challengeData,
-                    screenshot: screenshotUrl
+                    screenshot: screenshotUrl,
+                    playerName: playerName
                 };
                 
                 res.writeHead(200, { 
@@ -454,6 +513,40 @@ const server = http.createServer((req, res) => {
             // If key matches, serve map_maker.html
             if (providedKey === endpointKey) {
                 filePath = './map_maker.html';
+            } else {
+                // Invalid key, redirect to game
+                res.writeHead(302, { 'Location': '/' });
+                res.end();
+                return;
+            }
+        } catch (err) {
+            // Error reading key, deny access
+            res.writeHead(302, { 'Location': '/' });
+            res.end();
+            return;
+        }
+    }
+    // Check if accessing custom_game with key
+    else if (pathname === '/custom_game' || pathname === '/custom_game.html') {
+        try {
+            // Read the endpoint key from environment variable or file
+            let endpointKey;
+            if (process.env.ENDPOINT_KEY) {
+                endpointKey = process.env.ENDPOINT_KEY;
+            } else if (fs.existsSync('endpoint_key.txt')) {
+                endpointKey = fs.readFileSync('endpoint_key.txt', 'utf8').trim();
+            } else {
+                // No key configured, deny access
+                res.writeHead(302, { 'Location': '/' });
+                res.end();
+                return;
+            }
+            
+            const providedKey = queryParams.get('key');
+            
+            // If key matches, serve custom_game.html
+            if (providedKey === endpointKey) {
+                filePath = './custom_game.html';
             } else {
                 // Invalid key, redirect to game
                 res.writeHead(302, { 'Location': '/' });

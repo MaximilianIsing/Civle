@@ -129,6 +129,29 @@ GET /map_maker?key=your-secret-key
 
 ---
 
+### GET `/custom_game?key={key}`
+Serves the custom game page. This is a version of the main game that allows uploading custom challenge files but does not allow score submission.
+
+**Query Parameters:**
+- `key` (required): Authentication key
+
+**Response:**
+- **200 OK**: Custom game HTML page
+- **302 Redirect**: Redirects to `/` if key is invalid
+
+**Features:**
+- Allows uploading custom `.civle` challenge files
+- Does not auto-load daily challenges
+- Score submission is disabled
+- "Yesterday's Best Setup" button is removed
+
+**Example:**
+```
+GET /custom_game?key=your-secret-key
+```
+
+---
+
 ### GET `/reset_leaderboard?key={key}`
 Resets the leaderboard for the current day (EST timezone).
 
