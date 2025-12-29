@@ -6,9 +6,30 @@ const PORT = process.env.PORT || 8000;
 
 // Use persistent disk path if available (Render deployment), otherwise use relative path
 // On Render, the persistent disk is mounted at /opt/render/project/src/storage
-const STORAGE_DIR = fs.existsSync('/opt/render/project/src/storage') 
+// In production, always use the persistent disk path
+const STORAGE_DIR = (process.env.NODE_ENV === 'production' || fs.existsSync('/opt/render/project/src/storage'))
     ? '/opt/render/project/src/storage'
     : './storage';
+
+// Log which storage directory is being used (for debugging)
+console.log(`Using storage directory: ${STORAGE_DIR}`);
+console.log(`Storage directory exists: ${fs.existsSync(STORAGE_DIR)}`);
+
+// Ensure storage directories exist
+const scoresDir = path.join(STORAGE_DIR, 'scores');
+const screenshotsDir = path.join(STORAGE_DIR, 'screenshots');
+if (!fs.existsSync(STORAGE_DIR)) {
+    fs.mkdirSync(STORAGE_DIR, { recursive: true });
+    console.log(`Created storage directory: ${STORAGE_DIR}`);
+}
+if (!fs.existsSync(scoresDir)) {
+    fs.mkdirSync(scoresDir, { recursive: true });
+    console.log(`Created scores directory: ${scoresDir}`);
+}
+if (!fs.existsSync(screenshotsDir)) {
+    fs.mkdirSync(screenshotsDir, { recursive: true });
+    console.log(`Created screenshots directory: ${screenshotsDir}`);
+}
 const MIME_TYPES = {
     '.html': 'text/html',
     '.js': 'text/javascript',
@@ -477,7 +498,7 @@ const server = http.createServer((req, res) => {
             // Get current date in EST timezone
             const dateString = getESTDateString();
             
-            const scoresFile = `./storage/scores/${dateString}.json`;
+            const scoresFile = path.join(STORAGE_DIR, 'scores', `${dateString}.json`);
             
             let leaderboard = [];
             if (fs.existsSync(scoresFile)) {
