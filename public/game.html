@@ -747,8 +747,10 @@
             max-width: 500px;
             width: 90%;
             max-height: 80vh;
-            overflow-y: auto;
+            overflow: visible;
             color: #ffffff;
+            display: flex;
+            flex-direction: column;
         }
         
         .leaderboard-content h2 {
@@ -937,6 +939,27 @@
             list-style: none;
             padding: 0;
             margin: 0;
+            max-height: 400px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .leaderboard-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .leaderboard-list::-webkit-scrollbar-track {
+            background: #1a1a1c;
+            border-radius: 4px;
+        }
+
+        .leaderboard-list::-webkit-scrollbar-thumb {
+            background: #565758;
+            border-radius: 4px;
+        }
+
+        .leaderboard-list::-webkit-scrollbar-thumb:hover {
+            background: #818384;
         }
         
         .leaderboard-item {
@@ -4594,7 +4617,6 @@
                 const submitName = async () => {
                     const name = nameInput.value.trim();
                     if (name.length === 0) {
-                        alert('Please enter your name');
                         return;
                     }
                     
