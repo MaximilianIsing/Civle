@@ -4949,14 +4949,16 @@
             }, { passive: false });
 
             mapContainer.addEventListener('mousedown', (e) => {
-                const isHexClick = e.target.closest('.hex');
                 const isButtonClick = e.target.closest('button');
                 const isScorePanel = e.target.closest('.score-panel');
                 const isDistrict = e.target.closest('.hex-district');
+                const isImprovement = e.target.closest('.hex-improvement');
+                const isWonder = e.target.closest('.hex-wonder');
                 
-                // Don't start map panning if clicking on a district
-                if (e.button === 0 && !isHexClick && !isButtonClick && !isScorePanel && !isDistrict) {
-                    if (e.target === mapContainer || e.target === mapTransformWrapper || e.target.id === 'hexGrid') {
+                // Allow panning on background or terrain tiles, but not on districts, improvements, wonders, or buttons
+                if (e.button === 0 && !isButtonClick && !isScorePanel && !isDistrict && !isImprovement && !isWonder) {
+                    // Allow panning on background, hex grid, or any hex (terrain)
+                    if (e.target === mapContainer || e.target === mapTransformWrapper || e.target.id === 'hexGrid' || e.target.closest('.hex')) {
                         isDragging = true;
                         mapContainer.classList.add('dragging');
                         dragStartX = e.clientX;
