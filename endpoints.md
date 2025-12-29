@@ -4,6 +4,27 @@ This document describes all available API endpoints for the Civle game server.
 
 ## Public Endpoints
 
+### GET `/health`
+Health check endpoint for deployment monitoring (used by Render).
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "timestamp": "2024-12-29T12:00:00.000Z"
+}
+```
+
+**Status Codes:**
+- `200 OK` - Server is healthy and running
+
+**Example:**
+```
+GET /health
+```
+
+---
+
 ### GET `/`
 Serves the main game page (`public/game.html`).
 

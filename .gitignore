@@ -1,6 +1,7 @@
 # Sensitive files
 endpoint_key.txt
 storage/
+# Note: storage/ includes: scores/, setups/
 
 # Dependencies
 node_modules/

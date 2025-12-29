@@ -25,43 +25,60 @@ function getESTDateString(date = new Date()) {
     return `${month}-${day}`;
 }
 
-// Function to clean up old score files (keep only today and yesterday)
+// Function to clean up old score and setup files (keep only today and yesterday)
 function cleanupOldScores() {
     try {
+        // Clean up scores
         const scoresDir = './storage/scores';
-        if (!fs.existsSync(scoresDir)) {
-            return; // Directory doesn't exist, nothing to clean
-        }
+        if (fs.existsSync(scoresDir)) {
+            const now = new Date();
+            const today = getESTDateString(now);
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = getESTDateString(yesterday);
 
-        // Get today and yesterday's date strings
-        const now = new Date();
-        const today = getESTDateString(now);
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = getESTDateString(yesterday);
-
-        // Read all files in scores directory
-        const files = fs.readdirSync(scoresDir);
-        
-        files.forEach(file => {
-            // Only process JSON files that match the date format (MM-DD.json)
-            if (file.endsWith('.json') && /^\d{2}-\d{2}\.json$/.test(file)) {
-                const fileDate = file.replace('.json', '');
-                
-                // Delete if file is not today or yesterday
-                if (fileDate !== today && fileDate !== yesterdayStr) {
-                    const filePath = `${scoresDir}/${file}`;
-                    try {
-                        fs.unlinkSync(filePath);
-                        console.log(`Deleted old score file: ${file}`);
-                    } catch (err) {
-                        console.error(`Error deleting score file ${file}:`, err);
+            const files = fs.readdirSync(scoresDir);
+            files.forEach(file => {
+                if (file.endsWith('.json') && /^\d{2}-\d{2}\.json$/.test(file)) {
+                    const fileDate = file.replace('.json', '');
+                    if (fileDate !== today && fileDate !== yesterdayStr) {
+                        try {
+                            fs.unlinkSync(`${scoresDir}/${file}`);
+                            console.log(`Deleted old score file: ${file}`);
+                        } catch (err) {
+                            console.error(`Error deleting score file ${file}:`, err);
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
+
+        // Clean up screenshots
+        const screenshotsDir = './storage/screenshots';
+        if (fs.existsSync(screenshotsDir)) {
+            const now = new Date();
+            const today = getESTDateString(now);
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = getESTDateString(yesterday);
+
+            const files = fs.readdirSync(screenshotsDir);
+            files.forEach(file => {
+                if (file.endsWith('.png') && /^\d{2}-\d{2}\.png$/.test(file)) {
+                    const fileDate = file.replace('.png', '');
+                    if (fileDate !== today && fileDate !== yesterdayStr) {
+                        try {
+                            fs.unlinkSync(`${screenshotsDir}/${file}`);
+                            console.log(`Deleted old screenshot file: ${file}`);
+                        } catch (err) {
+                            console.error(`Error deleting screenshot file ${file}:`, err);
+                        }
+                    }
+                }
+            });
+        }
     } catch (err) {
-        console.error('Error cleaning up old scores:', err);
+        console.error('Error cleaning up old files:', err);
     }
 }
 
@@ -91,6 +108,7 @@ const server = http.createServer((req, res) => {
                 const data = JSON.parse(body);
                 const score = data.score;
                 const name = data.name || null;
+                const screenshot = data.screenshot || null;
                 
                 // If no score provided, this is just a name update - skip duplicate check
                 if (score === undefined && name) {
@@ -222,6 +240,32 @@ const server = http.createServer((req, res) => {
                 // Check if in top 20
                 const inTop20 = rank <= 20;
                 
+                // If rank is 1 and screenshot is provided, save it (server determines first place)
+                if (rank === 1 && screenshot) {
+                    try {
+                        const dateString = getESTDateString();
+                        const screenshotsDir = './storage/screenshots';
+                        if (!fs.existsSync(screenshotsDir)) {
+                            fs.mkdirSync(screenshotsDir, { recursive: true });
+                        }
+                        
+                        const screenshotPath = `${screenshotsDir}/${dateString}.png`;
+                        
+                        // Delete old screenshot if it exists (only one first place screenshot per day)
+                        if (fs.existsSync(screenshotPath)) {
+                            fs.unlinkSync(screenshotPath);
+                        }
+                        
+                        // Convert base64 to buffer and save
+                        const base64Data = screenshot.replace(/^data:image\/png;base64,/, '');
+                        const buffer = Buffer.from(base64Data, 'base64');
+                        fs.writeFileSync(screenshotPath, buffer);
+                    } catch (err) {
+                        console.error('Error saving screenshot:', err);
+                        // Don't fail the score submission if screenshot save fails
+                    }
+                }
+                
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ 
                     success: true, 
@@ -313,88 +357,6 @@ const server = http.createServer((req, res) => {
         return;
     }
     
-    // Handle first place screenshot submission
-    if (pathname === '/submit-first-place-screenshot' && req.method === 'POST') {
-        // Get current date in EST timezone
-        const dateString = getESTDateString();
-        
-        // Ensure storage/screenshots directory exists
-        const storageDir = './storage';
-        const screenshotsDir = './storage/screenshots';
-        if (!fs.existsSync(storageDir)) {
-            fs.mkdirSync(storageDir, { recursive: true });
-        }
-        if (!fs.existsSync(screenshotsDir)) {
-            fs.mkdirSync(screenshotsDir, { recursive: true });
-        }
-        
-        const screenshotPath = `${screenshotsDir}/${dateString}.png`;
-        
-        // Delete old screenshot if it exists (only one first place setup per day)
-        if (fs.existsSync(screenshotPath)) {
-            fs.unlinkSync(screenshotPath);
-        }
-        
-        // Read multipart form data
-        const chunks = [];
-        req.on('data', chunk => {
-            chunks.push(chunk);
-        });
-        req.on('end', () => {
-            try {
-                const buffer = Buffer.concat(chunks);
-                
-                // Parse multipart form data manually
-                const contentType = req.headers['content-type'] || '';
-                const boundaryMatch = contentType.match(/boundary=(.+)$/);
-                if (!boundaryMatch) {
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ success: false, error: 'Invalid content type' }), 'utf-8');
-                    return;
-                }
-                
-                const boundary = '--' + boundaryMatch[1];
-                const parts = buffer.toString('binary').split(boundary);
-                
-                for (let part of parts) {
-                    if (part.includes('Content-Type: image/png') || part.includes('Content-Type: image/png')) {
-                        // Extract image data - find the double CRLF that separates headers from body
-                        const headerEnd = part.indexOf('\r\n\r\n');
-                        if (headerEnd !== -1) {
-                            const imageStart = headerEnd + 4;
-                            // Find the end of this part (before the next boundary or end marker)
-                            let imageEnd = part.length;
-                            const nextBoundary = part.indexOf('\r\n--', imageStart);
-                            if (nextBoundary !== -1) {
-                                imageEnd = nextBoundary;
-                            }
-                            
-                            if (imageStart < imageEnd) {
-                                const imageData = part.substring(imageStart, imageEnd);
-                                const imageBuffer = Buffer.from(imageData, 'binary');
-                                
-                                // Save screenshot
-                                fs.writeFileSync(screenshotPath, imageBuffer);
-                                
-                                res.writeHead(200, { 'Content-Type': 'application/json' });
-                                res.end(JSON.stringify({ success: true }), 'utf-8');
-                                return;
-                            }
-                        }
-                    }
-                }
-                
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: false, error: 'No image data found' }), 'utf-8');
-            } catch (err) {
-                console.error('Error saving screenshot:', err);
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: false, error: 'Server error' }), 'utf-8');
-            }
-        });
-        return;
-    }
-    
     // Handle yesterday's best setup endpoint
     if (pathname === '/yesterday-best-setup' && req.method === 'GET') {
         try {
@@ -408,34 +370,30 @@ const server = http.createServer((req, res) => {
             const challengePath = `./day_challenges/${dateString}.civle`;
             
             let challengeData = null;
-            let screenshotData = null;
+            let screenshotUrl = null;
             
             // Read challenge if it exists
             if (fs.existsSync(challengePath)) {
                 challengeData = fs.readFileSync(challengePath, 'utf8');
             }
             
-            // Read screenshot if it exists
+            // Check if screenshot exists
             if (fs.existsSync(screenshotPath)) {
-                screenshotData = fs.readFileSync(screenshotPath);
+                screenshotUrl = `/storage/screenshots/${dateString}.png`;
             }
             
             // Return JSON with both challenge and screenshot
-            if (challengeData || screenshotData) {
+            if (challengeData || screenshotUrl) {
                 const response = {
                     success: true,
                     challenge: challengeData,
-                    hasScreenshot: screenshotData !== null
+                    screenshot: screenshotUrl
                 };
-                
-                // If screenshot exists, convert to base64 data URL
-                if (screenshotData) {
-                    response.screenshotUrl = `data:image/png;base64,${screenshotData.toString('base64')}`;
-                }
                 
                 res.writeHead(200, { 
                     'Content-Type': 'application/json',
-                    'Cache-Control': 'no-cache'
+                    'Cache-Control': 'no-cache',
+                    'Access-Control-Allow-Origin': '*'
                 });
                 res.end(JSON.stringify(response), 'utf-8');
             } else {
@@ -509,8 +467,12 @@ const server = http.createServer((req, res) => {
             return;
         }
     } else {
+        // Handle storage/screenshots requests
+        if (pathname.startsWith('/storage/screenshots/')) {
+            filePath = '.' + pathname;
+        }
         // Handle data folder requests (JSON files)
-        if (pathname.startsWith('/data/')) {
+        else if (pathname.startsWith('/data/')) {
             filePath = '.' + pathname;
         }
         // Handle assets folder (served from public/assets)
