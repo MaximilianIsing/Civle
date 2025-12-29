@@ -3332,7 +3332,8 @@
                 const neighborTile = challengeData.tiles[neighborKey];
                 
                 // Check neighbor terrain/features for adjacency bonuses
-                if (neighborTile) {
+                // Only count terrain/features if the tile doesn't have a district or improvement on it
+                if (neighborTile && !neighborPlaced) {
                     // Check for mountains
                     if (neighborTile.terrain && neighborTile.terrain.includes('Mountain')) {
                         mountainCount++;
@@ -3914,7 +3915,8 @@
                 const neighborTile = challengeData.tiles[neighborKey];
                 
                 // Check neighbor terrain/features for adjacency bonuses
-                if (neighborTile) {
+                // Only count terrain/features if the tile doesn't have a district or improvement on it
+                if (neighborTile && !neighborPlaced) {
                     // Check for mountains
                     if (neighborTile.terrain && neighborTile.terrain.includes('Mountain')) {
                         mountainCount++;

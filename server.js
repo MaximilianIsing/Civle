@@ -369,6 +369,102 @@ const server = http.createServer((req, res) => {
         return;
     }
     
+    // Handle upload yesterday winner endpoint
+    if (pathname === '/upload_yesterday_winner' && req.method === 'POST') {
+        // Read the endpoint key from environment variable or file
+        let endpointKey;
+        if (process.env.ENDPOINT_KEY) {
+            endpointKey = process.env.ENDPOINT_KEY;
+        } else if (fs.existsSync('endpoint_key.txt')) {
+            endpointKey = fs.readFileSync('endpoint_key.txt', 'utf8').trim();
+        } else {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Endpoint key not configured' }), 'utf-8');
+            return;
+        }
+        
+        const providedKey = queryParams.get('key');
+        
+        // If key doesn't match, deny access
+        if (providedKey !== endpointKey) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Invalid key' }), 'utf-8');
+            return;
+        }
+        
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body);
+                const image = data.image || null;
+                const name = data.name || null;
+                
+                if (!image) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, error: 'Image required' }), 'utf-8');
+                    return;
+                }
+                
+                if (!name) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, error: 'Name required' }), 'utf-8');
+                    return;
+                }
+                
+                // Get yesterday's date in EST timezone
+                const now = new Date();
+                const yesterday = new Date(now);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const dateString = getESTDateString(yesterday);
+                
+                // Ensure screenshots directory exists
+                const screenshotsDir = './storage/screenshots';
+                if (!fs.existsSync(screenshotsDir)) {
+                    fs.mkdirSync(screenshotsDir, { recursive: true });
+                }
+                
+                // Delete any existing screenshots for yesterday
+                if (fs.existsSync(screenshotsDir)) {
+                    const files = fs.readdirSync(screenshotsDir);
+                    files.forEach(file => {
+                        if (file.startsWith(dateString) && file.endsWith('.png')) {
+                            try {
+                                fs.unlinkSync(`${screenshotsDir}/${file}`);
+                            } catch (err) {
+                                // Ignore errors deleting old files
+                            }
+                        }
+                    });
+                }
+                
+                // Sanitize name for filename (remove invalid characters)
+                const sanitizedName = name.replace(/[^a-zA-Z0-9_-]/g, '_');
+                const filename = `${dateString}_(${sanitizedName})`;
+                const screenshotPath = `${screenshotsDir}/${filename}.png`;
+                
+                // Convert base64 to buffer and save
+                const base64Data = image.replace(/^data:image\/png;base64,/, '');
+                const buffer = Buffer.from(base64Data, 'base64');
+                fs.writeFileSync(screenshotPath, buffer);
+                
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ 
+                    success: true, 
+                    message: 'Screenshot uploaded successfully',
+                    filename: `${filename}.png`
+                }), 'utf-8');
+            } catch (err) {
+                console.error('Error uploading yesterday winner screenshot:', err);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Server error' }), 'utf-8');
+            }
+        });
+        return;
+    }
+    
     // Handle leaderboard endpoint
     if (pathname === '/leaderboard' && req.method === 'GET') {
         try {

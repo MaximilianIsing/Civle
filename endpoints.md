@@ -177,6 +177,55 @@ GET /reset_leaderboard?key=your-secret-key
 
 ---
 
+### POST `/upload_yesterday_winner?key={key}`
+Uploads or replaces yesterday's winner screenshot. This endpoint allows manually setting the screenshot for yesterday's challenge.
+
+**Query Parameters:**
+- `key` (required): Authentication key
+
+**Request Body:**
+```json
+{
+  "image": "data:image/png;base64,iVBORw0KGgoAAAANS...",
+  "name": "PlayerName"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Screenshot uploaded successfully",
+  "filename": "12-29_(PlayerName).png"
+}
+```
+
+**Errors:**
+- **400 Bad Request**: 
+  - `"Image required"` - No image provided
+  - `"Name required"` - No name provided
+- **403 Forbidden**: Invalid key
+- **500 Internal Server Error**: Server error
+
+**Example:**
+```
+POST /upload_yesterday_winner?key=your-secret-key
+Content-Type: application/json
+
+{
+  "image": "data:image/png;base64,...",
+  "name": "PlayerName"
+}
+```
+
+**Notes:**
+- The image should be a base64-encoded PNG image (with or without the `data:image/png;base64,` prefix)
+- The name will be sanitized for use in the filename (invalid characters replaced with underscores)
+- Any existing screenshot for yesterday's date will be replaced
+- The screenshot will be saved as `MM-DD_(Name).png` in the `storage/screenshots/` directory
+
+---
+
 ## Static File Endpoints
 
 ### GET `/data/*`
