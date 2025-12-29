@@ -347,6 +347,210 @@ const server = http.createServer((req, res) => {
         return;
     }
     
+    // Handle today scores endpoint
+    if (pathname === '/today_scores' && req.method === 'GET') {
+        try {
+            // Read the endpoint key from environment variable or file
+            let endpointKey;
+            if (process.env.ENDPOINT_KEY) {
+                endpointKey = process.env.ENDPOINT_KEY;
+            } else if (fs.existsSync('endpoint_key.txt')) {
+                endpointKey = fs.readFileSync('endpoint_key.txt', 'utf8').trim();
+            } else {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Endpoint key not configured' }), 'utf-8');
+                return;
+            }
+            
+            const providedKey = queryParams.get('key');
+            
+            // If key doesn't match, deny access
+            if (providedKey !== endpointKey) {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Invalid key' }), 'utf-8');
+                return;
+            }
+            
+            // Get current date in EST timezone
+            const dateString = getESTDateString();
+            
+            const scoresFile = path.join(STORAGE_DIR, 'scores', `${dateString}.json`);
+            
+            let scores = [];
+            if (fs.existsSync(scoresFile)) {
+                const fileContent = fs.readFileSync(scoresFile, 'utf8');
+                scores = JSON.parse(fileContent);
+            }
+            
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+                success: true, 
+                date: dateString,
+                scores: scores 
+            }), 'utf-8');
+        } catch (err) {
+            console.error('Error loading today scores:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Server error' }), 'utf-8');
+        }
+        return;
+    }
+    
+    // Handle yesterday scores endpoint
+    if (pathname === '/yesterday_scores' && req.method === 'GET') {
+        try {
+            // Read the endpoint key from environment variable or file
+            let endpointKey;
+            if (process.env.ENDPOINT_KEY) {
+                endpointKey = process.env.ENDPOINT_KEY;
+            } else if (fs.existsSync('endpoint_key.txt')) {
+                endpointKey = fs.readFileSync('endpoint_key.txt', 'utf8').trim();
+            } else {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Endpoint key not configured' }), 'utf-8');
+                return;
+            }
+            
+            const providedKey = queryParams.get('key');
+            
+            // If key doesn't match, deny access
+            if (providedKey !== endpointKey) {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Invalid key' }), 'utf-8');
+                return;
+            }
+            
+            // Get yesterday's date in EST timezone
+            const now = new Date();
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const dateString = getESTDateString(yesterday);
+            
+            const scoresFile = path.join(STORAGE_DIR, 'scores', `${dateString}.json`);
+            
+            let scores = [];
+            if (fs.existsSync(scoresFile)) {
+                const fileContent = fs.readFileSync(scoresFile, 'utf8');
+                scores = JSON.parse(fileContent);
+            }
+            
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+                success: true, 
+                date: dateString,
+                scores: scores 
+            }), 'utf-8');
+        } catch (err) {
+            console.error('Error loading yesterday scores:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Server error' }), 'utf-8');
+        }
+        return;
+    }
+    
+    // Handle today submissions count endpoint
+    if (pathname === '/num_today_submissions' && req.method === 'GET') {
+        try {
+            // Read the endpoint key from environment variable or file
+            let endpointKey;
+            if (process.env.ENDPOINT_KEY) {
+                endpointKey = process.env.ENDPOINT_KEY;
+            } else if (fs.existsSync('endpoint_key.txt')) {
+                endpointKey = fs.readFileSync('endpoint_key.txt', 'utf8').trim();
+            } else {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Endpoint key not configured' }), 'utf-8');
+                return;
+            }
+            
+            const providedKey = queryParams.get('key');
+            
+            // If key doesn't match, deny access
+            if (providedKey !== endpointKey) {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Invalid key' }), 'utf-8');
+                return;
+            }
+            
+            // Get current date in EST timezone
+            const dateString = getESTDateString();
+            
+            const scoresFile = path.join(STORAGE_DIR, 'scores', `${dateString}.json`);
+            
+            let count = 0;
+            if (fs.existsSync(scoresFile)) {
+                const fileContent = fs.readFileSync(scoresFile, 'utf8');
+                const scores = JSON.parse(fileContent);
+                count = scores.length;
+            }
+            
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+                success: true, 
+                date: dateString,
+                count: count 
+            }), 'utf-8');
+        } catch (err) {
+            console.error('Error loading today submissions count:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Server error' }), 'utf-8');
+        }
+        return;
+    }
+    
+    // Handle yesterday submissions count endpoint
+    if (pathname === '/num_yesterday_submissions' && req.method === 'GET') {
+        try {
+            // Read the endpoint key from environment variable or file
+            let endpointKey;
+            if (process.env.ENDPOINT_KEY) {
+                endpointKey = process.env.ENDPOINT_KEY;
+            } else if (fs.existsSync('endpoint_key.txt')) {
+                endpointKey = fs.readFileSync('endpoint_key.txt', 'utf8').trim();
+            } else {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Endpoint key not configured' }), 'utf-8');
+                return;
+            }
+            
+            const providedKey = queryParams.get('key');
+            
+            // If key doesn't match, deny access
+            if (providedKey !== endpointKey) {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Invalid key' }), 'utf-8');
+                return;
+            }
+            
+            // Get yesterday's date in EST timezone
+            const now = new Date();
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const dateString = getESTDateString(yesterday);
+            
+            const scoresFile = path.join(STORAGE_DIR, 'scores', `${dateString}.json`);
+            
+            let count = 0;
+            if (fs.existsSync(scoresFile)) {
+                const fileContent = fs.readFileSync(scoresFile, 'utf8');
+                const scores = JSON.parse(fileContent);
+                count = scores.length;
+            }
+            
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+                success: true, 
+                date: dateString,
+                count: count 
+            }), 'utf-8');
+        } catch (err) {
+            console.error('Error loading yesterday submissions count:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Server error' }), 'utf-8');
+        }
+        return;
+    }
+    
     // Handle reset leaderboard endpoint
     if (pathname === '/reset_leaderboard' && req.method === 'GET') {
         try {
