@@ -10,6 +10,6 @@ services:
         value: production
     disk:
       name: civle-storage
-      mountPath: /opt/render/project/src/storage
+      mountPath: /storage
       sizeGB: 1
 

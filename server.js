@@ -5,10 +5,10 @@ const path = require('path');
 const PORT = process.env.PORT || 8000;
 
 // Use persistent disk path if available (Render deployment), otherwise use relative path
-// On Render, the persistent disk is mounted at /opt/render/project/src/storage
+// On Render, the persistent disk is mounted at /storage (as configured in Render dashboard)
 // In production, always use the persistent disk path
-const STORAGE_DIR = (process.env.NODE_ENV === 'production' || fs.existsSync('/opt/render/project/src/storage'))
-    ? '/opt/render/project/src/storage'
+const STORAGE_DIR = (process.env.NODE_ENV === 'production' || fs.existsSync('/storage'))
+    ? '/storage'
     : './storage';
 
 // Log which storage directory is being used (for debugging)
