@@ -92,6 +92,14 @@
             color: #ffffff;
         }
 
+        .header-date {
+            font-size: 24px;
+            font-weight: 500;
+            margin: 0;
+            color: #818384;
+            margin-left: 12px;
+        }
+
         .header-right {
             position: absolute;
             right: 16px;
@@ -101,13 +109,13 @@
         }
 
         .yesterday-best-btn {
-            padding: 8px 16px;
+            padding: 10px 20px;
             background: #3a3a3c;
             color: #ffffff;
             border: 1px solid #565758;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 500;
             transition: background 0.1s;
         }
@@ -746,17 +754,11 @@
             text-align: center;
         }
 
-        .yesterday-best-content h3 {
-            color: #ffffff;
-            margin-bottom: 12px;
-            font-size: 18px;
-            font-weight: 600;
-        }
-
         .yesterday-best-content h2 {
             margin: 0 0 16px 0;
             font-size: 24px;
             font-weight: 700;
+            color: #ffffff;
         }
 
         .yesterday-best-content img {
@@ -765,7 +767,6 @@
             border: 1px solid #565758;
             border-radius: 4px;
         }
-        
 
         .yesterday-best-content .close-btn {
             margin-top: 16px;
@@ -780,6 +781,76 @@
         }
 
         .yesterday-best-content .close-btn:hover {
+            background: #5c9a56;
+        }
+
+        .tutorial-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10001;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .tutorial-modal.active {
+            display: flex;
+        }
+
+        .tutorial-content {
+            background: #121213;
+            border: 1px solid #565758;
+            border-radius: 8px;
+            padding: 32px;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: #ffffff;
+        }
+
+        .tutorial-content h2 {
+            margin: 0 0 20px 0;
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .tutorial-content p {
+            margin: 12px 0;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .tutorial-content ul {
+            margin: 12px 0;
+            padding-left: 24px;
+        }
+
+        .tutorial-content li {
+            margin: 8px 0;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .tutorial-content .close-btn {
+            margin-top: 24px;
+            padding: 10px 20px;
+            background: #6aaa64;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .tutorial-content .close-btn:hover {
             background: #5c9a56;
         }
         
@@ -893,6 +964,35 @@
             z-index: 1001;
         }
 
+        .help-button {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #3a3a3c;
+            border: 1px solid #565758;
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            transition: background 0.1s;
+        }
+
+        .help-button:hover {
+            background: #565758;
+            border-color: #818384;
+        }
+
+        .help-button:active {
+            background: #4a4a4c;
+        }
+
         .zoom-controls button {
             width: 36px;
             height: 36px;
@@ -940,6 +1040,7 @@
         <div class="header-left">
             <img src="assets/logo/Logo320x320.png" alt="Civle Logo" class="header-logo">
             <h1>CIVLE</h1>
+            <span id="headerDate" class="header-date"></span>
         </div>
         <div class="header-right">
             <button id="yesterdayBestBtn" class="yesterday-best-btn">Yesterday's Best Setup</button>
@@ -974,7 +1075,7 @@
         let resourcesData = null;
 
         // Zoom and pan state
-        let mapZoom = 2.0;
+        let mapZoom = 1.5;
         let mapPanX = 0;
         let mapPanY = 0;
         let isDragging = false;
@@ -2160,6 +2261,13 @@
                         }
                     });
                     
+                    // Right-click to delete improvement
+                    img.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removeItem(row, col);
+                    });
+                    
                     hexShape.appendChild(img);
                 } else if (placed.type === 'wonder') {
                     const img = document.createElement('img');
@@ -2264,6 +2372,13 @@
                             }
                         }, 100);
                     }
+                });
+                
+                // Right-click to delete district
+                img.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    removeItem(row, col);
                 });
                 
                 districtShape.appendChild(img);
@@ -2613,6 +2728,47 @@
             if (!placedItems[key]) return;
             
             const oldItem = placedItems[key];
+            
+            // If deleting a City_Center, delete all districts it owns
+            if (oldItem.type === 'district' && oldItem.name === 'City_Center') {
+                const districtsToDelete = [];
+                
+                // Find all districts that are owned by this City_Center
+                // Handle both direct owners and ambiguous owners
+                for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
+                    if (districtPlaced.type === 'district' && 
+                        districtPlaced.name !== 'City_Center') {
+                        // Check if this district is owned by (or could be owned by) this city center
+                        if (Array.isArray(districtPlaced.owner)) {
+                            if (districtPlaced.owner.includes(key)) {
+                                districtsToDelete.push(districtKey);
+                            }
+                        } else if (districtPlaced.owner === key) {
+                            districtsToDelete.push(districtKey);
+                        }
+                    }
+                }
+                
+                // Delete all owned districts
+                for (const districtKey of districtsToDelete) {
+                    const [districtRow, districtCol] = districtKey.split(',').map(Number);
+                    const district = placedItems[districtKey];
+                    if (district) {
+                        // Add back to available items
+                        availableItems[district.name] = (availableItems[district.name] || 0) + 1;
+                        // Delete the district
+                        delete placedItems[districtKey];
+                        // Update visuals for the deleted district location
+                        updateHexVisual(districtRow, districtCol);
+                        const districtNeighbors = getNeighbors(districtRow, districtCol);
+                        districtNeighbors.forEach(neighbor => {
+                            updateHexVisual(neighbor.row, neighbor.col);
+                        });
+                    }
+                }
+            }
+            
+            // Delete the item itself
             delete placedItems[key];
             availableItems[oldItem.name] = (availableItems[oldItem.name] || 0) + 1;
             
@@ -4562,7 +4718,7 @@
                 const day = String(yesterday.getDate()).padStart(2, '0');
                 const dateString = `${month}/${day}`;
                 
-                const response = await fetch(`/yesterday-best-setup`);
+                const response = await fetch('/yesterday-best-setup');
                 const data = await response.json();
                 
                 if (data.success && data.screenshot) {
@@ -4574,7 +4730,7 @@
                     }
                     
                     // Show screenshot
-                    imageContainer.innerHTML = `<img src="${data.screenshot}" alt="Yesterday's Best Setup" style="max-width: 100%; height: auto; border: 1px solid #565758; border-radius: 4px;">`;
+                    imageContainer.innerHTML = `<img src="${data.screenshot}" alt="Yesterday's Best Setup">`;
                 } else {
                     titleElement.textContent = `Yesterday (${dateString})`;
                     imageContainer.innerHTML = '<p>No setup available for yesterday.</p>';
@@ -4604,13 +4760,11 @@
             }
         });
 
-        // Add event listener for yesterday's best button
-        document.addEventListener('DOMContentLoaded', () => {
-            const yesterdayBtn = document.getElementById('yesterdayBestBtn');
-            if (yesterdayBtn) {
-                yesterdayBtn.addEventListener('click', showYesterdayBest);
-            }
-        });
+        // Event listener for yesterday's best button
+        const yesterdayBtn = document.getElementById('yesterdayBestBtn');
+        if (yesterdayBtn) {
+            yesterdayBtn.addEventListener('click', showYesterdayBest);
+        }
 
         function initMapZoomPan() {
             const mapContainer = document.getElementById('mapContainer');
@@ -4637,7 +4791,7 @@
 
             resetZoomBtn.onclick = (e) => {
                 e.stopPropagation();
-                mapZoom = 2.0; // Increased from 1.0 to zoom in more by default
+                mapZoom = 1.5; // Increased from 1.0 to zoom in more by default
                 mapPanX = 0;
                 mapPanY = 0;
                 updateTransform();
@@ -4746,10 +4900,71 @@
             updateTransform();
         }
         
+        function showTutorial() {
+            // Check if user has seen tutorial before
+            const hasSeenTutorial = localStorage.getItem('civle_tutorial_seen');
+            if (!hasSeenTutorial) {
+                const modal = document.getElementById('tutorialModal');
+                if (modal) {
+                    modal.classList.add('active');
+                }
+            }
+        }
+
+        function showTutorialAlways() {
+            // Show tutorial without checking localStorage (for help button)
+            const modal = document.getElementById('tutorialModal');
+            if (modal) {
+                modal.classList.add('active');
+            }
+        }
+
+        // Event listener for help button will be set up in initialization
+
+        function closeTutorial() {
+            const modal = document.getElementById('tutorialModal');
+            if (modal) {
+                modal.classList.remove('active');
+                // Mark tutorial as seen
+                localStorage.setItem('civle_tutorial_seen', 'true');
+            }
+        }
+
+        // Close tutorial when clicking outside
+        document.addEventListener('click', (e) => {
+            const tutorialModal = document.getElementById('tutorialModal');
+            if (e.target === tutorialModal) {
+                closeTutorial();
+            }
+        });
+
+        // Update header date
+        function updateHeaderDate() {
+            const now = new Date();
+            const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const month = String(estDate.getMonth() + 1).padStart(2, '0');
+            const day = String(estDate.getDate()).padStart(2, '0');
+            const dateString = `${month}/${day}`;
+            const dateElement = document.getElementById('headerDate');
+            if (dateElement) {
+                dateElement.textContent = `(${dateString})`;
+            }
+        }
+
         // Initialize on load
         // Load game data, then load daily challenge
         loadGameData().then(() => {
             loadDailyChallenge();
+            // Show tutorial on first visit
+            showTutorial();
+            // Update header date
+            updateHeaderDate();
+            // Ensure help button event listener is set up
+            const helpBtn = document.getElementById('helpButton');
+            if (helpBtn && !helpBtn.hasAttribute('data-listener-attached')) {
+                helpBtn.addEventListener('click', showTutorialAlways);
+                helpBtn.setAttribute('data-listener-attached', 'true');
+            }
         });
     </script>
     
@@ -4776,6 +4991,36 @@
             <button class="close-btn" onclick="closeYesterdayBest()">Close</button>
         </div>
     </div>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorialModal" class="tutorial-modal">
+        <div class="tutorial-content">
+            <h2>Welcome to Civle!</h2>
+            <p><strong>How to Play:</strong></p>
+            <ul>
+                <li>Drag districts, improvements, and wonders from the sidebar onto the map</li>
+                <li>Place them strategically to maximize your adjacency bonuses</li>
+                <li>Each district gets bonuses from adjacent tiles (mountains, rainforests, other districts, etc.)</li>
+                <li>Your score is calculated from all adjacency bonuses across all placed districts</li>
+                <li>City Centers must be at least 3 tiles apart</li>
+                <li>Districts must be within 3 tiles of a City Center to be valid</li>
+                <li>City's cannot contain duplicates of the same district type</li>
+                <li>A new daily challenge is available every day at 12:00 AM EST</li>
+            </ul>
+            <p><strong>Tips:</strong></p>
+            <ul>
+                <li>Hover over items in the sidebar to see their placement requirements and adjacent bonuses</li>
+                <li>Drag placed districts to move or delete them</li>
+                <li>Right click on a district to delete it</li>
+                <li>Use the zoom controls to get a better view of the map</li>
+                <li>Submit your score to compete on the daily leaderboard!</li>
+            </ul>
+            <button class="close-btn" onclick="closeTutorial()">Got it!</button>
+        </div>
+    </div>
+
+    <!-- Help Button -->
+    <button id="helpButton" class="help-button" title="Show Tutorial">?</button>
 </body>
 </html>
 
