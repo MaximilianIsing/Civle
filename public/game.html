@@ -3129,7 +3129,46 @@
             const districtsSection = document.createElement('div');
             districtsSection.innerHTML = '<h3 style="margin-top: 15px; margin-bottom: 10px; color: #4a90e2; font-size: 16px;">Districts</h3>';
             
-            Object.keys(availableItems).forEach(name => {
+            // Define the desired order for districts
+            const districtOrder = [
+                'City_Center',
+                'Government_Plaza',
+                'Diplomatic_Quarter',
+                'Neighborhood',
+                'Aqueduct',
+                'Canal',
+                'Dam',
+                'Industrial_Zone',
+                'Commercial_Hub',
+                'Harbor',
+                'Campus',
+                'Theater_Square',
+                'Entertainment_Complex',
+                'Water_Park',
+                'Holy_Site',
+                'Encampment',
+                'Preserve',
+                'Aerodrome',
+                'Spaceport'
+            ];
+            
+            // Get all district names from availableItems
+            const districtNames = Object.keys(availableItems).filter(name => {
+                return placementData.districts.find(d => d.name === name);
+            });
+            
+            // Sort districts according to the specified order
+            districtNames.sort((a, b) => {
+                const indexA = districtOrder.indexOf(a);
+                const indexB = districtOrder.indexOf(b);
+                // If not in the order list, put them at the end
+                if (indexA === -1 && indexB === -1) return 0;
+                if (indexA === -1) return 1;
+                if (indexB === -1) return -1;
+                return indexA - indexB;
+            });
+            
+            districtNames.forEach(name => {
                 const itemData = placementData.districts.find(d => d.name === name);
                 if (itemData) {
                     const item = createAvailableItem(name, 'district', availableItems[name]);
@@ -5349,6 +5388,7 @@
             
             // Check for strategic resources
             let strategicResourceCount = 0;
+            const strategicResources = [];
             neighbors.forEach(neighbor => {
                 const neighborKey = `${neighbor.row},${neighbor.col}`;
                 const neighborTile = challengeData.tiles[neighborKey];
@@ -5356,12 +5396,15 @@
                     const resourceInfo = resourcesData.strategic_resources.find(r => r.name === neighborTile.resource);
                     if (resourceInfo) {
                         strategicResourceCount++;
+                        if (!strategicResources.includes(neighborTile.resource)) {
+                            strategicResources.push(neighborTile.resource);
+                        }
                     }
                 }
             });
             
             if (bonuses.Strategic_Resource && strategicResourceCount > 0) {
-                sources.push({ type: 'Strategic_Resource', count: strategicResourceCount, bonus: bonuses.Strategic_Resource });
+                sources.push({ type: 'Strategic_Resource', count: strategicResourceCount, bonus: bonuses.Strategic_Resource, resourceNames: strategicResources });
             }
             
             return sources;
@@ -5492,6 +5535,17 @@
                             }
                         } else if (source.type === 'Coastal_Resources' && source.resourceNames && source.resourceNames.length > 0) {
                             // Show actual resource icons for coastal resources
+                            html += `<span style="margin-right: -2px;">(</span>`;
+                            source.resourceNames.forEach((resourceName, idx) => {
+                                const resourceIconPath = `assets/recources/${resourceName}.webp`;
+                                html += `<img src="${resourceIconPath}" alt="${resourceName.replace(/_/g, ' ')}" style="width: 16px; height: 16px; object-fit: contain; margin: 0;">`;
+                                if (idx < source.resourceNames.length - 1) {
+                                    html += `<span style="margin: -5px;">,</span>`;
+                                }
+                            });
+                            html += `<span style="margin-left: -2px;">)</span>`;
+                        } else if (source.type === 'Strategic_Resource' && source.resourceNames && source.resourceNames.length > 0) {
+                            // Show actual resource icons for strategic resources
                             html += `<span style="margin-right: -2px;">(</span>`;
                             source.resourceNames.forEach((resourceName, idx) => {
                                 const resourceIconPath = `assets/recources/${resourceName}.webp`;
