@@ -493,6 +493,39 @@
             position: relative;
             background: #121213;
         }
+        
+        .reset-button {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: #6b4040;
+            color: #d4a5a5;
+            border: 1px solid #7b5050;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.1s;
+            z-index: 1000;
+        }
+        
+        .reset-button:hover:not(:disabled) {
+            background: #7b5050;
+            color: #e0b0b0;
+        }
+        
+        .reset-button:active:not(:disabled) {
+            background: #5a3030;
+        }
+        
+        .reset-button:disabled {
+            background: #3a3a3c;
+            color: #818384;
+            border: 1px solid #565758;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
 
         .map-transform-wrapper {
             transform-origin: center center;
@@ -1410,6 +1443,7 @@
                 <h2>Loading...</h2>
                 <p>Please wait</p>
             </div>
+            <button class="reset-button" id="resetButton" style="display: none;">Reset</button>
         </div>
     </div>
 
@@ -1420,6 +1454,56 @@
         let GRID_HEIGHT = 0;
         let placedItems = {}; // { "row,col": { type: "district"|"improvement"|"wonder", name: "..." } }
         let availableItems = {}; // { "District_Name": count, "Improvement_Name": count }
+        
+        // Helper function to get today's date string (YYYY-MM-DD) in EST
+        function getTodayDateString() {
+            const now = new Date();
+            const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const year = estDate.getFullYear();
+            const month = String(estDate.getMonth() + 1).padStart(2, '0');
+            const day = String(estDate.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Save game state to localStorage
+        function saveGameState() {
+            try {
+                const today = getTodayDateString();
+                const gameState = {
+                    date: today,
+                    placedItems: placedItems,
+                    availableItems: availableItems
+                };
+                localStorage.setItem('civle_game_state', JSON.stringify(gameState));
+            } catch (e) {
+                console.error('Failed to save game state:', e);
+            }
+        }
+        
+        // Load game state from localStorage (only if it's the same day)
+        function loadGameState() {
+            try {
+                const savedState = localStorage.getItem('civle_game_state');
+                if (!savedState) return false;
+                
+                const gameState = JSON.parse(savedState);
+                const today = getTodayDateString();
+                
+                // Only load if it's from today
+                if (gameState.date === today && gameState.placedItems && gameState.availableItems) {
+                    placedItems = gameState.placedItems;
+                    availableItems = gameState.availableItems;
+                    return true;
+                } else {
+                    // Clear old state if it's a new day
+                    localStorage.removeItem('civle_game_state');
+                    return false;
+                }
+            } catch (e) {
+                console.error('Failed to load game state:', e);
+                return false;
+            }
+        }
         let adjacencyData = null;
         let placementData = null;
         let resourcesData = null;
@@ -1722,7 +1806,24 @@
                         }
                     });
                     
+                    // Try to load saved game state (only if same day)
+                    const loadedState = loadGameState();
+                    
                     initializeGame();
+                    
+                    // If we loaded a saved state, update all visuals
+                    if (loadedState) {
+                        // Update visuals for all placed items
+                        Object.keys(placedItems).forEach(key => {
+                            const [row, col] = key.split(',').map(Number);
+                            updateHexVisual(row, col);
+                            const neighbors = getNeighbors(row, col);
+                            neighbors.forEach(neighbor => {
+                                updateHexVisual(neighbor.row, neighbor.col);
+                            });
+                        });
+                        updateAllScores();
+                    }
                 } catch (error) {
                     console.error('Error loading challenge:', error);
                     alert('Failed to load challenge file: ' + error.message);
@@ -1906,7 +2007,24 @@
                     }
                 });
                 
+                // Try to load saved game state (only if same day)
+                const loadedState = loadGameState();
+                
                 initializeGame();
+                
+                // If we loaded a saved state, update all visuals
+                if (loadedState) {
+                    // Update visuals for all placed items
+                    Object.keys(placedItems).forEach(key => {
+                        const [row, col] = key.split(',').map(Number);
+                        updateHexVisual(row, col);
+                        const neighbors = getNeighbors(row, col);
+                        neighbors.forEach(neighbor => {
+                            updateHexVisual(neighbor.row, neighbor.col);
+                        });
+                    });
+                    updateAllScores();
+                }
             } catch (error) {
                 console.error('Error loading daily challenge:', error);
                 // Show error message but don't block the UI
@@ -1935,6 +2053,64 @@
             populateSidebar();
             initMapZoomPan();
             updateAllScores();
+            updateResetButton();
+        }
+        
+        function resetGame() {
+            if (!challengeData) return;
+            
+            // Clear all placed items
+            placedItems = {};
+            
+            // Restore available items from challenge allocations
+            availableItems = {};
+            
+            // Copy allocations to available items
+            Object.keys(challengeData.allocations.districts).forEach(name => {
+                const count = challengeData.allocations.districts[name];
+                if (count === true) {
+                    availableItems[name] = 1;
+                } else if (count > 0) {
+                    availableItems[name] = count;
+                }
+            });
+            
+            Object.keys(challengeData.allocations.improvements).forEach(name => {
+                const count = challengeData.allocations.improvements[name];
+                if (count > 0) {
+                    availableItems[name] = count;
+                }
+            });
+            
+            Object.keys(challengeData.allocations.wonders).forEach(name => {
+                if (challengeData.allocations.wonders[name]) {
+                    availableItems[name] = 1;
+                }
+            });
+            
+            // Update all visuals
+            for (let row = 0; row < GRID_HEIGHT; row++) {
+                for (let col = 0; col < GRID_WIDTH; col++) {
+                    updateHexVisual(row, col);
+                }
+            }
+            
+            updateAllScores();
+            populateSidebar();
+            
+            // Clear saved game state
+            localStorage.removeItem('civle_game_state');
+            
+            // Update reset button state
+            updateResetButton();
+        }
+        
+        function updateResetButton() {
+            const resetButton = document.getElementById('resetButton');
+            if (resetButton) {
+                const hasPlacedItems = Object.keys(placedItems).length > 0;
+                resetButton.disabled = !hasPlacedItems;
+            }
         }
 
         function createHexGrid() {
@@ -2035,6 +2211,24 @@
                 <button id="resetZoomBtn" title="Reset Zoom">⌂</button>
             `;
             mapContainer.appendChild(zoomControls);
+            
+            // Add reset button
+            let resetButton = document.getElementById('resetButton');
+            if (!resetButton) {
+                resetButton = document.createElement('button');
+                resetButton.className = 'reset-button';
+                resetButton.id = 'resetButton';
+                resetButton.textContent = 'Reset';
+                resetButton.onclick = resetGame;
+                mapContainer.appendChild(resetButton);
+            } else {
+                // Re-append existing button if it was removed
+                resetButton.onclick = resetGame;
+                mapContainer.appendChild(resetButton);
+            }
+            
+            // Update reset button state
+            updateResetButton();
         }
 
         function createHex(row, col) {
@@ -2246,6 +2440,8 @@
                             
                             updateAllScores();
                             populateSidebar();
+                            saveGameState();
+                            updateResetButton();
                             draggedDistrict = null;
                         } else if (isValidPlacement(row, col, 'district', districtName, tile, { row: draggedDistrict.row, col: draggedDistrict.col })) {
                             // Normal move (not a swap)
@@ -2493,6 +2689,8 @@
                             
                             updateAllScores();
                             populateSidebar();
+                            saveGameState();
+                            updateResetButton();
                             // Clear draggedDistrict on successful move
                             draggedDistrict = null;
                         } else {
@@ -2560,6 +2758,8 @@
                             
                             updateAllScores();
                             populateSidebar();
+                            saveGameState();
+                            updateResetButton();
                             // Clear draggedImprovement on successful move
                             draggedImprovement = null;
                         } else {
@@ -3492,6 +3692,8 @@
             });
             updateAllScores();
             populateSidebar();
+            saveGameState();
+            updateResetButton();
         }
 
         function validateAndDeleteInvalidWonders(checkRow, checkCol) {
@@ -3601,6 +3803,8 @@
             });
             updateAllScores();
             populateSidebar();
+            saveGameState();
+            updateResetButton();
         }
 
         function isValidPlacement(row, col, type, name, tile, excludeLocation = null) {
