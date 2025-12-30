@@ -3811,6 +3811,36 @@
                     }
                 }
                 
+                // Special placement rules for Dam: Only one dam per major floodplain
+                // Two dams cannot be connected by floodplain tiles
+                if (name === 'Dam') {
+                    // Check if this tile is a floodplain
+                    const isFloodplain = tile.terrain && (
+                        tile.terrain === 'Desert_Floodplains' || 
+                        tile.terrain === 'Grassland_Floodplains' || 
+                        tile.terrain === 'Plains_Floodplains'
+                    );
+                    
+                    if (isFloodplain) {
+                        // Find all connected floodplain tiles
+                        const connectedFloodplains = getConnectedFloodplains(row, col, excludeLocation);
+                        
+                        // Check if any connected floodplain tile already has a Dam
+                        for (const floodplainKey of connectedFloodplains) {
+                            const floodplainPlaced = placedItems[floodplainKey];
+                            if (floodplainPlaced && floodplainPlaced.type === 'district' && floodplainPlaced.name === 'Dam') {
+                                // Skip if this is the excluded location (when moving)
+                                const [floodplainRow, floodplainCol] = floodplainKey.split(',').map(Number);
+                                if (excludeLocation && floodplainRow === excludeLocation.row && floodplainCol === excludeLocation.col) {
+                                    continue;
+                                }
+                                // Another dam exists in this floodplain - cannot place
+                                return false;
+                            }
+                        }
+                    }
+                }
+                
                 if (itemData.must_be_adjacent_to_city_center && !hasCityCenterAdjacent(row, col)) {
                     return false;
                 }
@@ -3863,9 +3893,11 @@
                                 }
                                 
                                 // If there's already a district of the same type in the first ring, prevent placement
+                                // Exception: Dam can have multiple instances per city
                                 if (cityNeighborPlaced && 
                                     cityNeighborPlaced.type === 'district' && 
-                                    cityNeighborPlaced.name === name) {
+                                    cityNeighborPlaced.name === name &&
+                                    name !== 'Dam') {
                                     return false;
                                 }
                             }
@@ -3900,10 +3932,12 @@
                     // If district is adjacent to a City_Center, it must be owned by that City_Center
                     if (adjacentCityCenter) {
                         // Check if that City_Center already owns a district of this type
+                        // Exception: Dam can have multiple instances per city (no ownership restriction)
                         // Consider ambiguous owners - if a district has ambiguous owners, we can still place
                         let alreadyOwns = false;
-                        for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
-                            if (districtPlaced.type !== 'district' || districtPlaced.name !== name) continue;
+                        if (name !== 'Dam') {
+                            for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
+                                if (districtPlaced.type !== 'district' || districtPlaced.name !== name) continue;
                             
                             // Skip if this is the district being moved (same location)
                             const [districtRow, districtCol] = districtKey.split(',').map(Number);
@@ -3925,6 +3959,7 @@
                                 // Direct owner - city center already owns this type
                                 alreadyOwns = true;
                                 break;
+                            }
                             }
                         }
                         
@@ -3962,10 +3997,12 @@
                                 const distance = getHexDistance(row, col, cityRow, cityCol);
                                 if (distance <= 3) {
                                     // Check if this City_Center already owns a district of this type
+                                    // Exception: Dam can have multiple instances per city (no ownership restriction)
                                     // Consider ambiguous owners - if a district has ambiguous owners, we can still place
                                     let alreadyOwns = false;
-                                    for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
-                                        if (districtPlaced.type !== 'district' || districtPlaced.name !== name) continue;
+                                    if (name !== 'Dam') {
+                                        for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
+                                            if (districtPlaced.type !== 'district' || districtPlaced.name !== name) continue;
                                         
                                         // Skip if this is the district being moved (same location)
                                         const [districtRow, districtCol] = districtKey.split(',').map(Number);
@@ -3987,6 +4024,7 @@
                                             // Direct owner - city center already owns this type
                                             alreadyOwns = true;
                                             break;
+                                        }
                                         }
                                     }
                                     
@@ -4122,6 +4160,50 @@
             }
             
             return true;
+        }
+
+        // Helper function to find all floodplain tiles connected to a given tile
+        function getConnectedFloodplains(startRow, startCol, excludeLocation = null) {
+            const connected = new Set();
+            const visited = new Set();
+            const queue = [{ row: startRow, col: startCol }];
+            
+            while (queue.length > 0) {
+                const current = queue.shift();
+                const currentKey = `${current.row},${current.col}`;
+                
+                // Skip if already visited
+                if (visited.has(currentKey)) {
+                    continue;
+                }
+                visited.add(currentKey);
+                
+                // Skip if this is the excluded location (when moving)
+                if (excludeLocation && current.row === excludeLocation.row && current.col === excludeLocation.col) {
+                    continue;
+                }
+                
+                // Check if this tile is a floodplain
+                const tile = challengeData.tiles[currentKey];
+                if (tile && tile.terrain && (
+                    tile.terrain === 'Desert_Floodplains' || 
+                    tile.terrain === 'Grassland_Floodplains' || 
+                    tile.terrain === 'Plains_Floodplains'
+                )) {
+                    connected.add(currentKey);
+                    
+                    // Add all neighbors to the queue
+                    const neighbors = getNeighbors(current.row, current.col);
+                    for (const neighbor of neighbors) {
+                        const neighborKey = `${neighbor.row},${neighbor.col}`;
+                        if (!visited.has(neighborKey)) {
+                            queue.push(neighbor);
+                        }
+                    }
+                }
+            }
+            
+            return connected;
         }
 
         function hasCityCenterAdjacent(row, col) {
@@ -4592,12 +4674,14 @@
                     const distance = getHexDistance(row, col, cityRow, cityCol);
                     if (distance <= 3) {
                         // Check if this City_Center already owns a district of this type
+                        // Exception: Dam can have multiple instances per city (no ownership restriction)
                         // But consider ambiguous owners - if a district has ambiguous owners including this city,
                         // we can still add this city as a possible owner (allows swapping)
                         let alreadyOwns = false;
                         
-                        for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
-                            if (districtPlaced.type !== 'district' || districtPlaced.name !== districtName) continue;
+                        if (districtName !== 'Dam') {
+                            for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
+                                if (districtPlaced.type !== 'district' || districtPlaced.name !== districtName) continue;
                             
                             // Skip if this is the excluded location (old location when moving)
                             if (excludeLocation) {
@@ -4631,6 +4715,7 @@
                                 // Direct owner (not ambiguous) - city center already owns this type
                                 alreadyOwns = true;
                                 break;
+                            }
                             }
                         }
                         
