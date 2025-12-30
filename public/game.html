@@ -285,27 +285,39 @@
         .sidebar {
             width: 280px;
             background: #121213;
-            padding: 24px;
-            overflow-y: auto;
             border-right: 1px solid #3a3a3c;
             display: flex;
             flex-direction: column;
+            position: relative;
+        }
+        
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+        
+        .sidebar-footer {
+            padding: 20px 24px;
+            border-top: 1px solid #3a3a3c;
+            background: #121213;
+            flex-shrink: 0;
         }
 
-        .sidebar::-webkit-scrollbar {
+        .sidebar-content::-webkit-scrollbar {
             width: 8px;
         }
 
-        .sidebar::-webkit-scrollbar-track {
+        .sidebar-content::-webkit-scrollbar-track {
             background: #1a1a1a;
         }
 
-        .sidebar::-webkit-scrollbar-thumb {
+        .sidebar-content::-webkit-scrollbar-thumb {
             background: #3a3a3c;
             border-radius: 4px;
         }
 
-        .sidebar::-webkit-scrollbar-thumb:hover {
+        .sidebar-content::-webkit-scrollbar-thumb:hover {
             background: #565758;
         }
 
@@ -322,7 +334,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 12px;
+            padding: 6px 12px;
             margin: 4px 0;
             background: #3a3a3c;
             border: 1.5px solid #565758;
@@ -499,9 +511,9 @@
             bottom: 20px;
             left: 20px;
             padding: 10px 20px;
-            background: #6b4040;
+            background: #7b4040;
             color: #d4a5a5;
-            border: 1px solid #7b5050;
+            border: 1px solid #8b5050;
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
@@ -511,12 +523,12 @@
         }
         
         .reset-button:hover:not(:disabled) {
-            background: #7b5050;
+            background: #8b5050;
             color: #e0b0b0;
         }
         
         .reset-button:active:not(:disabled) {
-            background: #5a3030;
+            background: #6a3030;
         }
         
         .reset-button:disabled {
@@ -3318,8 +3330,11 @@
             const sidebar = document.getElementById('sidebar');
             sidebar.innerHTML = '';
             
+            // Create scrollable content area
+            const sidebarContent = document.createElement('div');
+            sidebarContent.className = 'sidebar-content';
+            
             const contentWrapper = document.createElement('div');
-            contentWrapper.style.flex = '1';
             contentWrapper.style.display = 'flex';
             contentWrapper.style.flexDirection = 'column';
             
@@ -3418,13 +3433,12 @@
             contentWrapper.appendChild(wondersSection);
             }
             
-            sidebar.appendChild(contentWrapper);
+            sidebarContent.appendChild(contentWrapper);
+            sidebar.appendChild(sidebarContent);
             
-            // Privacy Policy and Report Bug Links - positioned at absolute bottom
+            // Privacy Policy and Report Bug Links - fixed at bottom (not scrollable)
             const footerLinks = document.createElement('div');
-            footerLinks.style.paddingTop = '20px';
-            footerLinks.style.borderTop = '1px solid #3a3a3c';
-            footerLinks.style.marginTop = 'auto';
+            footerLinks.className = 'sidebar-footer';
             footerLinks.style.display = 'flex';
             footerLinks.style.justifyContent = 'space-between';
             footerLinks.style.alignItems = 'center';
