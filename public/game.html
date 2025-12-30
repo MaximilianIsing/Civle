@@ -3710,20 +3710,23 @@
                     const neighbors = getNeighbors(row, col);
                     let hasAdjacentWater = false;
                     let validPlacement = false;
+                    let capacity = 0;
                     
-                    // Check all neighbors for water tiles
+                    // Count capacity: +1 for each adjacent water tile, +1 for each adjacent city center
                     for (const neighbor of neighbors) {
                         const neighborKey = `${neighbor.row},${neighbor.col}`;
                         const neighborTile = challengeData.tiles[neighborKey];
+                        const neighborPlaced = placedItems[neighborKey];
                         
                         // Skip if this is the excluded location (when moving)
                         if (excludeLocation && neighbor.row === excludeLocation.row && neighbor.col === excludeLocation.col) {
                             continue;
                         }
                         
-                        // Check if neighbor is a water tile
+                        // For every adjacent water tile: capacity++
                         if (neighborTile && neighborTile.terrain && 
                             (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
+                            capacity++;
                             hasAdjacentWater = true;
                             
                             // Calculate the direction from canal to this water tile
@@ -3790,6 +3793,16 @@
                             // If we found a valid placement for this water tile, we can break
                             if (validPlacement) break;
                         }
+                        
+                        // For every adjacent city center: capacity++
+                        if (neighborPlaced && neighborPlaced.type === 'district' && neighborPlaced.name === 'City_Center') {
+                            capacity++;
+                        }
+                    }
+                    
+                    // If capacity > 2, canal can't be placed there
+                    if (capacity > 2) {
+                        return false;
                     }
                     
                     // Canal must be adjacent to water AND have valid opposite tile
