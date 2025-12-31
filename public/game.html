@@ -1557,6 +1557,11 @@
         let activeSidebarTooltip = null; // Track active sidebar tooltip to ensure only one at a time
         let lastMouseX = 0;
         let lastMouseY = 0;
+        
+        // Touch drag state
+        let touchDragState = null; // { type, name, startX, startY, element } for sidebar items
+        let touchDragDistrict = null; // { row, col, name, startX, startY, element } for districts
+        let touchDragImprovement = null; // { row, col, name, startX, startY, element } for improvements
 
         // Load game data from JSON files
         async function loadGameData() {
@@ -3094,29 +3099,105 @@
                         highlightAllTiles('improvement', placed.name, true);
                     });
                     
-                    img.addEventListener('dragend', (e) => {
-                        e.stopPropagation();
-                        
-                        // Clear all highlights
-                        clearAllHighlights();
-                        
-                        // Restore opacity if improvement wasn't moved (drop failed or cancelled)
-                        if (draggedImprovement) {
-                            const draggedImg = document.querySelector(`.hex-improvement[data-row="${draggedImprovement.row}"][data-col="${draggedImprovement.col}"]`);
-                            if (draggedImg) {
-                                draggedImg.style.opacity = '1';
-                                draggedImg.style.cursor = 'grab';
-                            }
-                            // Clear if not already cleared by successful drop
-                            setTimeout(() => {
-                                if (draggedImprovement) {
-                                    draggedImprovement = null;
-                                }
-                            }, 100);
-                        }
-                    });
+                img.addEventListener('dragend', (e) => {
+                    e.stopPropagation();
                     
-                    // Right-click to delete improvement
+                    // Clear all highlights
+                    clearAllHighlights();
+                    
+                    // Restore opacity if improvement wasn't moved (drop failed or cancelled)
+                    if (draggedImprovement) {
+                        const draggedImg = document.querySelector(`.hex-improvement[data-row="${draggedImprovement.row}"][data-col="${draggedImprovement.col}"]`);
+                        if (draggedImg) {
+                            draggedImg.style.opacity = '1';
+                            draggedImg.style.cursor = 'grab';
+                        }
+                        // Clear if not already cleared by successful drop
+                        setTimeout(() => {
+                            if (draggedImprovement) {
+                                draggedImprovement = null;
+                            }
+                        }, 100);
+                    }
+                });
+                
+                // Touch support for dragging improvements
+                img.addEventListener('touchstart', (e) => {
+                    const touch = e.touches[0];
+                    touchDragImprovement = {
+                        row: row,
+                        col: col,
+                        name: placed.name,
+                        startX: touch.clientX,
+                        startY: touch.clientY,
+                        element: img
+                    };
+                    img.style.opacity = '0.5';
+                    highlightAllTiles('improvement', placed.name, true);
+                    e.preventDefault();
+                }, { passive: false });
+                
+                img.addEventListener('touchmove', (e) => {
+                    if (touchDragImprovement && touchDragImprovement.element === img) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+                
+                img.addEventListener('touchend', (e) => {
+                    if (touchDragImprovement && touchDragImprovement.element === img) {
+                        const touch = e.changedTouches[0];
+                        const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+                        const hexElement = elementAtPoint?.closest('.hex');
+                        
+                        if (hexElement) {
+                            const targetRow = parseInt(hexElement.dataset.row);
+                            const targetCol = parseInt(hexElement.dataset.col);
+                            if (!isNaN(targetRow) && !isNaN(targetCol)) {
+                                const sourceKey = `${touchDragImprovement.row},${touchDragImprovement.col}`;
+                                const targetKey = `${targetRow},${targetCol}`;
+                                
+                                if (sourceKey !== targetKey) {
+                                    const tile = challengeData.tiles[targetKey];
+                                    if (isValidPlacement(targetRow, targetCol, 'improvement', touchDragImprovement.name, tile, { row: touchDragImprovement.row, col: touchDragImprovement.col })) {
+                                        // Remove from old location
+                                        delete placedItems[sourceKey];
+                                        availableItems[touchDragImprovement.name] = (availableItems[touchDragImprovement.name] || 0) + 1;
+                                        
+                                        // Place at new location
+                                        if (placedItems[targetKey]) {
+                                            const oldItem = placedItems[targetKey];
+                                            availableItems[oldItem.name] = (availableItems[oldItem.name] || 0) + 1;
+                                        }
+                                        placedItems[targetKey] = { type: 'improvement', name: touchDragImprovement.name };
+                                        availableItems[touchDragImprovement.name] = (availableItems[touchDragImprovement.name] || 0) - 1;
+                                        
+                                        updateHexVisual(touchDragImprovement.row, touchDragImprovement.col);
+                                        updateHexVisual(targetRow, targetCol);
+                                        updateAllScores();
+                                        populateSidebar();
+                                        saveGameState();
+                                        updateResetButton();
+                                    }
+                                }
+                            }
+                        }
+                        
+                        img.style.opacity = '1';
+                        touchDragImprovement = null;
+                        clearAllHighlights();
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+                
+                img.addEventListener('touchcancel', () => {
+                    if (touchDragImprovement && touchDragImprovement.element === img) {
+                        img.style.opacity = '1';
+                        touchDragImprovement = null;
+                        clearAllHighlights();
+                    }
+                });
+                
+                // Right-click to delete improvement
                     img.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -3331,6 +3412,205 @@
                                 draggedDistrict = null;
                             }
                         }, 100);
+                    }
+                });
+                
+                // Touch support for dragging districts
+                img.addEventListener('touchstart', (e) => {
+                    const touch = e.touches[0];
+                    touchDragDistrict = {
+                        row: row,
+                        col: col,
+                        name: placed.name,
+                        startX: touch.clientX,
+                        startY: touch.clientY,
+                        element: img
+                    };
+                    img.style.opacity = '0.5';
+                    highlightAllTiles('district', placed.name, true, { row, col });
+                    e.preventDefault();
+                }, { passive: false });
+                
+                img.addEventListener('touchmove', (e) => {
+                    if (touchDragDistrict && touchDragDistrict.element === img) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+                
+                img.addEventListener('touchend', (e) => {
+                    if (touchDragDistrict && touchDragDistrict.element === img) {
+                        const touch = e.changedTouches[0];
+                        const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+                        const hexElement = elementAtPoint?.closest('.hex');
+                        
+                        if (hexElement) {
+                            const targetRow = parseInt(hexElement.dataset.row);
+                            const targetCol = parseInt(hexElement.dataset.col);
+                            if (!isNaN(targetRow) && !isNaN(targetCol)) {
+                                // Simulate the drop logic from the drop handler
+                                draggedDistrict = { row: touchDragDistrict.row, col: touchDragDistrict.col, name: touchDragDistrict.name };
+                                const sourceKey = `${touchDragDistrict.row},${touchDragDistrict.col}`;
+                                const targetKey = `${targetRow},${targetCol}`;
+                                
+                                if (sourceKey !== targetKey) {
+                                    const tile = challengeData.tiles[targetKey];
+                                    const districtName = touchDragDistrict.name;
+                                    const targetDistrict = placedItems[targetKey];
+                                    
+                                    // Check if we're swapping with another district of the same type
+                                    let isSwap = false;
+                                    if (targetDistrict && 
+                                        targetDistrict.type === 'district' && 
+                                        targetDistrict.name === districtName &&
+                                        districtName !== 'City_Center') {
+                                        isSwap = canDistrictsSwap(sourceKey, targetKey);
+                                    }
+                                    
+                                    if (isSwap) {
+                                        // Perform swap (same logic as drop handler)
+                                        const sourceDistrict = placedItems[sourceKey];
+                                        const targetDistrictOwner = targetDistrict.owner;
+                                        
+                                        delete placedItems[sourceKey];
+                                        delete placedItems[targetKey];
+                                        
+                                        placedItems[targetKey] = { type: 'district', name: districtName };
+                                        placedItems[sourceKey] = { type: 'district', name: districtName };
+                                        
+                                        assignDistrictOwnership(targetKey, targetRow, targetCol, districtName, { row: touchDragDistrict.row, col: touchDragDistrict.col });
+                                        assignDistrictOwnership(sourceKey, touchDragDistrict.row, touchDragDistrict.col, districtName, { row: targetRow, col: targetCol });
+                                        
+                                        validateAndDeleteInvalidWonders(touchDragDistrict.row, touchDragDistrict.col);
+                                        validateAndDeleteInvalidWonders(targetRow, targetCol);
+                                        
+                                        updateHexVisual(touchDragDistrict.row, touchDragDistrict.col);
+                                        const oldNeighbors = getNeighbors(touchDragDistrict.row, touchDragDistrict.col);
+                                        oldNeighbors.forEach(neighbor => {
+                                            updateHexVisual(neighbor.row, neighbor.col);
+                                        });
+                                        
+                                        updateHexVisual(targetRow, targetCol);
+                                        const newNeighbors = getNeighbors(targetRow, targetCol);
+                                        newNeighbors.forEach(neighbor => {
+                                            updateHexVisual(neighbor.row, neighbor.col);
+                                        });
+                                        
+                                        updateAllScores();
+                                        populateSidebar();
+                                        saveGameState();
+                                        updateResetButton();
+                                    } else if (isValidPlacement(targetRow, targetCol, 'district', districtName, tile, { row: touchDragDistrict.row, col: touchDragDistrict.col })) {
+                                        // Normal move (same logic as drop handler)
+                                        const oldKey = `${touchDragDistrict.row},${touchDragDistrict.col}`;
+                                        const oldDistrict = placedItems[oldKey];
+                                        const oldOwner = oldDistrict ? oldDistrict.owner : null;
+                                        delete placedItems[oldKey];
+                                        availableItems[districtName] = (availableItems[districtName] || 0) + 1;
+                                        
+                                        const key = `${targetRow},${targetCol}`;
+                                        if (placedItems[key]) {
+                                            const oldItem = placedItems[key];
+                                            availableItems[oldItem.name] = (availableItems[oldItem.name] || 0) + 1;
+                                        }
+                                        placedItems[key] = { type: 'district', name: districtName };
+                                        
+                                        if (districtName !== 'City_Center') {
+                                            assignDistrictOwnership(key, targetRow, targetCol, districtName, { row: touchDragDistrict.row, col: touchDragDistrict.col });
+                                        }
+                                        
+                                        availableItems[districtName] = (availableItems[districtName] || 0) - 1;
+                                        
+                                        // Handle City_Center move (same logic as drop handler)
+                                        if (districtName === 'City_Center') {
+                                            const districtsToReassign = [];
+                                            const districtsToDelete = [];
+                                            
+                                            for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
+                                                if (districtPlaced.type === 'district' && 
+                                                    districtPlaced.name !== 'City_Center') {
+                                                    if (Array.isArray(districtPlaced.owner)) {
+                                                        if (districtPlaced.owner.includes(oldKey)) {
+                                                            districtsToReassign.push(districtKey);
+                                                        }
+                                                    } else if (districtPlaced.owner === oldKey) {
+                                                        districtsToReassign.push(districtKey);
+                                                    }
+                                                }
+                                            }
+                                            
+                                            for (const districtKey of districtsToReassign) {
+                                                reassignDistrictOwnership(districtKey);
+                                                const district = placedItems[districtKey];
+                                                if (district) {
+                                                    if (!district.owner) {
+                                                        districtsToDelete.push(districtKey);
+                                                    } else {
+                                                        const [districtRow, districtCol] = districtKey.split(',').map(Number);
+                                                        updateHexVisual(districtRow, districtCol);
+                                                        const districtNeighbors = getNeighbors(districtRow, districtCol);
+                                                        districtNeighbors.forEach(neighbor => {
+                                                            updateHexVisual(neighbor.row, neighbor.col);
+                                                        });
+                                                    }
+                                                }
+                                            }
+                                            
+                                            for (const districtKey of districtsToDelete) {
+                                                const district = placedItems[districtKey];
+                                                if (district) {
+                                                    availableItems[district.name] = (availableItems[district.name] || 0) + 1;
+                                                    delete placedItems[districtKey];
+                                                    const [districtRow, districtCol] = districtKey.split(',').map(Number);
+                                                    updateHexVisual(districtRow, districtCol);
+                                                    const districtNeighbors = getNeighbors(districtRow, districtCol);
+                                                    districtNeighbors.forEach(neighbor => {
+                                                        updateHexVisual(neighbor.row, neighbor.col);
+                                                    });
+                                                }
+                                            }
+                                            
+                                            validateAndDeleteInvalidWonders(targetRow, targetCol);
+                                        } else {
+                                            validateAndDeleteInvalidWonders(targetRow, targetCol);
+                                        }
+                                        
+                                        updateHexVisual(touchDragDistrict.row, touchDragDistrict.col);
+                                        const oldNeighbors = getNeighbors(touchDragDistrict.row, touchDragDistrict.col);
+                                        oldNeighbors.forEach(neighbor => {
+                                            updateHexVisual(neighbor.row, neighbor.col);
+                                        });
+                                        
+                                        updateHexVisual(targetRow, targetCol);
+                                        const newNeighbors = getNeighbors(targetRow, targetCol);
+                                        newNeighbors.forEach(neighbor => {
+                                            updateHexVisual(neighbor.row, neighbor.col);
+                                        });
+                                        
+                                        updateAllScores();
+                                        populateSidebar();
+                                        saveGameState();
+                                        updateResetButton();
+                                    }
+                                }
+                                
+                                draggedDistrict = null;
+                            }
+                        } else {
+                            // Touch ended outside a hex, restore opacity
+                            img.style.opacity = '1';
+                        }
+                        
+                        touchDragDistrict = null;
+                        clearAllHighlights();
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+                
+                img.addEventListener('touchcancel', () => {
+                    if (touchDragDistrict && touchDragDistrict.element === img) {
+                        img.style.opacity = '1';
+                        touchDragDistrict = null;
+                        clearAllHighlights();
                     }
                 });
                 
@@ -3734,6 +4014,59 @@
                 
                 // Remove all highlights
                 clearAllHighlights();
+            });
+            
+            // Touch support for drag and drop
+            item.addEventListener('touchstart', (e) => {
+                if (count > 0) {
+                    const touch = e.touches[0];
+                    touchDragState = {
+                        type: type,
+                        name: name,
+                        startX: touch.clientX,
+                        startY: touch.clientY,
+                        element: item
+                    };
+                    item.classList.add('dragging');
+                    highlightAllTiles(type, name);
+                    e.preventDefault(); // Prevent scrolling
+                }
+            }, { passive: false });
+            
+            item.addEventListener('touchmove', (e) => {
+                if (touchDragState && touchDragState.element === item) {
+                    e.preventDefault(); // Prevent scrolling while dragging
+                }
+            }, { passive: false });
+            
+            item.addEventListener('touchend', (e) => {
+                if (touchDragState && touchDragState.element === item) {
+                    const touch = e.changedTouches[0];
+                    const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+                    
+                    // Find the hex element (could be the hex itself or a child)
+                    const hexElement = elementAtPoint?.closest('.hex');
+                    if (hexElement) {
+                        const row = parseInt(hexElement.dataset.row);
+                        const col = parseInt(hexElement.dataset.col);
+                        if (!isNaN(row) && !isNaN(col)) {
+                            placeItem(row, col, touchDragState.type, touchDragState.name);
+                        }
+                    }
+                    
+                    item.classList.remove('dragging');
+                    touchDragState = null;
+                    clearAllHighlights();
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            item.addEventListener('touchcancel', () => {
+                if (touchDragState && touchDragState.element === item) {
+                    item.classList.remove('dragging');
+                    touchDragState = null;
+                    clearAllHighlights();
+                }
             });
             
             return item;
@@ -6833,7 +7166,18 @@
                 }
             }, { passive: false });
 
+            // Prevent map panning when dragging items
+            const isDraggingItem = () => {
+                return draggedItem || draggedDistrict || draggedImprovement || 
+                       touchDragState || touchDragDistrict || touchDragImprovement;
+            };
+            
             mapContainer.addEventListener('mousedown', (e) => {
+                // Don't start panning if we're dragging an item
+                if (isDraggingItem()) {
+                    return;
+                }
+                
                 const isButtonClick = e.target.closest('button');
                 const isScorePanel = e.target.closest('.score-panel');
                 const isDistrict = e.target.closest('.hex-district');
@@ -6854,6 +7198,59 @@
                     }
                 }
             });
+            
+            // Touch support for map panning (only when not dragging items)
+            let touchPanStart = null;
+            mapContainer.addEventListener('touchstart', (e) => {
+                // Don't start panning if we're dragging an item
+                if (isDraggingItem()) {
+                    return;
+                }
+                
+                if (e.touches.length === 1) {
+                    const touch = e.touches[0];
+                    const isButtonClick = touch.target.closest('button');
+                    const isScorePanel = touch.target.closest('.score-panel');
+                    const isDistrict = touch.target.closest('.hex-district');
+                    const isImprovement = touch.target.closest('.hex-improvement');
+                    const isWonder = touch.target.closest('.hex-wonder');
+                    
+                    if (!isButtonClick && !isScorePanel && !isDistrict && !isImprovement && !isWonder) {
+                        if (touch.target === mapContainer || touch.target === mapTransformWrapper || touch.target.id === 'hexGrid' || touch.target.closest('.hex')) {
+                            touchPanStart = {
+                                x: touch.clientX,
+                                y: touch.clientY,
+                                panX: mapPanX,
+                                panY: mapPanY
+                            };
+                        }
+                    }
+                }
+            }, { passive: true });
+            
+            mapContainer.addEventListener('touchmove', (e) => {
+                // Don't pan if we're dragging an item
+                if (isDraggingItem()) {
+                    return;
+                }
+                
+                if (touchPanStart && e.touches.length === 1) {
+                    const touch = e.touches[0];
+                    const deltaX = touch.clientX - touchPanStart.x;
+                    const deltaY = touch.clientY - touchPanStart.y;
+                    mapPanX = touchPanStart.panX + deltaX;
+                    mapPanY = touchPanStart.panY + deltaY;
+                    updateTransform();
+                }
+            }, { passive: true });
+            
+            mapContainer.addEventListener('touchend', () => {
+                touchPanStart = null;
+            }, { passive: true });
+            
+            mapContainer.addEventListener('touchcancel', () => {
+                touchPanStart = null;
+            }, { passive: true });
 
             mapContainer.addEventListener('mousemove', (e) => {
                 if (isDragging) {
