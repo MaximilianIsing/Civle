@@ -6002,16 +6002,18 @@
                             <span>${totalScience + totalCulture + totalProduction + totalFaith + (totalGold * 0.5)}</span>
                         </div>
                     </div>
-                    <button id="submitScoreBtn" class="submit-score-btn">Submit Score</button>
+                    ${window.isCustomMode ? '' : '<button id="submitScoreBtn" class="submit-score-btn">Submit Score</button>'}
                 `;
                 
-                // Check if user has already submitted today
-                checkSubmissionStatus();
-                
-                // Add event listener for submit button
-                const submitBtn = document.getElementById('submitScoreBtn');
-                if (submitBtn) {
-                    submitBtn.onclick = handleScoreButtonClick;
+                // Check if user has already submitted today (only in normal mode)
+                if (!window.isCustomMode) {
+                    checkSubmissionStatus();
+                    
+                    // Add event listener for submit button
+                    const submitBtn = document.getElementById('submitScoreBtn');
+                    if (submitBtn) {
+                        submitBtn.onclick = handleScoreButtonClick;
+                    }
                 }
             }
         }
@@ -6845,9 +6847,40 @@
             }
         } else {
         // Initialize on load
-            // Load game data, then load daily challenge
+            // Check if we're in custom mode (from URL parameter)
+            const urlParams = new URLSearchParams(window.location.search);
+            const isCustomMode = urlParams.get('mode') === 'custom';
+            
+            // Hide leaderboard and yesterday's best button in custom mode
+            if (isCustomMode) {
+                const yesterdayBestBtn = document.getElementById('yesterdayBestBtn');
+                if (yesterdayBestBtn) {
+                    yesterdayBestBtn.style.display = 'none';
+                }
+            }
+            
+            // Store isCustomMode globally for use in other functions
+            window.isCustomMode = isCustomMode;
+            
+            // Load game data, then load daily challenge or show upload button
             loadGameData().then(() => {
-                loadDailyChallenge();
+                if (isCustomMode) {
+                    // Custom mode: show upload button instead of loading daily challenge
+                    const sidebar = document.getElementById('sidebar');
+                    if (sidebar) {
+                        sidebar.innerHTML = `
+                            <div class="empty-state">
+                                <h2>Upload Challenge</h2>
+                                <p>Please upload a challenge file to begin playing.</p>
+                                <input type="file" id="challengeFileInput" accept=".civle" style="display: none;" onchange="loadChallenge(event)">
+                                <button class="submit-score-btn" onclick="document.getElementById('challengeFileInput').click()" style="margin-top: 20px; width: 100%;">Upload Challenge File</button>
+                            </div>
+                        `;
+                    }
+                } else {
+                    // Normal mode: load daily challenge
+                    loadDailyChallenge();
+                }
                 // Show tutorial on first visit
                 showTutorial();
                 // Update header date
