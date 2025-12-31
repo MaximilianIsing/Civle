@@ -3189,13 +3189,28 @@
                 // Touch support for dragging improvements
                 img.addEventListener('touchstart', (e) => {
                     const touch = e.touches[0];
+                    
+                    // Create a visual element that follows the touch
+                    const dragElement = document.createElement('img');
+                    dragElement.src = `assets/improvements/${placed.name}.webp`;
+                    dragElement.style.position = 'fixed';
+                    dragElement.style.width = '64px';
+                    dragElement.style.height = '64px';
+                    dragElement.style.opacity = '0.5';
+                    dragElement.style.pointerEvents = 'none';
+                    dragElement.style.zIndex = '10000';
+                    dragElement.style.left = (touch.clientX - 32) + 'px';
+                    dragElement.style.top = (touch.clientY - 32) + 'px';
+                    document.body.appendChild(dragElement);
+                    
                     touchDragImprovement = {
                         row: row,
                         col: col,
                         name: placed.name,
                         startX: touch.clientX,
                         startY: touch.clientY,
-                        element: img
+                        element: img,
+                        dragElement: dragElement
                     };
                     img.style.opacity = '0.5';
                     highlightAllTiles('improvement', placed.name, true);
@@ -3204,6 +3219,12 @@
                 
                 img.addEventListener('touchmove', (e) => {
                     if (touchDragImprovement && touchDragImprovement.element === img) {
+                        const touch = e.touches[0];
+                        // Update drag element position
+                        if (touchDragImprovement.dragElement) {
+                            touchDragImprovement.dragElement.style.left = (touch.clientX - 32) + 'px';
+                            touchDragImprovement.dragElement.style.top = (touch.clientY - 32) + 'px';
+                        }
                         e.preventDefault();
                     }
                 }, { passive: false });
@@ -3236,8 +3257,24 @@
                                         placedItems[targetKey] = { type: 'improvement', name: touchDragImprovement.name };
                                         availableItems[touchDragImprovement.name] = (availableItems[touchDragImprovement.name] || 0) - 1;
                                         
+                                        // Validate and delete invalid adjacent wonders at old location
+                                        validateAndDeleteInvalidWonders(touchDragImprovement.row, touchDragImprovement.col);
+                                        
+                                        // Validate and delete invalid adjacent wonders at new location
+                                        validateAndDeleteInvalidWonders(targetRow, targetCol);
+                                        
                                         updateHexVisual(touchDragImprovement.row, touchDragImprovement.col);
+                                        const oldNeighbors = getNeighbors(touchDragImprovement.row, touchDragImprovement.col);
+                                        oldNeighbors.forEach(neighbor => {
+                                            updateHexVisual(neighbor.row, neighbor.col);
+                                        });
+                                        
                                         updateHexVisual(targetRow, targetCol);
+                                        const newNeighbors = getNeighbors(targetRow, targetCol);
+                                        newNeighbors.forEach(neighbor => {
+                                            updateHexVisual(neighbor.row, neighbor.col);
+                                        });
+                                        
                                         updateAllScores();
                                         populateSidebar();
                                         saveGameState();
@@ -3245,6 +3282,11 @@
                                     }
                                 }
                             }
+                        }
+                        
+                        // Remove drag element
+                        if (touchDragImprovement.dragElement && touchDragImprovement.dragElement.parentNode) {
+                            touchDragImprovement.dragElement.parentNode.removeChild(touchDragImprovement.dragElement);
                         }
                         
                         img.style.opacity = '1';
@@ -3256,6 +3298,10 @@
                 
                 img.addEventListener('touchcancel', () => {
                     if (touchDragImprovement && touchDragImprovement.element === img) {
+                        // Remove drag element
+                        if (touchDragImprovement.dragElement && touchDragImprovement.dragElement.parentNode) {
+                            touchDragImprovement.dragElement.parentNode.removeChild(touchDragImprovement.dragElement);
+                        }
                         img.style.opacity = '1';
                         touchDragImprovement = null;
                         clearAllHighlights();
@@ -3436,8 +3482,24 @@
                                             placedItems[targetKey] = { type: 'wonder', name: touchDragWonder.name };
                                             availableItems[touchDragWonder.name] = (availableItems[touchDragWonder.name] || 0) - 1;
                                             
+                                            // Validate and delete invalid adjacent wonders at old location
+                                            validateAndDeleteInvalidWonders(touchDragWonder.row, touchDragWonder.col);
+                                            
+                                            // Validate and delete invalid adjacent wonders at new location
+                                            validateAndDeleteInvalidWonders(targetRow, targetCol);
+                                            
                                             updateHexVisual(touchDragWonder.row, touchDragWonder.col);
+                                            const oldNeighbors = getNeighbors(touchDragWonder.row, touchDragWonder.col);
+                                            oldNeighbors.forEach(neighbor => {
+                                                updateHexVisual(neighbor.row, neighbor.col);
+                                            });
+                                            
                                             updateHexVisual(targetRow, targetCol);
+                                            const newNeighbors = getNeighbors(targetRow, targetCol);
+                                            newNeighbors.forEach(neighbor => {
+                                                updateHexVisual(neighbor.row, neighbor.col);
+                                            });
+                                            
                                             updateAllScores();
                                             populateSidebar();
                                             saveGameState();
@@ -3684,13 +3746,28 @@
                 // Touch support for dragging districts
                 img.addEventListener('touchstart', (e) => {
                     const touch = e.touches[0];
+                    
+                    // Create a visual element that follows the touch
+                    const dragElement = document.createElement('img');
+                    dragElement.src = `assets/districts/${placed.name}.webp`;
+                    dragElement.style.position = 'fixed';
+                    dragElement.style.width = '64px';
+                    dragElement.style.height = '64px';
+                    dragElement.style.opacity = '0.5';
+                    dragElement.style.pointerEvents = 'none';
+                    dragElement.style.zIndex = '10000';
+                    dragElement.style.left = (touch.clientX - 32) + 'px';
+                    dragElement.style.top = (touch.clientY - 32) + 'px';
+                    document.body.appendChild(dragElement);
+                    
                     touchDragDistrict = {
                         row: row,
                         col: col,
                         name: placed.name,
                         startX: touch.clientX,
                         startY: touch.clientY,
-                        element: img
+                        element: img,
+                        dragElement: dragElement
                     };
                     img.style.opacity = '0.5';
                     highlightAllTiles('district', placed.name, true, { row, col });
@@ -3699,6 +3776,12 @@
                 
                 img.addEventListener('touchmove', (e) => {
                     if (touchDragDistrict && touchDragDistrict.element === img) {
+                        const touch = e.touches[0];
+                        // Update drag element position
+                        if (touchDragDistrict.dragElement) {
+                            touchDragDistrict.dragElement.style.left = (touch.clientX - 32) + 'px';
+                            touchDragDistrict.dragElement.style.top = (touch.clientY - 32) + 'px';
+                        }
                         e.preventDefault();
                     }
                 }, { passive: false });
@@ -3837,6 +3920,9 @@
                                             
                                             validateAndDeleteInvalidWonders(targetRow, targetCol);
                                         } else {
+                                            // Validate and delete invalid adjacent wonders at old location
+                                            validateAndDeleteInvalidWonders(touchDragDistrict.row, touchDragDistrict.col);
+                                            // Validate and delete invalid adjacent wonders at new location
                                             validateAndDeleteInvalidWonders(targetRow, targetCol);
                                         }
                                         
@@ -3866,6 +3952,11 @@
                             img.style.opacity = '1';
                         }
                         
+                        // Remove drag element
+                        if (touchDragDistrict.dragElement && touchDragDistrict.dragElement.parentNode) {
+                            touchDragDistrict.dragElement.parentNode.removeChild(touchDragDistrict.dragElement);
+                        }
+                        
                         touchDragDistrict = null;
                         clearAllHighlights();
                         e.preventDefault();
@@ -3874,6 +3965,10 @@
                 
                 img.addEventListener('touchcancel', () => {
                     if (touchDragDistrict && touchDragDistrict.element === img) {
+                        // Remove drag element
+                        if (touchDragDistrict.dragElement && touchDragDistrict.dragElement.parentNode) {
+                            touchDragDistrict.dragElement.parentNode.removeChild(touchDragDistrict.dragElement);
+                        }
                         img.style.opacity = '1';
                         touchDragDistrict = null;
                         clearAllHighlights();
