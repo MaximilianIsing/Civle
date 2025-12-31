@@ -3195,7 +3195,7 @@
                     dragElement.src = `assets/improvements/${placed.name}.webp`;
                     dragElement.style.width = '64px';
                     dragElement.style.height = '64px';
-                    dragElement.style.opacity = '1';
+                    dragElement.style.opacity = '0.5';
                     dragElement.style.position = 'fixed';
                     dragElement.style.left = (touch.clientX - 32) + 'px';
                     dragElement.style.top = (touch.clientY - 32) + 'px';
@@ -3417,7 +3417,7 @@
                         dragElement.src = `assets/wonders/${placed.name}.webp`;
                         dragElement.style.width = '64px';
                         dragElement.style.height = '64px';
-                        dragElement.style.opacity = '1';
+                        dragElement.style.opacity = '0.5';
                         dragElement.style.position = 'fixed';
                         dragElement.style.left = (touch.clientX - 32) + 'px';
                         dragElement.style.top = (touch.clientY - 32) + 'px';
@@ -3762,7 +3762,7 @@
                     dragElement.src = `assets/districts/${placed.name}.webp`;
                     dragElement.style.width = '64px';
                     dragElement.style.height = '64px';
-                    dragElement.style.opacity = '1';
+                    dragElement.style.opacity = '0.5';
                     dragElement.style.position = 'fixed';
                     dragElement.style.left = (touch.clientX - 32) + 'px';
                     dragElement.style.top = (touch.clientY - 32) + 'px';
@@ -4596,12 +4596,27 @@
             item.addEventListener('touchstart', (e) => {
                 if (count > 0) {
                     const touch = e.touches[0];
+                    
+                    // Create a visual element that follows the touch (same approach as regular drag)
+                    const dragElement = new Image();
+                    dragElement.src = imgPath;
+                    dragElement.style.width = '64px';
+                    dragElement.style.height = '64px';
+                    dragElement.style.opacity = '0.5';
+                    dragElement.style.position = 'fixed';
+                    dragElement.style.left = (touch.clientX - 32) + 'px';
+                    dragElement.style.top = (touch.clientY - 32) + 'px';
+                    dragElement.style.pointerEvents = 'none';
+                    dragElement.style.zIndex = '99999';
+                    document.body.appendChild(dragElement);
+                    
                     touchDragState = {
                         type: type,
                         name: name,
                         startX: touch.clientX,
                         startY: touch.clientY,
-                        element: item
+                        element: item,
+                        dragElement: dragElement
                     };
                     item.classList.add('dragging');
                     highlightAllTiles(type, name);
@@ -4611,6 +4626,12 @@
             
             item.addEventListener('touchmove', (e) => {
                 if (touchDragState && touchDragState.element === item) {
+                    const touch = e.touches[0];
+                    // Update drag element position
+                    if (touchDragState.dragElement) {
+                        touchDragState.dragElement.style.left = (touch.clientX - 32) + 'px';
+                        touchDragState.dragElement.style.top = (touch.clientY - 32) + 'px';
+                    }
                     e.preventDefault(); // Prevent scrolling while dragging
                 }
             }, { passive: false });
@@ -4630,6 +4651,11 @@
                         }
                     }
                     
+                    // Remove drag element
+                    if (touchDragState.dragElement && touchDragState.dragElement.parentNode) {
+                        touchDragState.dragElement.parentNode.removeChild(touchDragState.dragElement);
+                    }
+                    
                     item.classList.remove('dragging');
                     touchDragState = null;
                     clearAllHighlights();
@@ -4639,6 +4665,10 @@
             
             item.addEventListener('touchcancel', () => {
                 if (touchDragState && touchDragState.element === item) {
+                    // Remove drag element
+                    if (touchDragState.dragElement && touchDragState.dragElement.parentNode) {
+                        touchDragState.dragElement.parentNode.removeChild(touchDragState.dragElement);
+                    }
                     item.classList.remove('dragging');
                     touchDragState = null;
                     clearAllHighlights();
