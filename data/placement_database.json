@@ -44,7 +44,7 @@
     },
     {
       "name": "Dam",
-      "description": "**Placement:** Placeable on a Floodplains tile that contains atleast 2 River Edges.",
+      "description": "**Placement:** Placeable on a Floodplains tile that contains atleast 2 River Edges. Only one Dam can be placed per major floodplains. Cities can contain multiple Dams.",
       "allowed_terrain": ["Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
