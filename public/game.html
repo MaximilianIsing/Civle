@@ -3190,19 +3190,17 @@
                 img.addEventListener('touchstart', (e) => {
                     const touch = e.touches[0];
                     
-                    // Create a visual element that follows the touch
-                    const dragElement = document.createElement('img');
+                    // Create a visual element that follows the touch (same approach as regular drag)
+                    const dragElement = new Image();
                     dragElement.src = `assets/improvements/${placed.name}.webp`;
-                    dragElement.style.position = 'fixed';
                     dragElement.style.width = '64px';
                     dragElement.style.height = '64px';
-                    dragElement.style.opacity = '0.5';
-                    dragElement.style.pointerEvents = 'none';
-                    dragElement.style.zIndex = '99999';
+                    dragElement.style.opacity = '1';
+                    dragElement.style.position = 'fixed';
                     dragElement.style.left = (touch.clientX - 32) + 'px';
                     dragElement.style.top = (touch.clientY - 32) + 'px';
-                    dragElement.style.transform = 'translateZ(0)'; // Force hardware acceleration
-                    dragElement.style.display = 'block';
+                    dragElement.style.pointerEvents = 'none';
+                    dragElement.style.zIndex = '99999';
                     document.body.appendChild(dragElement);
                     
                     touchDragImprovement = {
@@ -3284,6 +3282,10 @@
                                     }
                                 }
                             }
+                        } else {
+                            // Touch ended outside a hex - delete the item
+                            removeItem(touchDragImprovement.row, touchDragImprovement.col);
+                            img.style.opacity = '1';
                         }
                         
                         // Remove drag element
@@ -3410,19 +3412,17 @@
                     img.addEventListener('touchstart', (e) => {
                         const touch = e.touches[0];
                         
-                        // Create a visual element that follows the touch
-                        const dragElement = document.createElement('img');
+                        // Create a visual element that follows the touch (same approach as regular drag)
+                        const dragElement = new Image();
                         dragElement.src = `assets/wonders/${placed.name}.webp`;
-                        dragElement.style.position = 'fixed';
                         dragElement.style.width = '64px';
                         dragElement.style.height = '64px';
-                        dragElement.style.opacity = '0.5';
-                        dragElement.style.pointerEvents = 'none';
-                        dragElement.style.zIndex = '99999';
+                        dragElement.style.opacity = '1';
+                        dragElement.style.position = 'fixed';
                         dragElement.style.left = (touch.clientX - 32) + 'px';
                         dragElement.style.top = (touch.clientY - 32) + 'px';
-                        dragElement.style.transform = 'translateZ(0)'; // Force hardware acceleration
-                        dragElement.style.display = 'block';
+                        dragElement.style.pointerEvents = 'none';
+                        dragElement.style.zIndex = '99999';
                         document.body.appendChild(dragElement);
                         
                         touchDragWonder = {
@@ -3514,8 +3514,14 @@
                                     draggedWonder = null;
                                 }
                             } else {
-                                // Touch ended outside a hex, restore opacity
+                                // Touch ended outside a hex - delete the item
+                                removeItem(touchDragWonder.row, touchDragWonder.col);
                                 img.style.opacity = '1';
+                            }
+                            
+                            // Remove drag element
+                            if (touchDragWonder.dragElement && touchDragWonder.dragElement.parentNode) {
+                                touchDragWonder.dragElement.parentNode.removeChild(touchDragWonder.dragElement);
                             }
                             
                             touchDragWonder = null;
@@ -3751,19 +3757,17 @@
                 img.addEventListener('touchstart', (e) => {
                     const touch = e.touches[0];
                     
-                    // Create a visual element that follows the touch
-                    const dragElement = document.createElement('img');
+                    // Create a visual element that follows the touch (same approach as regular drag)
+                    const dragElement = new Image();
                     dragElement.src = `assets/districts/${placed.name}.webp`;
-                    dragElement.style.position = 'fixed';
                     dragElement.style.width = '64px';
                     dragElement.style.height = '64px';
-                    dragElement.style.opacity = '0.5';
-                    dragElement.style.pointerEvents = 'none';
-                    dragElement.style.zIndex = '99999';
+                    dragElement.style.opacity = '1';
+                    dragElement.style.position = 'fixed';
                     dragElement.style.left = (touch.clientX - 32) + 'px';
                     dragElement.style.top = (touch.clientY - 32) + 'px';
-                    dragElement.style.transform = 'translateZ(0)'; // Force hardware acceleration
-                    dragElement.style.display = 'block';
+                    dragElement.style.pointerEvents = 'none';
+                    dragElement.style.zIndex = '99999';
                     document.body.appendChild(dragElement);
                     
                     touchDragDistrict = {
@@ -4158,7 +4162,8 @@
                                 draggedDistrict = null;
                             }
                         } else {
-                            // Touch ended outside a hex, restore opacity
+                            // Touch ended outside a hex - delete the item
+                            removeItem(touchDragDistrict.row, touchDragDistrict.col);
                             img.style.opacity = '1';
                         }
                         
