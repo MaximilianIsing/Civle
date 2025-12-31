@@ -1548,6 +1548,7 @@
         let draggedItem = null;
         let draggedDistrict = null; // { row, col, name }
         let draggedImprovement = null; // { row, col, name }
+        let draggedWonder = null; // { row, col, name }
         
         // Tooltip state
         let hexTooltip = null;
@@ -1562,6 +1563,7 @@
         let touchDragState = null; // { type, name, startX, startY, element } for sidebar items
         let touchDragDistrict = null; // { row, col, name, startX, startY, element } for districts
         let touchDragImprovement = null; // { row, col, name, startX, startY, element } for improvements
+        let touchDragWonder = null; // { row, col, name, startX, startY, element, dragElement } for wonders
 
         // Load game data from JSON files
         async function loadGameData() {
@@ -2276,7 +2278,7 @@
             // Tooltip handlers
             hex.addEventListener('mouseenter', (e) => {
                 // Don't show tooltip if dragging
-                if (draggedDistrict || draggedImprovement || draggedItem) {
+                if (draggedDistrict || draggedImprovement || draggedItem || draggedWonder) {
                     return;
                 }
                 
@@ -2315,7 +2317,7 @@
                     // Set timeout to show tooltip after 1 second (only if not already visible)
                     tooltipTimeout = setTimeout(() => {
                         // Double-check we're not dragging before showing
-                        if (!draggedDistrict && !draggedImprovement && !draggedItem && hexTooltip) {
+                        if (!draggedDistrict && !draggedImprovement && !draggedItem && !draggedWonder && hexTooltip) {
                             currentTooltipRow = row;
                             currentTooltipCol = col;
                             const content = formatTooltipContent(row, col);
@@ -2847,6 +2849,69 @@
                             // draggedImprovement will be cleared in dragend
                         }
                     }
+                } else if (draggedWonder) {
+                    // Dragging a wonder to move it
+                    const sourceKey = `${draggedWonder.row},${draggedWonder.col}`;
+                    const targetKey = `${row},${col}`;
+                    
+                    // If dropping on the same hex, do nothing and clear the dragged state
+                    if (sourceKey === targetKey) {
+                        // Dropped back on original location - restore opacity first, then clear
+                        const draggedImg = document.querySelector(`.hex-wonder[data-row="${draggedWonder.row}"][data-col="${draggedWonder.col}"]`);
+                        if (draggedImg) {
+                            draggedImg.style.opacity = '1';
+                            draggedImg.style.cursor = 'grab';
+                        }
+                        // Clear immediately to prevent map container drop handler from deleting it
+                        draggedWonder = null;
+                        e.stopPropagation(); // Prevent event from bubbling to map container
+                        return; // Exit early, don't process further
+                    } else {
+                        const tile = challengeData.tiles[targetKey];
+                        const wonderName = draggedWonder.name;
+                        
+                        // Check if valid placement
+                        if (isValidPlacement(row, col, 'wonder', wonderName, tile, { row: draggedWonder.row, col: draggedWonder.col })) {
+                            // Remove from old location (this adds it back to availableItems)
+                            const oldKey = `${draggedWonder.row},${draggedWonder.col}`;
+                            delete placedItems[oldKey];
+                            availableItems[wonderName] = (availableItems[wonderName] || 0) + 1;
+                            
+                            // Place at new location (subtract from availableItems to keep count correct)
+                            const key = `${row},${col}`;
+                            // Remove any existing item at this location
+                            if (placedItems[key]) {
+                                const oldItem = placedItems[key];
+                                availableItems[oldItem.name] = (availableItems[oldItem.name] || 0) + 1;
+                            }
+                            placedItems[key] = { type: 'wonder', name: wonderName };
+                            availableItems[wonderName] = (availableItems[wonderName] || 0) - 1;
+                            
+                            // Update visuals for old location and its neighbors
+                            updateHexVisual(draggedWonder.row, draggedWonder.col);
+                            const oldNeighbors = getNeighbors(draggedWonder.row, draggedWonder.col);
+                            oldNeighbors.forEach(neighbor => {
+                                updateHexVisual(neighbor.row, neighbor.col);
+                            });
+                            
+                            // Update visuals for new location and its neighbors
+                            updateHexVisual(row, col);
+                            const newNeighbors = getNeighbors(row, col);
+                            newNeighbors.forEach(neighbor => {
+                                updateHexVisual(neighbor.row, neighbor.col);
+                            });
+                            
+                            updateAllScores();
+                            populateSidebar();
+                            saveGameState();
+                            updateResetButton();
+                            // Clear draggedWonder on successful move
+                            draggedWonder = null;
+                        } else {
+                            // Invalid placement - wonder stays in original location
+                            // draggedWonder will be cleared in dragend
+                        }
+                    }
                 }
             });
 
@@ -3210,7 +3275,208 @@
                     img.className = 'hex-wonder';
                     img.src = `assets/wonders/${placed.name}.webp`;
                     img.alt = placed.name;
-                    img.draggable = false;
+                    img.draggable = true;
+                    img.dataset.row = row;
+                    img.dataset.col = col;
+                    img.style.pointerEvents = 'auto';
+                    img.style.cursor = 'grab';
+                    
+                    // Add drag handlers for wonders
+                    img.addEventListener('dragstart', (e) => {
+                        draggedWonder = { row, col, name: placed.name };
+                        img.style.opacity = '0.5';
+                        img.style.cursor = 'grabbing';
+                        e.stopPropagation();
+                        
+                        // Hide tooltip when dragging starts
+                        if (hexTooltip) {
+                            hexTooltip.classList.remove('visible');
+                            currentTooltipRow = null;
+                            currentTooltipCol = null;
+                        }
+                        if (tooltipTimeout) {
+                            clearTimeout(tooltipTimeout);
+                            tooltipTimeout = null;
+                        }
+                        
+                        // Create a custom drag image
+                        const dragImg = new Image();
+                        dragImg.src = `assets/wonders/${placed.name}.webp`;
+                        dragImg.style.width = '64px';
+                        dragImg.style.height = '64px';
+                        dragImg.style.opacity = '1';
+                        dragImg.style.position = 'fixed';
+                        dragImg.style.left = '-1000px';
+                        dragImg.style.top = '-1000px';
+                        dragImg.style.pointerEvents = 'none';
+                        document.body.appendChild(dragImg);
+                        
+                        if (dragImg.complete && dragImg.naturalWidth > 0) {
+                            e.dataTransfer.setDragImage(dragImg, 32, 32);
+                            setTimeout(() => {
+                                if (dragImg.parentNode) {
+                                    document.body.removeChild(dragImg);
+                                }
+                            }, 0);
+                        } else {
+                            dragImg.onload = () => {
+                                e.dataTransfer.setDragImage(dragImg, 32, 32);
+                                setTimeout(() => {
+                                    if (dragImg.parentNode) {
+                                        document.body.removeChild(dragImg);
+                                    }
+                                }, 0);
+                            };
+                            dragImg.onerror = () => {
+                                if (dragImg.parentNode) {
+                                    document.body.removeChild(dragImg);
+                                }
+                            };
+                        }
+                        
+                        e.dataTransfer.effectAllowed = 'move';
+                        // Show highlights for valid wonder placement
+                        highlightAllTiles('wonder', placed.name, true, { row, col });
+                    });
+                    
+                    img.addEventListener('dragend', (e) => {
+                        e.stopPropagation();
+                        clearAllHighlights();
+                        
+                        // Restore opacity if wonder wasn't moved
+                        if (draggedWonder) {
+                            const draggedImg = document.querySelector(`.hex-wonder[data-row="${draggedWonder.row}"][data-col="${draggedWonder.col}"]`);
+                            if (draggedImg) {
+                                draggedImg.style.opacity = '1';
+                                draggedImg.style.cursor = 'grab';
+                            }
+                            setTimeout(() => {
+                                if (draggedWonder) {
+                                    draggedWonder = null;
+                                }
+                            }, 100);
+                        }
+                    });
+                    
+                    // Touch support for dragging wonders
+                    img.addEventListener('touchstart', (e) => {
+                        const touch = e.touches[0];
+                        
+                        // Create a visual element that follows the touch
+                        const dragElement = document.createElement('img');
+                        dragElement.src = `assets/wonders/${placed.name}.webp`;
+                        dragElement.style.position = 'fixed';
+                        dragElement.style.width = '64px';
+                        dragElement.style.height = '64px';
+                        dragElement.style.opacity = '0.5';
+                        dragElement.style.pointerEvents = 'none';
+                        dragElement.style.zIndex = '10000';
+                        dragElement.style.left = (touch.clientX - 32) + 'px';
+                        dragElement.style.top = (touch.clientY - 32) + 'px';
+                        document.body.appendChild(dragElement);
+                        
+                        touchDragWonder = {
+                            row: row,
+                            col: col,
+                            name: placed.name,
+                            startX: touch.clientX,
+                            startY: touch.clientY,
+                            element: img,
+                            dragElement: dragElement
+                        };
+                        img.style.opacity = '0.5';
+                        highlightAllTiles('wonder', placed.name, true, { row, col });
+                        e.preventDefault();
+                    }, { passive: false });
+                    
+                    img.addEventListener('touchmove', (e) => {
+                        if (touchDragWonder && touchDragWonder.element === img) {
+                            const touch = e.touches[0];
+                            // Update drag element position
+                            if (touchDragWonder.dragElement) {
+                                touchDragWonder.dragElement.style.left = (touch.clientX - 32) + 'px';
+                                touchDragWonder.dragElement.style.top = (touch.clientY - 32) + 'px';
+                            }
+                            e.preventDefault();
+                        }
+                    }, { passive: false });
+                    
+                    img.addEventListener('touchend', (e) => {
+                        if (touchDragWonder && touchDragWonder.element === img) {
+                            const touch = e.changedTouches[0];
+                            const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+                            const hexElement = elementAtPoint?.closest('.hex');
+                            
+                            // Remove drag element
+                            if (touchDragWonder.dragElement && touchDragWonder.dragElement.parentNode) {
+                                touchDragWonder.dragElement.parentNode.removeChild(touchDragWonder.dragElement);
+                            }
+                            
+                            if (hexElement) {
+                                const targetRow = parseInt(hexElement.dataset.row);
+                                const targetCol = parseInt(hexElement.dataset.col);
+                                if (!isNaN(targetRow) && !isNaN(targetCol)) {
+                                    // Simulate the drop logic
+                                    draggedWonder = { row: touchDragWonder.row, col: touchDragWonder.col, name: touchDragWonder.name };
+                                    const sourceKey = `${touchDragWonder.row},${touchDragWonder.col}`;
+                                    const targetKey = `${targetRow},${targetCol}`;
+                                    
+                                    if (sourceKey !== targetKey) {
+                                        const tile = challengeData.tiles[targetKey];
+                                        if (isValidPlacement(targetRow, targetCol, 'wonder', touchDragWonder.name, tile, { row: touchDragWonder.row, col: touchDragWonder.col })) {
+                                            // Remove from old location
+                                            delete placedItems[sourceKey];
+                                            availableItems[touchDragWonder.name] = (availableItems[touchDragWonder.name] || 0) + 1;
+                                            
+                                            // Place at new location
+                                            if (placedItems[targetKey]) {
+                                                const oldItem = placedItems[targetKey];
+                                                availableItems[oldItem.name] = (availableItems[oldItem.name] || 0) + 1;
+                                            }
+                                            placedItems[targetKey] = { type: 'wonder', name: touchDragWonder.name };
+                                            availableItems[touchDragWonder.name] = (availableItems[touchDragWonder.name] || 0) - 1;
+                                            
+                                            updateHexVisual(touchDragWonder.row, touchDragWonder.col);
+                                            updateHexVisual(targetRow, targetCol);
+                                            updateAllScores();
+                                            populateSidebar();
+                                            saveGameState();
+                                            updateResetButton();
+                                        }
+                                    }
+                                    
+                                    draggedWonder = null;
+                                }
+                            } else {
+                                // Touch ended outside a hex, restore opacity
+                                img.style.opacity = '1';
+                            }
+                            
+                            touchDragWonder = null;
+                            clearAllHighlights();
+                            e.preventDefault();
+                        }
+                    }, { passive: false });
+                    
+                    img.addEventListener('touchcancel', () => {
+                        if (touchDragWonder && touchDragWonder.element === img) {
+                            // Remove drag element
+                            if (touchDragWonder.dragElement && touchDragWonder.dragElement.parentNode) {
+                                touchDragWonder.dragElement.parentNode.removeChild(touchDragWonder.dragElement);
+                            }
+                            img.style.opacity = '1';
+                            touchDragWonder = null;
+                            clearAllHighlights();
+                        }
+                    });
+                    
+                    // Right-click to delete wonder
+                    img.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removeItem(row, col);
+                    });
+                    
                     hexShape.appendChild(img);
                 }
             }
@@ -7168,8 +7434,8 @@
 
             // Prevent map panning when dragging items
             const isDraggingItem = () => {
-                return draggedItem || draggedDistrict || draggedImprovement || 
-                       touchDragState || touchDragDistrict || touchDragImprovement;
+                return draggedItem || draggedDistrict || draggedImprovement || draggedWonder || 
+                       touchDragState || touchDragDistrict || touchDragImprovement || touchDragWonder;
             };
             
             mapContainer.addEventListener('mousedown', (e) => {
@@ -7296,7 +7562,7 @@
 
             // Allow dropping districts and improvements in the void to delete them
             mapContainer.addEventListener('dragover', (e) => {
-                if (draggedDistrict || draggedImprovement) {
+                if (draggedDistrict || draggedImprovement || draggedWonder) {
                     e.preventDefault();
                     e.dataTransfer.dropEffect = 'move';
                 }
@@ -7321,6 +7587,11 @@
                         // Delete the improvement by removing it
                         removeItem(draggedImprovement.row, draggedImprovement.col);
                         draggedImprovement = null;
+                    } else if (draggedWonder) {
+                        e.preventDefault();
+                        // Delete the wonder by removing it
+                        removeItem(draggedWonder.row, draggedWonder.col);
+                        draggedWonder = null;
                     }
                 }
             });
