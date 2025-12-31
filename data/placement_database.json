@@ -23,7 +23,7 @@
     },
     {
       "name": "Canal",
-      "description": "**Placement:** Placeable on any flat land tile with a Coast or Lake tile on one side, and either a City Center or another body of water on the other. A single canal passage may go either straight, or bend 60 degrees; three-way canals are not allowed.",
+      "description": "**Placement:** Placeable on any flat land tile with a water tile on one side, and either a City Center or another water tile on the other. A single canal passage may go either straight, or bend 60 degrees; three-way canals are not allowed. Cities may contain multiple Canals.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
@@ -44,7 +44,7 @@
     },
     {
       "name": "Dam",
-      "description": "**Placement:** Placeable on a Floodplains tile that contains atleast 2 River Edges. Only one Dam can be placed per major floodplains. Cities can contain multiple Dams.",
+      "description": "**Placement:** Placeable on a Floodplains tile that contains atleast 2 River Edges. Only one Dam can be placed per major floodplains. Cities may contain multiple Dams.",
       "allowed_terrain": ["Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
@@ -100,7 +100,7 @@
     },
     {
       "name": "Neighborhood",
-      "description": "**Placement:** Placeable on any land tile.",
+      "description": "**Placement:** Placeable on any land tile. Cities may contain multiple Neighborhoods.",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": false
