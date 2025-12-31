@@ -1679,6 +1679,9 @@
             const file = event.target.files[0];
             if (!file) return;
 
+            // Clear saved game state when uploading a new challenge
+            localStorage.removeItem('civle_game_state');
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
@@ -1834,24 +1837,8 @@
                         }
                     });
                     
-                    // Try to load saved game state (only if same day)
-                    const loadedState = loadGameState();
-                    
+                    // Don't load saved game state when uploading a new challenge (already cleared above)
                     initializeGame();
-                    
-                    // If we loaded a saved state, update all visuals
-                    if (loadedState) {
-                        // Update visuals for all placed items
-                        Object.keys(placedItems).forEach(key => {
-                            const [row, col] = key.split(',').map(Number);
-                            updateHexVisual(row, col);
-                            const neighbors = getNeighbors(row, col);
-                            neighbors.forEach(neighbor => {
-                                updateHexVisual(neighbor.row, neighbor.col);
-                            });
-                        });
-                        updateAllScores();
-                    }
                 } catch (error) {
                     console.error('Error loading challenge:', error);
                     alert('Failed to load challenge file: ' + error.message);
@@ -2689,6 +2676,65 @@
                                         updateHexVisual(canalRow, canalCol);
                                         const canalNeighbors = getNeighbors(canalRow, canalCol);
                                         canalNeighbors.forEach(neighbor => {
+                                            updateHexVisual(neighbor.row, neighbor.col);
+                                        });
+                                    }
+                                }
+                                
+                                // Check all Wonders that might be affected by the city center move
+                                // Wonders must be within 3 tiles of a city center
+                                const wondersToCheck = new Set();
+                                
+                                // Check all placed items for Wonders
+                                for (const [wonderKey, wonderPlaced] of Object.entries(placedItems)) {
+                                    if (wonderPlaced.type === 'wonder') {
+                                        const [wonderRow, wonderCol] = wonderKey.split(',').map(Number);
+                                        
+                                        // Check distance to old city center location
+                                        const distanceToOld = getHexDistance(wonderRow, wonderCol, draggedDistrict.row, draggedDistrict.col);
+                                        // Check distance to new city center location
+                                        const distanceToNew = getHexDistance(wonderRow, wonderCol, row, col);
+                                        
+                                        // If the wonder was within 3 tiles of the old location or new location, check it
+                                        if (distanceToOld <= 3 || distanceToNew <= 3) {
+                                            wondersToCheck.add(wonderKey);
+                                        }
+                                    }
+                                }
+                                
+                                // Also check all wonders to see if they're still within range of any city center
+                                for (const [wonderKey, wonderPlaced] of Object.entries(placedItems)) {
+                                    if (wonderPlaced.type === 'wonder') {
+                                        wondersToCheck.add(wonderKey);
+                                    }
+                                }
+                                
+                                const wondersToDelete = [];
+                                for (const wonderKey of wondersToCheck) {
+                                    const [wonderRow, wonderCol] = wonderKey.split(',').map(Number);
+                                    const wonder = placedItems[wonderKey];
+                                    if (wonder) {
+                                        const wonderTile = challengeData.tiles[wonderKey];
+                                        // Validate this Wonder against placement rules
+                                        if (!isValidPlacement(wonderRow, wonderCol, 'wonder', wonder.name, wonderTile)) {
+                                            wondersToDelete.push(wonderKey);
+                                        }
+                                    }
+                                }
+                                
+                                // Delete Wonders that no longer meet requirements
+                                for (const wonderKey of wondersToDelete) {
+                                    const wonder = placedItems[wonderKey];
+                                    if (wonder) {
+                                        // Add back to available items
+                                        availableItems[wonder.name] = (availableItems[wonder.name] || 0) + 1;
+                                        // Delete the Wonder
+                                        delete placedItems[wonderKey];
+                                        // Update visuals for the deleted Wonder location
+                                        const [wonderRow, wonderCol] = wonderKey.split(',').map(Number);
+                                        updateHexVisual(wonderRow, wonderCol);
+                                        const wonderNeighbors = getNeighbors(wonderRow, wonderCol);
+                                        wonderNeighbors.forEach(neighbor => {
                                             updateHexVisual(neighbor.row, neighbor.col);
                                         });
                                     }
@@ -3779,7 +3825,7 @@
             
             const oldItem = placedItems[key];
             
-            // If deleting a City_Center, delete all districts it owns
+            // If deleting a City_Center, delete all districts it owns and check all wonders
             if (oldItem.type === 'district' && oldItem.name === 'City_Center') {
                 const districtsToDelete = [];
                 
@@ -3812,6 +3858,45 @@
                         updateHexVisual(districtRow, districtCol);
                         const districtNeighbors = getNeighbors(districtRow, districtCol);
                         districtNeighbors.forEach(neighbor => {
+                            updateHexVisual(neighbor.row, neighbor.col);
+                        });
+                    }
+                }
+                
+                // Check all Wonders to see if they're still within range of any city center
+                const wondersToCheck = [];
+                for (const [wonderKey, wonderPlaced] of Object.entries(placedItems)) {
+                    if (wonderPlaced.type === 'wonder') {
+                        wondersToCheck.push(wonderKey);
+                    }
+                }
+                
+                const wondersToDelete = [];
+                for (const wonderKey of wondersToCheck) {
+                    const [wonderRow, wonderCol] = wonderKey.split(',').map(Number);
+                    const wonder = placedItems[wonderKey];
+                    if (wonder) {
+                        const wonderTile = challengeData.tiles[wonderKey];
+                        // Validate this Wonder against placement rules
+                        if (!isValidPlacement(wonderRow, wonderCol, 'wonder', wonder.name, wonderTile)) {
+                            wondersToDelete.push(wonderKey);
+                        }
+                    }
+                }
+                
+                // Delete Wonders that are no longer within range of any city center
+                for (const wonderKey of wondersToDelete) {
+                    const wonder = placedItems[wonderKey];
+                    if (wonder) {
+                        // Add back to available items
+                        availableItems[wonder.name] = (availableItems[wonder.name] || 0) + 1;
+                        // Delete the Wonder
+                        delete placedItems[wonderKey];
+                        // Update visuals for the deleted Wonder location
+                        const [wonderRow, wonderCol] = wonderKey.split(',').map(Number);
+                        updateHexVisual(wonderRow, wonderCol);
+                        const wonderNeighbors = getNeighbors(wonderRow, wonderCol);
+                        wonderNeighbors.forEach(neighbor => {
                             updateHexVisual(neighbor.row, neighbor.col);
                         });
                     }
@@ -4369,6 +4454,20 @@
             
             // Check wonder requirements
             if (type === 'wonder') {
+                // Wonders must be within 3 tiles of a city center
+                let withinRangeOfCityCenter = false;
+                for (const [placedKey, placed] of Object.entries(placedItems)) {
+                    if (placed.type === 'district' && placed.name === 'City_Center') {
+                        const [cityRow, cityCol] = placedKey.split(',').map(Number);
+                        const distance = getHexDistance(row, col, cityRow, cityCol);
+                        if (distance <= 3) {
+                            withinRangeOfCityCenter = true;
+                            break;
+                        }
+                    }
+                }
+                if (!withinRangeOfCityCenter) return false;
+                
                 // Check allowed features
                 if (itemData.allowed_features && itemData.allowed_features.length > 0) {
                     if (!tile.feature || !itemData.allowed_features.includes(tile.feature)) {
