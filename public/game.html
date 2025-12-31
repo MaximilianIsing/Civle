@@ -3242,6 +3242,23 @@
                                 const sourceKey = `${touchDragImprovement.row},${touchDragImprovement.col}`;
                                 const targetKey = `${targetRow},${targetCol}`;
                                 
+                                // If dropping on the same hex, restore opacity and do nothing
+                                if (sourceKey === targetKey) {
+                                    // Dropped back on original location - restore opacity
+                                    img.style.opacity = '1';
+                                    img.style.cursor = 'grab';
+                                    
+                                    // Remove drag element
+                                    if (touchDragImprovement.dragElement && touchDragImprovement.dragElement.parentNode) {
+                                        touchDragImprovement.dragElement.parentNode.removeChild(touchDragImprovement.dragElement);
+                                    }
+                                    
+                                    touchDragImprovement = null;
+                                    clearAllHighlights();
+                                    e.preventDefault();
+                                    return;
+                                }
+                                
                                 if (sourceKey !== targetKey) {
                                     const tile = challengeData.tiles[targetKey];
                                     if (isValidPlacement(targetRow, targetCol, 'improvement', touchDragImprovement.name, tile, { row: touchDragImprovement.row, col: touchDragImprovement.col })) {
@@ -3457,11 +3474,6 @@
                             const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
                             const hexElement = elementAtPoint?.closest('.hex');
                             
-                            // Remove drag element
-                            if (touchDragWonder.dragElement && touchDragWonder.dragElement.parentNode) {
-                                touchDragWonder.dragElement.parentNode.removeChild(touchDragWonder.dragElement);
-                            }
-                            
                             if (hexElement) {
                                 const targetRow = parseInt(hexElement.dataset.row);
                                 const targetCol = parseInt(hexElement.dataset.col);
@@ -3470,6 +3482,23 @@
                                     draggedWonder = { row: touchDragWonder.row, col: touchDragWonder.col, name: touchDragWonder.name };
                                     const sourceKey = `${touchDragWonder.row},${touchDragWonder.col}`;
                                     const targetKey = `${targetRow},${targetCol}`;
+                                    
+                                    // If dropping on the same hex, restore opacity and do nothing
+                                    if (sourceKey === targetKey) {
+                                        // Dropped back on original location - restore opacity
+                                        img.style.opacity = '1';
+                                        img.style.cursor = 'grab';
+                                        
+                                        // Remove drag element
+                                        if (touchDragWonder.dragElement && touchDragWonder.dragElement.parentNode) {
+                                            touchDragWonder.dragElement.parentNode.removeChild(touchDragWonder.dragElement);
+                                        }
+                                        
+                                        touchDragWonder = null;
+                                        clearAllHighlights();
+                                        e.preventDefault();
+                                        return;
+                                    }
                                     
                                     if (sourceKey !== targetKey) {
                                         const tile = challengeData.tiles[targetKey];
@@ -3519,8 +3548,8 @@
                                 img.style.opacity = '1';
                             }
                             
-                            // Remove drag element
-                            if (touchDragWonder.dragElement && touchDragWonder.dragElement.parentNode) {
+                            // Remove drag element (if not already removed in same-position case)
+                            if (touchDragWonder && touchDragWonder.dragElement && touchDragWonder.dragElement.parentNode) {
                                 touchDragWonder.dragElement.parentNode.removeChild(touchDragWonder.dragElement);
                             }
                             
@@ -3810,6 +3839,23 @@
                                 draggedDistrict = { row: touchDragDistrict.row, col: touchDragDistrict.col, name: touchDragDistrict.name };
                                 const sourceKey = `${touchDragDistrict.row},${touchDragDistrict.col}`;
                                 const targetKey = `${targetRow},${targetCol}`;
+                                
+                                // If dropping on the same hex, restore opacity and do nothing
+                                if (sourceKey === targetKey) {
+                                    // Dropped back on original location - restore opacity
+                                    img.style.opacity = '1';
+                                    img.style.cursor = 'grab';
+                                    
+                                    // Remove drag element
+                                    if (touchDragDistrict.dragElement && touchDragDistrict.dragElement.parentNode) {
+                                        touchDragDistrict.dragElement.parentNode.removeChild(touchDragDistrict.dragElement);
+                                    }
+                                    
+                                    touchDragDistrict = null;
+                                    clearAllHighlights();
+                                    e.preventDefault();
+                                    return;
+                                }
                                 
                                 if (sourceKey !== targetKey) {
                                     const tile = challengeData.tiles[targetKey];
