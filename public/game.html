@@ -969,6 +969,22 @@
             font-size: 24px;
             font-weight: 700;
             color: #ffffff;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            flex-wrap: nowrap;
+            text-align: center;
+        }
+        
+        .yesterday-best-content h2 img {
+            display: inline-block;
+            vertical-align: middle;
+            flex-shrink: 0;
+            border: none;
+            outline: none;
+            background: transparent;
         }
 
         .yesterday-best-content img {
@@ -4193,8 +4209,8 @@
                         // Consider ambiguous owners - if a district has ambiguous owners, we can still place
                         let alreadyOwns = false;
                         if (name !== 'Dam' && name !== 'Neighborhood' && name !== 'Canal') {
-                            for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
-                                if (districtPlaced.type !== 'district' || districtPlaced.name !== name) continue;
+                        for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
+                            if (districtPlaced.type !== 'district' || districtPlaced.name !== name) continue;
                             
                             // Skip if this is the district being moved (same location)
                             const [districtRow, districtCol] = districtKey.split(',').map(Number);
@@ -4258,8 +4274,8 @@
                                     // Consider ambiguous owners - if a district has ambiguous owners, we can still place
                                     let alreadyOwns = false;
                                     if (name !== 'Dam' && name !== 'Neighborhood' && name !== 'Canal') {
-                                        for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
-                                            if (districtPlaced.type !== 'district' || districtPlaced.name !== name) continue;
+                                    for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
+                                        if (districtPlaced.type !== 'district' || districtPlaced.name !== name) continue;
                                         
                                         // Skip if this is the district being moved (same location)
                                         const [districtRow, districtCol] = districtKey.split(',').map(Number);
@@ -4942,8 +4958,8 @@
                         let alreadyOwns = false;
                         
                         if (districtName !== 'Dam' && districtName !== 'Neighborhood' && districtName !== 'Canal') {
-                            for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
-                                if (districtPlaced.type !== 'district' || districtPlaced.name !== districtName) continue;
+                        for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
+                            if (districtPlaced.type !== 'district' || districtPlaced.name !== districtName) continue;
                             
                             // Skip if this is the excluded location (old location when moving)
                             if (excludeLocation) {
@@ -6583,9 +6599,13 @@
                 const data = await response.json();
                 
                 if (data.success && data.screenshot) {
-                    // Update title with date and player name
+                    // Update title with date, player name, and score
                     if (data.playerName) {
-                        titleElement.textContent = `Yesterday's Best Setup (${dateString}) - By: ${data.playerName}`;
+                        let titleHTML = `<span>Yesterday's Best Setup (${dateString}) - By: ${data.playerName}</span>`;
+                        if (data.playerScore !== null && data.playerScore !== undefined) {
+                            titleHTML += `<span style="font-size: 0.65em; color: #b0b0b0; margin-left: 6px;">(<img src="assets/yields/Score.webp" alt="Score" style="width: 14px; height: 14px; vertical-align: middle; margin-left: 0px; margin-right: 0px; display: inline-block; border: none; outline: none; background: transparent;"><span>${data.playerScore}</span>)</span>`;
+                        }
+                        titleElement.innerHTML = titleHTML;
                     } else {
                         titleElement.textContent = `Yesterday's Best Setup (${dateString})`;
                     }
