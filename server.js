@@ -342,12 +342,14 @@ const server = http.createServer((req, res) => {
                             fs.mkdirSync(screenshotsDir, { recursive: true });
                         }
                         
-                        // Build filename with player name if available
+                        // Build filename with player name and score if available
                         let filename = dateString;
                         if (name) {
                             // Sanitize name for filename (remove invalid characters)
                             const sanitizedName = name.replace(/[^a-zA-Z0-9_-]/g, '_');
-                            filename = `${dateString}_(${sanitizedName})`;
+                            // Calculate total score
+                            const totalScore = data.score || 0;
+                            filename = `${dateString}_(${sanitizedName})_(${totalScore})`;
                         }
                         const screenshotPath = `${screenshotsDir}/${filename}.png`;
                         
@@ -386,12 +388,28 @@ const server = http.createServer((req, res) => {
                         );
                         
                         if (existingFile) {
-                            // Rename to include name
+                            // Rename to include name and score
                             const sanitizedName = name.replace(/[^a-zA-Z0-9_-]/g, '_');
-                            const newFilename = `${dateString}_(${sanitizedName}).png`;
+                            const totalScore = data.score || 0;
+                            const newFilename = `${dateString}_(${sanitizedName})_(${totalScore}).png`;
                             const oldPath = `${screenshotsDir}/${existingFile}`;
                             const newPath = `${screenshotsDir}/${newFilename}`;
                             fs.renameSync(oldPath, newPath);
+                        } else {
+                            // Check if file exists with name but without score, update it
+                            const fileWithName = files.find(file => {
+                                const nameMatch = file.match(/^\d{2}-\d{2}_\((.*?)\)\.png$/);
+                                return nameMatch && file.startsWith(dateString) && file.endsWith('.png') && !file.match(/_\d+\)\.png$/);
+                            });
+                            
+                            if (fileWithName) {
+                                const sanitizedName = name.replace(/[^a-zA-Z0-9_-]/g, '_');
+                                const totalScore = data.score || 0;
+                                const newFilename = `${dateString}_(${sanitizedName})_(${totalScore}).png`;
+                                const oldPath = `${screenshotsDir}/${fileWithName}`;
+                                const newPath = `${screenshotsDir}/${newFilename}`;
+                                fs.renameSync(oldPath, newPath);
+                            }
                         }
                     } catch (err) {
                         console.error('Error renaming screenshot with name:', err);
@@ -821,21 +839,38 @@ const server = http.createServer((req, res) => {
                 if (screenshotFile) {
                     screenshotUrl = `/storage/screenshots/${screenshotFile}`;
                     
-                    // Extract player name from filename if present (format: MM-DD_(Name).png)
-                    const nameMatch = screenshotFile.match(/^\d{2}-\d{2}_\((.*?)\)\.png$/);
-                    if (nameMatch) {
-                        playerName = nameMatch[1].replace(/_/g, ' '); // Replace underscores with spaces
+                    // Extract player name and score from filename if present
+                    // Format: MM-DD_(Name)_(Score).png or MM-DD_(Name).png
+                    const nameScoreMatch = screenshotFile.match(/^\d{2}-\d{2}_\((.*?)\)_\((\d+(?:\.\d+)?)\)\.png$/);
+                    const nameOnlyMatch = screenshotFile.match(/^\d{2}-\d{2}_\((.*?)\)\.png$/);
+                    
+                    if (nameScoreMatch) {
+                        playerName = nameScoreMatch[1].replace(/_/g, ' '); // Replace underscores with spaces
+                        // Score is in nameScoreMatch[2], but we'll extract it separately in the response
+                    } else if (nameOnlyMatch) {
+                        playerName = nameOnlyMatch[1].replace(/_/g, ' '); // Replace underscores with spaces
                     }
                 }
             }
             
-            // Return JSON with challenge, screenshot, and player name
+            // Extract score from filename if present
+            let playerScore = null;
+            if (screenshotUrl) {
+                const screenshotFile = screenshotUrl.split('/').pop();
+                const nameScoreMatch = screenshotFile.match(/^\d{2}-\d{2}_\((.*?)\)_\((\d+(?:\.\d+)?)\)\.png$/);
+                if (nameScoreMatch) {
+                    playerScore = parseFloat(nameScoreMatch[2]);
+                }
+            }
+            
+            // Return JSON with challenge, screenshot, player name, and score
             if (challengeData || screenshotUrl) {
                 const response = {
                     success: true,
                     challenge: challengeData,
                     screenshot: screenshotUrl,
-                    playerName: playerName
+                    playerName: playerName,
+                    playerScore: playerScore
                 };
                 
                 res.writeHead(200, { 
