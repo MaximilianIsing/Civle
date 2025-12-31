@@ -3198,9 +3198,11 @@
                     dragElement.style.height = '64px';
                     dragElement.style.opacity = '0.5';
                     dragElement.style.pointerEvents = 'none';
-                    dragElement.style.zIndex = '10000';
+                    dragElement.style.zIndex = '99999';
                     dragElement.style.left = (touch.clientX - 32) + 'px';
                     dragElement.style.top = (touch.clientY - 32) + 'px';
+                    dragElement.style.transform = 'translateZ(0)'; // Force hardware acceleration
+                    dragElement.style.display = 'block';
                     document.body.appendChild(dragElement);
                     
                     touchDragImprovement = {
@@ -3416,9 +3418,11 @@
                         dragElement.style.height = '64px';
                         dragElement.style.opacity = '0.5';
                         dragElement.style.pointerEvents = 'none';
-                        dragElement.style.zIndex = '10000';
+                        dragElement.style.zIndex = '99999';
                         dragElement.style.left = (touch.clientX - 32) + 'px';
                         dragElement.style.top = (touch.clientY - 32) + 'px';
+                        dragElement.style.transform = 'translateZ(0)'; // Force hardware acceleration
+                        dragElement.style.display = 'block';
                         document.body.appendChild(dragElement);
                         
                         touchDragWonder = {
@@ -3755,9 +3759,11 @@
                     dragElement.style.height = '64px';
                     dragElement.style.opacity = '0.5';
                     dragElement.style.pointerEvents = 'none';
-                    dragElement.style.zIndex = '10000';
+                    dragElement.style.zIndex = '99999';
                     dragElement.style.left = (touch.clientX - 32) + 'px';
                     dragElement.style.top = (touch.clientY - 32) + 'px';
+                    dragElement.style.transform = 'translateZ(0)'; // Force hardware acceleration
+                    dragElement.style.display = 'block';
                     document.body.appendChild(dragElement);
                     
                     touchDragDistrict = {
@@ -3869,14 +3875,18 @@
                                         
                                         availableItems[districtName] = (availableItems[districtName] || 0) - 1;
                                         
-                                        // Handle City_Center move (same logic as drop handler)
+                                        // If a City_Center was moved, reassign ownership of districts it owned
+                                        // This allows districts to swap to other city centers if they're better positioned
                                         if (districtName === 'City_Center') {
                                             const districtsToReassign = [];
                                             const districtsToDelete = [];
                                             
+                                            // Find all districts that were owned by this City_Center at its old location
+                                            // Handle both direct owners and ambiguous owners
                                             for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
                                                 if (districtPlaced.type === 'district' && 
                                                     districtPlaced.name !== 'City_Center') {
+                                                    // Check if this district is owned by (or could be owned by) the old city center
                                                     if (Array.isArray(districtPlaced.owner)) {
                                                         if (districtPlaced.owner.includes(oldKey)) {
                                                             districtsToReassign.push(districtKey);
@@ -3887,13 +3897,18 @@
                                                 }
                                             }
                                             
+                                            // Reassign ownership for all districts that were owned by the old city center
+                                            // This will find the best available city center (could be the moved one or a different one)
                                             for (const districtKey of districtsToReassign) {
                                                 reassignDistrictOwnership(districtKey);
+                                                
                                                 const district = placedItems[districtKey];
                                                 if (district) {
+                                                    // If no valid owner was found (district is out of range of all city centers), delete it
                                                     if (!district.owner) {
                                                         districtsToDelete.push(districtKey);
                                                     } else {
+                                                        // Update visuals for the reassigned district and its neighbors
                                                         const [districtRow, districtCol] = districtKey.split(',').map(Number);
                                                         updateHexVisual(districtRow, districtCol);
                                                         const districtNeighbors = getNeighbors(districtRow, districtCol);
@@ -3904,11 +3919,15 @@
                                                 }
                                             }
                                             
+                                            // Delete districts that are out of range of all city centers
                                             for (const districtKey of districtsToDelete) {
                                                 const district = placedItems[districtKey];
                                                 if (district) {
+                                                    // Add back to available items
                                                     availableItems[district.name] = (availableItems[district.name] || 0) + 1;
+                                                    // Delete the district
                                                     delete placedItems[districtKey];
+                                                    // Update visuals for the deleted district location
                                                     const [districtRow, districtCol] = districtKey.split(',').map(Number);
                                                     updateHexVisual(districtRow, districtCol);
                                                     const districtNeighbors = getNeighbors(districtRow, districtCol);
@@ -3918,13 +3937,204 @@
                                                 }
                                             }
                                             
-                                            validateAndDeleteInvalidWonders(targetRow, targetCol);
-                                        } else {
-                                            // Validate and delete invalid adjacent wonders at old location
-                                            validateAndDeleteInvalidWonders(touchDragDistrict.row, touchDragDistrict.col);
-                                            // Validate and delete invalid adjacent wonders at new location
-                                            validateAndDeleteInvalidWonders(targetRow, targetCol);
+                                            // Also check all districts that might now be better owned by the moved city center
+                                            // This handles the case where a district was within range of 2 city centers
+                                            // and the moved city center is now closer
+                                            for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
+                                                if (districtPlaced.type === 'district' && 
+                                                    districtPlaced.name !== 'City_Center' &&
+                                                    districtPlaced.owner) {
+                                                    // Check if this district is not already owned by the new city center location
+                                                    let isOwnedByNewCity = false;
+                                                    if (Array.isArray(districtPlaced.owner)) {
+                                                        isOwnedByNewCity = districtPlaced.owner.includes(key);
+                                                    } else {
+                                                        isOwnedByNewCity = districtPlaced.owner === key;
+                                                    }
+                                                    
+                                                    if (!isOwnedByNewCity) {
+                                                        // Reassign to see if the moved city center is now a better owner
+                                                        reassignDistrictOwnership(districtKey);
+                                                        
+                                                        // Update visuals if ownership changed
+                                                        const [districtRow, districtCol] = districtKey.split(',').map(Number);
+                                                        updateHexVisual(districtRow, districtCol);
+                                                        const districtNeighbors = getNeighbors(districtRow, districtCol);
+                                                        districtNeighbors.forEach(neighbor => {
+                                                            updateHexVisual(neighbor.row, neighbor.col);
+                                                        });
+                                                    }
+                                                }
+                                            }
+                                            
+                                            // Check all Aqueducts adjacent to both old and new City_Center locations
+                                            // Delete any that no longer meet placement requirements
+                                            const aqueductsToCheck = new Set();
+                                            
+                                            // Check neighbors of new location
+                                            const newCityNeighbors = getNeighbors(targetRow, targetCol);
+                                            for (const neighbor of newCityNeighbors) {
+                                                const neighborKey = `${neighbor.row},${neighbor.col}`;
+                                                const neighborPlaced = placedItems[neighborKey];
+                                                if (neighborPlaced && neighborPlaced.type === 'district' && neighborPlaced.name === 'Aqueduct') {
+                                                    aqueductsToCheck.add(neighborKey);
+                                                }
+                                            }
+                                            
+                                            // Check neighbors of old location
+                                            const oldCityNeighbors = getNeighbors(touchDragDistrict.row, touchDragDistrict.col);
+                                            for (const neighbor of oldCityNeighbors) {
+                                                const neighborKey = `${neighbor.row},${neighbor.col}`;
+                                                const neighborPlaced = placedItems[neighborKey];
+                                                if (neighborPlaced && neighborPlaced.type === 'district' && neighborPlaced.name === 'Aqueduct') {
+                                                    aqueductsToCheck.add(neighborKey);
+                                                }
+                                            }
+                                            
+                                            const aqueductsToDelete = [];
+                                            for (const aqueductKey of aqueductsToCheck) {
+                                                const [aqueductRow, aqueductCol] = aqueductKey.split(',').map(Number);
+                                                const aqueductTile = challengeData.tiles[aqueductKey];
+                                                // Validate this Aqueduct against placement rules
+                                                if (!isValidPlacement(aqueductRow, aqueductCol, 'district', 'Aqueduct', aqueductTile)) {
+                                                    aqueductsToDelete.push(aqueductKey);
+                                                }
+                                            }
+                                            
+                                            // Delete Aqueducts that no longer meet requirements
+                                            for (const aqueductKey of aqueductsToDelete) {
+                                                const aqueduct = placedItems[aqueductKey];
+                                                if (aqueduct) {
+                                                    // Add back to available items
+                                                    availableItems[aqueduct.name] = (availableItems[aqueduct.name] || 0) + 1;
+                                                    // Delete the Aqueduct
+                                                    delete placedItems[aqueductKey];
+                                                    // Update visuals for the deleted Aqueduct location
+                                                    const [aqueductRow, aqueductCol] = aqueductKey.split(',').map(Number);
+                                                    updateHexVisual(aqueductRow, aqueductCol);
+                                                    const aqueductNeighbors = getNeighbors(aqueductRow, aqueductCol);
+                                                    aqueductNeighbors.forEach(neighbor => {
+                                                        updateHexVisual(neighbor.row, neighbor.col);
+                                                    });
+                                                }
+                                            }
+                                            
+                                            // Check all Canals that might be affected by the city center move
+                                            // A Canal can be valid if it has a city center on one of its opposite tiles
+                                            // Check all Canals within 4 tiles of both old and new city center locations
+                                            const canalsToCheck = new Set();
+                                            
+                                            // Check all placed items for Canals within range
+                                            for (const [canalKey, canalPlaced] of Object.entries(placedItems)) {
+                                                if (canalPlaced.type === 'district' && canalPlaced.name === 'Canal') {
+                                                    const [canalRow, canalCol] = canalKey.split(',').map(Number);
+                                                    
+                                                    // Check distance to old city center location
+                                                    const distanceToOld = getHexDistance(canalRow, canalCol, touchDragDistrict.row, touchDragDistrict.col);
+                                                    // Check distance to new city center location
+                                                    const distanceToNew = getHexDistance(canalRow, canalCol, targetRow, targetCol);
+                                                    
+                                                    // A city center could be on one of the opposite tiles if it's within 4 tiles
+                                                    // (water tile is 1 tile away, opposite tiles are 3 tiles from water = 4 tiles from canal)
+                                                    if (distanceToOld <= 4 || distanceToNew <= 4) {
+                                                        canalsToCheck.add(canalKey);
+                                                    }
+                                                }
+                                            }
+                                            
+                                            const canalsToDelete = [];
+                                            for (const canalKey of canalsToCheck) {
+                                                const [canalRow, canalCol] = canalKey.split(',').map(Number);
+                                                const canalTile = challengeData.tiles[canalKey];
+                                                // Validate this Canal against placement rules
+                                                if (!isValidPlacement(canalRow, canalCol, 'district', 'Canal', canalTile)) {
+                                                    canalsToDelete.push(canalKey);
+                                                }
+                                            }
+                                            
+                                            // Delete Canals that no longer meet requirements
+                                            for (const canalKey of canalsToDelete) {
+                                                const canal = placedItems[canalKey];
+                                                if (canal) {
+                                                    // Add back to available items
+                                                    availableItems[canal.name] = (availableItems[canal.name] || 0) + 1;
+                                                    // Delete the Canal
+                                                    delete placedItems[canalKey];
+                                                    // Update visuals for the deleted Canal location
+                                                    const [canalRow, canalCol] = canalKey.split(',').map(Number);
+                                                    updateHexVisual(canalRow, canalCol);
+                                                    const canalNeighbors = getNeighbors(canalRow, canalCol);
+                                                    canalNeighbors.forEach(neighbor => {
+                                                        updateHexVisual(neighbor.row, neighbor.col);
+                                                    });
+                                                }
+                                            }
+                                            
+                                            // Check all Wonders that might be affected by the city center move
+                                            // Wonders must be within 3 tiles of a city center
+                                            const wondersToCheck = new Set();
+                                            
+                                            // Check all placed items for Wonders
+                                            for (const [wonderKey, wonderPlaced] of Object.entries(placedItems)) {
+                                                if (wonderPlaced.type === 'wonder') {
+                                                    const [wonderRow, wonderCol] = wonderKey.split(',').map(Number);
+                                                    
+                                                    // Check distance to old city center location
+                                                    const distanceToOld = getHexDistance(wonderRow, wonderCol, touchDragDistrict.row, touchDragDistrict.col);
+                                                    // Check distance to new city center location
+                                                    const distanceToNew = getHexDistance(wonderRow, wonderCol, targetRow, targetCol);
+                                                    
+                                                    // If the wonder was within 3 tiles of the old location or new location, check it
+                                                    if (distanceToOld <= 3 || distanceToNew <= 3) {
+                                                        wondersToCheck.add(wonderKey);
+                                                    }
+                                                }
+                                            }
+                                            
+                                            // Also check all wonders to see if they're still within range of any city center
+                                            for (const [wonderKey, wonderPlaced] of Object.entries(placedItems)) {
+                                                if (wonderPlaced.type === 'wonder') {
+                                                    wondersToCheck.add(wonderKey);
+                                                }
+                                            }
+                                            
+                                            const wondersToDelete = [];
+                                            for (const wonderKey of wondersToCheck) {
+                                                const [wonderRow, wonderCol] = wonderKey.split(',').map(Number);
+                                                const wonder = placedItems[wonderKey];
+                                                if (wonder) {
+                                                    const wonderTile = challengeData.tiles[wonderKey];
+                                                    // Validate this Wonder against placement rules
+                                                    if (!isValidPlacement(wonderRow, wonderCol, 'wonder', wonder.name, wonderTile)) {
+                                                        wondersToDelete.push(wonderKey);
+                                                    }
+                                                }
+                                            }
+                                            
+                                            // Delete Wonders that no longer meet requirements
+                                            for (const wonderKey of wondersToDelete) {
+                                                const wonder = placedItems[wonderKey];
+                                                if (wonder) {
+                                                    // Add back to available items
+                                                    availableItems[wonder.name] = (availableItems[wonder.name] || 0) + 1;
+                                                    // Delete the Wonder
+                                                    delete placedItems[wonderKey];
+                                                    // Update visuals for the deleted Wonder location
+                                                    const [wonderRow, wonderCol] = wonderKey.split(',').map(Number);
+                                                    updateHexVisual(wonderRow, wonderCol);
+                                                    const wonderNeighbors = getNeighbors(wonderRow, wonderCol);
+                                                    wonderNeighbors.forEach(neighbor => {
+                                                        updateHexVisual(neighbor.row, neighbor.col);
+                                                    });
+                                                }
+                                            }
                                         }
+                                        
+                                        // Validate and delete invalid adjacent wonders at old location
+                                        validateAndDeleteInvalidWonders(touchDragDistrict.row, touchDragDistrict.col);
+                                        
+                                        // Validate and delete invalid adjacent wonders at new location
+                                        validateAndDeleteInvalidWonders(targetRow, targetCol);
                                         
                                         updateHexVisual(touchDragDistrict.row, touchDragDistrict.col);
                                         const oldNeighbors = getNeighbors(touchDragDistrict.row, touchDragDistrict.col);
