@@ -4150,11 +4150,11 @@
                                 }
                                 
                                 // If there's already a district of the same type in the first ring, prevent placement
-                                // Exception: Dam can have multiple instances per city
+                                // Exception: Dam and Neighborhood can have multiple instances per city
                                 if (cityNeighborPlaced && 
                                     cityNeighborPlaced.type === 'district' && 
                                     cityNeighborPlaced.name === name &&
-                                    name !== 'Dam') {
+                                    name !== 'Dam' && name !== 'Neighborhood') {
                                     return false;
                                 }
                             }
@@ -4189,10 +4189,10 @@
                     // If district is adjacent to a City_Center, it must be owned by that City_Center
                     if (adjacentCityCenter) {
                         // Check if that City_Center already owns a district of this type
-                        // Exception: Dam can have multiple instances per city (no ownership restriction)
+                        // Exception: Dam and Neighborhood can have multiple instances per city (no ownership restriction)
                         // Consider ambiguous owners - if a district has ambiguous owners, we can still place
                         let alreadyOwns = false;
-                        if (name !== 'Dam') {
+                        if (name !== 'Dam' && name !== 'Neighborhood') {
                             for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
                                 if (districtPlaced.type !== 'district' || districtPlaced.name !== name) continue;
                             
@@ -4254,10 +4254,10 @@
                                 const distance = getHexDistance(row, col, cityRow, cityCol);
                                 if (distance <= 3) {
                                     // Check if this City_Center already owns a district of this type
-                                    // Exception: Dam can have multiple instances per city (no ownership restriction)
+                                    // Exception: Dam and Neighborhood can have multiple instances per city (no ownership restriction)
                                     // Consider ambiguous owners - if a district has ambiguous owners, we can still place
                                     let alreadyOwns = false;
-                                    if (name !== 'Dam') {
+                                    if (name !== 'Dam' && name !== 'Neighborhood') {
                                         for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
                                             if (districtPlaced.type !== 'district' || districtPlaced.name !== name) continue;
                                         
@@ -4880,6 +4880,11 @@
         function getPossibleOwners(row, col, districtName, excludeLocation = null) {
             const possibleOwners = [];
             
+            // Dam and Neighborhood have no owners - return empty array
+            if (districtName === 'Dam' || districtName === 'Neighborhood') {
+                return [];
+            }
+            
             // First, check if this district is adjacent to any City_Center (first ring)
             const neighbors = getNeighbors(row, col);
             let adjacentCityCenter = null;
@@ -4931,12 +4936,12 @@
                     const distance = getHexDistance(row, col, cityRow, cityCol);
                     if (distance <= 3) {
                         // Check if this City_Center already owns a district of this type
-                        // Exception: Dam can have multiple instances per city (no ownership restriction)
+                        // Exception: Dam and Neighborhood can have multiple instances per city (no ownership restriction)
                         // But consider ambiguous owners - if a district has ambiguous owners including this city,
                         // we can still add this city as a possible owner (allows swapping)
                         let alreadyOwns = false;
                         
-                        if (districtName !== 'Dam') {
+                        if (districtName !== 'Dam' && districtName !== 'Neighborhood') {
                             for (const [districtKey, districtPlaced] of Object.entries(placedItems)) {
                                 if (districtPlaced.type !== 'district' || districtPlaced.name !== districtName) continue;
                             
