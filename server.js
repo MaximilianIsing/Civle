@@ -381,6 +381,21 @@ const server = http.createServer((req, res) => {
                         const dateString = getESTDateString();
                         const screenshotsDir = path.join(STORAGE_DIR, 'screenshots');
                         
+                        // Get the score from the request data, or from the entry if not provided
+                        let totalScore = data.score;
+                        if (totalScore === undefined || totalScore === null) {
+                            // Try to get score from the entry we just updated
+                            const entry = scores.find(e => e.name === name && e.score);
+                            if (entry) {
+                                totalScore = entry.score;
+                            } else {
+                                totalScore = score; // Use the score from the request
+                            }
+                        }
+                        if (totalScore === undefined || totalScore === null) {
+                            totalScore = 0;
+                        }
+                        
                         // Find existing screenshot file for this date (might not have name yet)
                         const files = fs.readdirSync(screenshotsDir);
                         const existingFile = files.find(file => 
@@ -390,7 +405,6 @@ const server = http.createServer((req, res) => {
                         if (existingFile) {
                             // Rename to include name and score
                             const sanitizedName = name.replace(/[^a-zA-Z0-9_-]/g, '_');
-                            const totalScore = data.score || 0;
                             const newFilename = `${dateString}_(${sanitizedName})_(${totalScore}).png`;
                             const oldPath = `${screenshotsDir}/${existingFile}`;
                             const newPath = `${screenshotsDir}/${newFilename}`;
@@ -404,7 +418,6 @@ const server = http.createServer((req, res) => {
                             
                             if (fileWithName) {
                                 const sanitizedName = name.replace(/[^a-zA-Z0-9_-]/g, '_');
-                                const totalScore = data.score || 0;
                                 const newFilename = `${dateString}_(${sanitizedName})_(${totalScore}).png`;
                                 const oldPath = `${screenshotsDir}/${fileWithName}`;
                                 const newPath = `${screenshotsDir}/${newFilename}`;
@@ -753,7 +766,11 @@ const server = http.createServer((req, res) => {
                 
                 // Sanitize name for filename (remove invalid characters)
                 const sanitizedName = name.replace(/[^a-zA-Z0-9_-]/g, '_');
-                const filename = `${dateString}_(${sanitizedName})`;
+                const score = data.score || null;
+                let filename = `${dateString}_(${sanitizedName})`;
+                if (score !== null && score !== undefined) {
+                    filename = `${dateString}_(${sanitizedName})_(${score})`;
+                }
                 const screenshotPath = `${screenshotsDir}/${filename}.png`;
                 
                 // Convert base64 to buffer and save

@@ -47,7 +47,7 @@ GET /daily-challenge
 ---
 
 ### GET `/leaderboard`
-Returns the top 20 leaderboard entries for the current day (EST timezone).
+Returns the top 10 leaderboard entries for the current day (EST timezone).
 
 **Response:**
 ```json
@@ -77,7 +77,8 @@ Submits a score to the leaderboard.
 ```json
 {
   "score": 150,
-  "name": "PlayerName"  // Optional, only if in top 20
+  "name": "PlayerName",  // Optional, only if in top 10
+  "screenshot": "data:image/png;base64,..."  // Optional, base64-encoded PNG screenshot
 }
 ```
 
@@ -86,7 +87,7 @@ Submits a score to the leaderboard.
 {
   "success": true,
   "rank": 5,
-  "inTop20": true
+  "inTop10": true
 }
 ```
 
@@ -102,9 +103,46 @@ POST /submit-score
 Content-Type: application/json
 
 {
-  "score": 150
+  "score": 150,
+  "screenshot": "data:image/png;base64,..."
 }
 ```
+
+**Notes:**
+- If the submission ranks #1 and includes a screenshot, the screenshot is saved automatically
+- Screenshot filename format: `MM-DD_(Name)_(Score).png` (if name and score are provided)
+- If name is added later to a rank 1 entry, the screenshot file is renamed to include the name and score
+- Screenshots are stored in `storage/screenshots/` directory
+
+---
+
+### GET `/yesterday-best-setup`
+Returns yesterday's best setup (challenge file and screenshot) for display in the game.
+
+**Response:**
+```json
+{
+  "success": true,
+  "challenge": "CIV1...",
+  "screenshot": "/storage/screenshots/12-29_(PlayerName)_(150).png",
+  "playerName": "PlayerName",
+  "playerScore": 150
+}
+```
+
+**Errors:**
+- **404 Not Found**: No setup available for yesterday
+
+**Example:**
+```
+GET /yesterday-best-setup
+```
+
+**Notes:**
+- Returns the challenge file (`.civle` format) and screenshot URL for yesterday's date
+- Extracts player name and score from the screenshot filename if present
+- Filename format: `MM-DD_(Name)_(Score).png` or `MM-DD_(Name).png` or `MM-DD.png`
+- `playerName` and `playerScore` will be `null` if not found in the filename
 
 ---
 
@@ -374,7 +412,8 @@ Uploads or replaces yesterday's winner screenshot. This endpoint allows manually
 ```json
 {
   "image": "data:image/png;base64,iVBORw0KGgoAAAANS...",
-  "name": "PlayerName"
+  "name": "PlayerName",
+  "score": 150  // Optional, score of the winner
 }
 ```
 
@@ -383,7 +422,7 @@ Uploads or replaces yesterday's winner screenshot. This endpoint allows manually
 {
   "success": true,
   "message": "Screenshot uploaded successfully",
-  "filename": "12-29_(PlayerName).png"
+  "filename": "12-29_(PlayerName)_(150).png"
 }
 ```
 
@@ -401,15 +440,18 @@ Content-Type: application/json
 
 {
   "image": "data:image/png;base64,...",
-  "name": "PlayerName"
+  "name": "PlayerName",
+  "score": 150
 }
 ```
 
 **Notes:**
 - The image should be a base64-encoded PNG image (with or without the `data:image/png;base64,` prefix)
 - The name will be sanitized for use in the filename (invalid characters replaced with underscores)
+- If score is provided, the screenshot will be saved as `MM-DD_(Name)_(Score).png`
+- If score is not provided, the screenshot will be saved as `MM-DD_(Name).png`
 - Any existing screenshot for yesterday's date will be replaced
-- The screenshot will be saved as `MM-DD_(Name).png` in the `storage/screenshots/` directory
+- The screenshot will be saved in the `storage/screenshots/` directory
 
 ---
 
