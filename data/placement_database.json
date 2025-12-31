@@ -9,7 +9,7 @@
     },
     {
       "name": "Aqueduct",
-      "description": "**Placement:** Placeable adjacent to a City Center and either a Mountain, Lake, or River (on an edge that is not directly connected between the City Center and the Aquaduct)",
+      "description": "**Placement:** Placeable adjacent to a City Center and either a Mountain, Lake, or River (on an edge that is not directly connected between the City Center and the Aquaduct).",
       "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow", "Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "cant_be_adjacent_to_city_center": false,
       "must_be_adjacent_to_city_center": true
