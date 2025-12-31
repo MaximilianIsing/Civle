@@ -1554,6 +1554,7 @@
         let tooltipTimeout = null;
         let currentTooltipRow = null;
         let currentTooltipCol = null;
+        let activeSidebarTooltip = null; // Track active sidebar tooltip to ensure only one at a time
         let lastMouseX = 0;
         let lastMouseY = 0;
 
@@ -3617,9 +3618,14 @@
             item.appendChild(countSpan);
             
             // Add tooltip for placement requirements
-            let tooltip = null;
             item.addEventListener('mouseenter', (e) => {
                 if (!placementData) return;
+                
+                // Remove any existing sidebar tooltip before creating a new one
+                if (activeSidebarTooltip) {
+                    activeSidebarTooltip.remove();
+                    activeSidebarTooltip = null;
+                }
                 
                 let itemData = null;
                 if (type === 'district') {
@@ -3632,10 +3638,13 @@
                 
                 if (!itemData) return;
                 
-                tooltip = document.createElement('div');
+                const tooltip = document.createElement('div');
                 tooltip.className = 'placement-tooltip';
                 tooltip.innerHTML = formatPlacementRequirements(itemData, type);
                 document.body.appendChild(tooltip);
+                
+                // Store as the active sidebar tooltip
+                activeSidebarTooltip = tooltip;
                 
                 // Position tooltip
                 const rect = item.getBoundingClientRect();
@@ -3644,7 +3653,7 @@
                 
                 // Adjust if tooltip goes off screen
                 setTimeout(() => {
-                    if (tooltip) {
+                    if (activeSidebarTooltip === tooltip) {
                         const tooltipRect = tooltip.getBoundingClientRect();
                         if (tooltipRect.right > window.innerWidth) {
                             tooltip.style.left = (rect.left - tooltipRect.width - 10) + 'px';
@@ -3657,17 +3666,18 @@
             });
             
             item.addEventListener('mouseleave', () => {
-                if (tooltip) {
-                    tooltip.remove();
-                    tooltip = null;
+                // Only remove if this is still the active tooltip
+                if (activeSidebarTooltip) {
+                    activeSidebarTooltip.remove();
+                    activeSidebarTooltip = null;
                 }
             });
             
             item.addEventListener('dragstart', (e) => {
                 // Hide tooltip when dragging starts
-                if (tooltip) {
-                    tooltip.remove();
-                    tooltip = null;
+                if (activeSidebarTooltip) {
+                    activeSidebarTooltip.remove();
+                    activeSidebarTooltip = null;
                 }
                 
                 if (count > 0) {
