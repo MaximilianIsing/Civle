@@ -4606,17 +4606,23 @@
                     
                     const key = `${row},${col}`;
                     const tile = challengeData.tiles[key];
+                    const existingPlaced = placedItems[key];
                     
                     // Check if placement is valid
                     const isValid = isValidPlacement(row, col, type, name, tile, excludeLocation);
                     const isAvailable = skipAvailabilityCheck || availableItems[name] > 0;
                     
+                    // Don't show preview on tiles that already have a district (unless we're moving that same district)
+                    const hasExistingDistrict = existingPlaced && existingPlaced.type === 'district';
+                    const isMovingSameDistrict = excludeLocation && excludeLocation.row === row && excludeLocation.col === col;
+                    const shouldShowPreview = !hasExistingDistrict || isMovingSameDistrict;
+                    
                     if (isValid && isAvailable) {
                         hex.classList.add('valid-placement');
                         hex.classList.remove('invalid-placement');
                         
-                        // If dragging a district, show adjacency preview
-                        if (type === 'district') {
+                        // If dragging a district, show adjacency preview (only if no existing district or moving the same one)
+                        if (type === 'district' && shouldShowPreview) {
                             const preview = calculateAdjacencyPreview(row, col, name, excludeLocation);
                             if (preview && preview.total > 0) {
                                 const previewIndicator = document.createElement('div');
