@@ -5588,6 +5588,7 @@
             let harborCount = 0;
             let commercialHubCount = 0;
             let wonderCount = 0;
+            const wonderNames = [];
             let entertainmentComplexCount = 0;
             let waterParkCount = 0;
             let governmentPlazaCount = 0;
@@ -5647,6 +5648,9 @@
                         improvementCounts[neighborPlaced.name] = (improvementCounts[neighborPlaced.name] || 0) + 1;
                     } else if (neighborPlaced.type === 'wonder') {
                         wonderCount++;
+                        if (!wonderNames.includes(neighborPlaced.name)) {
+                            wonderNames.push(neighborPlaced.name);
+                        }
                     }
                 }
             });
@@ -5668,7 +5672,7 @@
                 sources.push({ type: 'Commercial_Hub', count: commercialHubCount, bonus: bonuses.Commercial_Hub });
             }
             if (bonuses.Wonder && wonderCount > 0) {
-                sources.push({ type: 'Wonder', count: wonderCount, bonus: bonuses.Wonder });
+                sources.push({ type: 'Wonder', count: wonderCount, bonus: bonuses.Wonder, wonderNames: wonderNames });
             }
             if (bonuses.Entertainment_Complex && entertainmentComplexCount > 0) {
                 sources.push({ type: 'Entertainment_Complex', count: entertainmentComplexCount, bonus: bonuses.Entertainment_Complex });
@@ -5889,6 +5893,17 @@
                                 const resourceIconPath = `assets/recources/${resourceName}.webp`;
                                 html += `<img src="${resourceIconPath}" alt="${resourceName.replace(/_/g, ' ')}" style="width: 16px; height: 16px; object-fit: contain; margin: 0;">`;
                                 if (idx < source.resourceNames.length - 1) {
+                                    html += `<span style="margin: -5px;">,</span>`;
+                                }
+                            });
+                            html += `<span style="margin-left: -2px;">)</span>`;
+                        } else if (source.type === 'Wonder' && source.wonderNames && source.wonderNames.length > 0) {
+                            // Show actual wonder icons for wonders
+                            html += `<span style="margin-right: -2px;">(</span>`;
+                            source.wonderNames.forEach((wonderName, idx) => {
+                                const wonderIconPath = `assets/wonders/${wonderName}.webp`;
+                                html += `<img src="${wonderIconPath}" alt="${wonderName.replace(/_/g, ' ')}" style="width: 16px; height: 16px; object-fit: contain; margin: 0;">`;
+                                if (idx < source.wonderNames.length - 1) {
                                     html += `<span style="margin: -5px;">,</span>`;
                                 }
                             });
