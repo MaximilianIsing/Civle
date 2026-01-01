@@ -908,6 +908,29 @@ const server = http.createServer((req, res) => {
         return;
     }
     
+    // Handle sitemap.xml endpoint
+    if (pathname === '/sitemap.xml' && req.method === 'GET') {
+        try {
+            const sitemapPath = path.join(__dirname, 'public', 'sitemap.xml');
+            if (fs.existsSync(sitemapPath)) {
+                const sitemapContent = fs.readFileSync(sitemapPath, 'utf8');
+                res.writeHead(200, { 
+                    'Content-Type': 'application/xml; charset=utf-8',
+                    'Cache-Control': 'public, max-age=3600'
+                });
+                res.end(sitemapContent, 'utf-8');
+            } else {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Sitemap not found' }), 'utf-8');
+            }
+        } catch (err) {
+            console.error('Error serving sitemap:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Server error loading sitemap' }), 'utf-8');
+        }
+        return;
+    }
+    
     // Handle daily challenge endpoint
     if (pathname === '/daily-challenge') {
         try {
@@ -1001,12 +1024,8 @@ const server = http.createServer((req, res) => {
             return;
         }
     } else {
-        // Handle sitemap.xml
-        if (pathname === '/sitemap.xml') {
-            filePath = './public/sitemap.xml';
-        }
         // Handle robots.txt
-        else if (pathname === '/robots.txt') {
+        if (pathname === '/robots.txt') {
             filePath = './public/robots.txt';
         }
         // Handle storage/screenshots requests
@@ -1041,10 +1060,8 @@ const server = http.createServer((req, res) => {
     const ext = path.extname(filePath).toLowerCase();
     let contentType = MIME_TYPES[ext] || 'application/octet-stream';
     
-    // Special handling for sitemap.xml and robots.txt
-    if (pathname === '/sitemap.xml') {
-        contentType = 'application/xml; charset=utf-8';
-    } else if (pathname === '/robots.txt') {
+    // Special handling for robots.txt
+    if (pathname === '/robots.txt') {
         contentType = 'text/plain; charset=utf-8';
     }
     
@@ -1059,12 +1076,7 @@ const server = http.createServer((req, res) => {
                 res.end(`Server Error: ${err.code}`, 'utf-8');
             }
         } else {
-            const headers = { 'Content-Type': contentType };
-            // Add charset for XML files
-            if (pathname === '/sitemap.xml') {
-                headers['Content-Type'] = 'application/xml; charset=utf-8';
-            }
-            res.writeHead(200, headers);
+            res.writeHead(200, { 'Content-Type': contentType });
             res.end(content, 'utf-8');
         }
     });
