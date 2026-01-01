@@ -3164,26 +3164,26 @@
                         highlightAllTiles('improvement', placed.name, true);
                     });
                     
-                img.addEventListener('dragend', (e) => {
-                    e.stopPropagation();
-                    
-                    // Clear all highlights
-                    clearAllHighlights();
-                    
-                    // Restore opacity if improvement wasn't moved (drop failed or cancelled)
-                    if (draggedImprovement) {
-                        const draggedImg = document.querySelector(`.hex-improvement[data-row="${draggedImprovement.row}"][data-col="${draggedImprovement.col}"]`);
-                        if (draggedImg) {
-                            draggedImg.style.opacity = '1';
-                            draggedImg.style.cursor = 'grab';
-                        }
-                        // Clear if not already cleared by successful drop
-                        setTimeout(() => {
-                            if (draggedImprovement) {
-                                draggedImprovement = null;
+                    img.addEventListener('dragend', (e) => {
+                        e.stopPropagation();
+                        
+                        // Clear all highlights
+                        clearAllHighlights();
+                        
+                        // Restore opacity if improvement wasn't moved (drop failed or cancelled)
+                        if (draggedImprovement) {
+                            const draggedImg = document.querySelector(`.hex-improvement[data-row="${draggedImprovement.row}"][data-col="${draggedImprovement.col}"]`);
+                            if (draggedImg) {
+                                draggedImg.style.opacity = '1';
+                                draggedImg.style.cursor = 'grab';
                             }
-                        }, 100);
-                    }
+                            // Clear if not already cleared by successful drop
+                            setTimeout(() => {
+                                if (draggedImprovement) {
+                                    draggedImprovement = null;
+                                }
+                            }, 100);
+                        }
                 });
                 
                 // Touch support for dragging improvements
@@ -4931,9 +4931,12 @@
             
             if (!itemData) return false;
             
-            // Check terrain
+            // Check terrain (for non-wonders, or wonders without allowed_features)
+            // For wonders with both allowed_terrain and allowed_features, we check them together later
+            if (type !== 'wonder' || !itemData.allowed_features || itemData.allowed_features.length === 0) {
             if (itemData.allowed_terrain && !itemData.allowed_terrain.includes(tile.terrain)) {
                 return false;
+                }
             }
             
             // Check city center adjacency rules for districts
@@ -5463,9 +5466,32 @@
                 }
                 if (!withinRangeOfCityCenter) return false;
                 
-                // Check allowed features
-                if (itemData.allowed_features && itemData.allowed_features.length > 0) {
-                    if (!tile.feature || !itemData.allowed_features.includes(tile.feature)) {
+                // Check allowed terrain and/or features
+                // If both exist, placement is valid if EITHER terrain OR feature matches
+                const hasAllowedTerrain = itemData.allowed_terrain && itemData.allowed_terrain.length > 0;
+                const hasAllowedFeatures = itemData.allowed_features && itemData.allowed_features.length > 0;
+                
+                if (hasAllowedTerrain || hasAllowedFeatures) {
+                    let terrainMatches = false;
+                    let featureMatches = false;
+                    
+                    if (hasAllowedTerrain) {
+                        terrainMatches = itemData.allowed_terrain.includes(tile.terrain);
+                    }
+                    
+                    if (hasAllowedFeatures) {
+                        featureMatches = tile.feature && itemData.allowed_features.includes(tile.feature);
+                    }
+                    
+                    // If both exist, either one can match. If only one exists, that one must match.
+                    if (hasAllowedTerrain && hasAllowedFeatures) {
+                        // Either terrain OR feature must match
+                        if (!terrainMatches && !featureMatches) {
+                            return false;
+                        }
+                    } else if (hasAllowedTerrain && !terrainMatches) {
+                        return false;
+                    } else if (hasAllowedFeatures && !featureMatches) {
                         return false;
                     }
                 }
@@ -7823,7 +7849,7 @@
                 return draggedItem || draggedDistrict || draggedImprovement || draggedWonder || 
                        touchDragState || touchDragDistrict || touchDragImprovement || touchDragWonder;
             };
-            
+
             mapContainer.addEventListener('mousedown', (e) => {
                 // Don't start panning if we're dragging an item
                 if (isDraggingItem()) {
