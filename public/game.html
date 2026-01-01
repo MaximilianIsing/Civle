@@ -63,8 +63,8 @@
         (function() {
             const now = new Date();
             const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-            const month = String(estDate.getMonth() + 1).padStart(2, '0');
-            const day = String(estDate.getDate()).padStart(2, '0');
+            const month = estDate.getMonth() + 1;
+            const day = estDate.getDate();
             document.title = `Civle ${month}/${day}`;
         })();
     </script>
@@ -8027,8 +8027,8 @@
         function updateHeaderDate() {
             const now = new Date();
             const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-            const month = String(estDate.getMonth() + 1).padStart(2, '0');
-            const day = String(estDate.getDate()).padStart(2, '0');
+            const month = estDate.getMonth() + 1;
+            const day = estDate.getDate();
             const dateString = `${month}/${day}`;
             const dateElement = document.getElementById('headerDate');
             if (dateElement) {
