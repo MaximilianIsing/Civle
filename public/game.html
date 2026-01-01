@@ -6368,6 +6368,7 @@
             let improvementCounts = {};
             let mountainCount = 0;
             let rainforestCount = 0;
+            let woodsCount = 0;
             let geothermalFissureCount = 0;
             let reefCount = 0;
             let coastalResourceCount = 0;
@@ -6387,6 +6388,9 @@
                     // Check for features
                     if (neighborTile.feature === 'Rainforest') {
                         rainforestCount++;
+                    }
+                    if (neighborTile.feature === 'Woods') {
+                        woodsCount++;
                     }
                     // Check for reef
                     if (neighborTile.terrain === 'Reef') {
@@ -6438,6 +6442,12 @@
                 const bonus = bonuses.Rainforest;
                 const amount = Math.floor(rainforestCount / bonus.per) * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
+            }
+            
+            if (bonuses.Woods && woodsCount > 0) {
+                const bonus = bonuses.Woods;
+                const amount = Math.floor(woodsCount / bonus.per) * bonus.bonus;
+                if (bonus.type === 'Faith') faith += amount;
             }
             
             if (bonuses.Geothermal_Fissure && geothermalFissureCount > 0) {
