@@ -374,7 +374,7 @@
     {
       "name": "University_of_Sankore",
       "description": "May be placed on any desert tile adjacent to a Campus.",
-      "allowed_terrain": ["Desert", "Desert_Floodplains"],
+      "allowed_terrain": ["Desert", "Desert_Floodplains", "Desert_Hill"],
       "allowed_features": [],
       "required_feature_adjacency": [],
       "required_resource_adjacency": [],

@@ -5213,9 +5213,24 @@
                     }
                 }
                 
-                // Districts cannot be built on geothermal fissures (except City_Center)
-                if (name !== 'City_Center' && tile.feature === 'Geothermal_Fissure') {
-                    return false;
+                // Districts cannot be built on geothermal fissures, reefs, or resources (except City_Center)
+                if (name !== 'City_Center') {
+                    // Check for geothermal fissures
+                    if (tile.feature === 'Geothermal_Fissure') {
+                        return false;
+                    }
+                    // Check for reef terrain
+                    if (tile.terrain === 'Reef') {
+                        return false;
+                    }
+                    // Check for strategic or luxury resources
+                    if (tile.resource && resourcesData) {
+                        const isStrategic = resourcesData.strategic_resources.some(r => r.name === tile.resource);
+                        const isLuxury = resourcesData.luxury_resources.some(r => r.name === tile.resource);
+                        if (isStrategic || isLuxury) {
+                            return false;
+                        }
+                    }
                 }
                 
                 // Hard check: No city center can have multiple districts of the same type in its first ring (adjacent tiles)
@@ -5465,6 +5480,24 @@
                     }
                 }
                 if (!withinRangeOfCityCenter) return false;
+                
+                // Wonders cannot be built on geothermal fissures, reefs, or resources
+                // Check for geothermal fissures
+                if (tile.feature === 'Geothermal_Fissure') {
+                    return false;
+                }
+                // Check for reef terrain
+                if (tile.terrain === 'Reef') {
+                    return false;
+                }
+                // Check for strategic or luxury resources
+                if (tile.resource && resourcesData) {
+                    const isStrategic = resourcesData.strategic_resources.some(r => r.name === tile.resource);
+                    const isLuxury = resourcesData.luxury_resources.some(r => r.name === tile.resource);
+                    if (isStrategic || isLuxury) {
+                        return false;
+                    }
+                }
                 
                 // Check allowed terrain and/or features
                 // If both exist, placement is valid if EITHER terrain OR feature matches
