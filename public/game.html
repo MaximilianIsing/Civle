@@ -5216,8 +5216,8 @@
                 // Districts cannot be built on geothermal fissures, reefs, or resources (except City_Center)
                 if (name !== 'City_Center') {
                     // Check for geothermal fissures
-                    if (tile.feature === 'Geothermal_Fissure') {
-                        return false;
+                if (tile.feature === 'Geothermal_Fissure') {
+                    return false;
                     }
                     // Check for reef terrain
                     if (tile.terrain === 'Reef') {
@@ -5561,7 +5561,18 @@
                     for (const neighbor of neighbors) {
                         const neighborKey = `${neighbor.row},${neighbor.col}`;
                         const neighborTile = challengeData.tiles[neighborKey];
-                        if (neighborTile && neighborTile.resource && itemData.required_resource_adjacency.includes(neighborTile.resource)) {
+                        const neighborPlaced = placedItems[neighborKey];
+                        
+                        // Skip if this is the excluded location (when moving)
+                        if (excludeLocation && neighbor.row === excludeLocation.row && neighbor.col === excludeLocation.col) {
+                            continue;
+                        }
+                        
+                        // Resource only counts if there's no district/improvement/wonder on the tile
+                        // Districts/improvements/wonders placed on bonus resources "cover" them
+                        if (neighborTile && neighborTile.resource && 
+                            itemData.required_resource_adjacency.includes(neighborTile.resource) &&
+                            !neighborPlaced) {
                             hasRequiredResource = true;
                             break;
                         }
