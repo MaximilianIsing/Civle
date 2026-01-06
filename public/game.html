@@ -5066,9 +5066,10 @@
                     const neighbors = getNeighbors(row, col);
                     let hasAdjacentWater = false;
                     let validPlacement = false;
-                    let capacity = 0;
+                    let waterOrCityCount = 0;
                     
-                    // Count capacity: +1 for each adjacent water tile, +1 for each adjacent city center
+                    // First pass: Count all adjacent water tiles (Coast, Ocean, Reef) and city centers
+                    // Canal can have AT MOST 2 adjacent water or city center tiles
                     for (const neighbor of neighbors) {
                         const neighborKey = `${neighbor.row},${neighbor.col}`;
                         const neighborTile = challengeData.tiles[neighborKey];
@@ -5079,85 +5080,109 @@
                             continue;
                         }
                         
-                        // For every adjacent water tile: capacity++
-                        if (neighborTile && neighborTile.terrain && 
-                            (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
-                            capacity++;
+                        // Check if neighbor is water (Coast, Ocean, or Reef)
+                        const isWater = neighborTile && neighborTile.terrain && 
+                            (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef');
+                        
+                        // Check if neighbor is city center
+                        const isCityCenter = neighborPlaced && neighborPlaced.type === 'district' && neighborPlaced.name === 'City_Center';
+                        
+                        if (isWater) {
+                            waterOrCityCount++;
                             hasAdjacentWater = true;
-                            
-                            // Calculate the direction from canal to this water tile
-                            const dr = neighbor.row - row;
-                            const dc = neighbor.col - col;
-                            const isOddRow = row % 2 === 1;
-                            
-                            // Determine direction index (0-5) based on relative position
-                            // Directions: 0=Right, 1=Top-right, 2=Top-left, 3=Left, 4=Bottom-left, 5=Bottom-right
-                            let directionIndex = -1;
-                            
-                            if (isOddRow) {
-                                if (dr === 0 && dc === 1) directionIndex = 0; // Right
-                                else if (dr === -1 && dc === 1) directionIndex = 1; // Top-right
-                                else if (dr === -1 && dc === 0) directionIndex = 2; // Top-left
-                                else if (dr === 0 && dc === -1) directionIndex = 3; // Left
-                                else if (dr === 1 && dc === 0) directionIndex = 4; // Bottom-left
-                                else if (dr === 1 && dc === 1) directionIndex = 5; // Bottom-right
-                            } else {
-                                if (dr === 0 && dc === 1) directionIndex = 0; // Right
-                                else if (dr === -1 && dc === 0) directionIndex = 1; // Top-right
-                                else if (dr === -1 && dc === -1) directionIndex = 2; // Top-left
-                                else if (dr === 0 && dc === -1) directionIndex = 3; // Left
-                                else if (dr === 1 && dc === -1) directionIndex = 4; // Bottom-left
-                                else if (dr === 1 && dc === 0) directionIndex = 5; // Bottom-right
-                            }
-                            
-                            // If we found the direction, check the opposite 3 tiles
-                            if (directionIndex >= 0) {
-                                // Opposite 3 tiles are at directions (i+2) mod 6, (i+3) mod 6, (i+4) mod 6
-                                const oppositeDirections = [
-                                    (directionIndex + 2) % 6,
-                                    (directionIndex + 3) % 6,
-                                    (directionIndex + 4) % 6
-                                ];
-                                
-                                // Check each opposite direction for water tile or city center
-                                for (const oppDir of oppositeDirections) {
-                                    const oppNeighbor = getNeighborAtDirection(row, col, oppDir);
-                                    if (oppNeighbor) {
-                                        const oppKey = `${oppNeighbor.row},${oppNeighbor.col}`;
-                                        const oppTile = challengeData.tiles[oppKey];
-                                        const oppPlaced = placedItems[oppKey];
-                                        
-                                        // Skip if this is the excluded location (when moving)
-                                        if (excludeLocation && oppNeighbor.row === excludeLocation.row && oppNeighbor.col === excludeLocation.col) {
-                                            continue;
-                                        }
-                                        
-                                        // Check if opposite tile has water or city center
-                                        if (oppTile && oppTile.terrain && 
-                                            (oppTile.terrain === 'Coast' || oppTile.terrain === 'Ocean' || oppTile.terrain === 'Reef')) {
-                                            validPlacement = true;
-                                            break;
-                                        }
-                                        if (oppPlaced && oppPlaced.type === 'district' && oppPlaced.name === 'City_Center') {
-                                            validPlacement = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // If we found a valid placement for this water tile, we can break
-                            if (validPlacement) break;
                         }
                         
-                        // For every adjacent city center: capacity++
-                        if (neighborPlaced && neighborPlaced.type === 'district' && neighborPlaced.name === 'City_Center') {
-                            capacity++;
+                        // Count city centers as well
+                        if (isCityCenter) {
+                            waterOrCityCount++;
                         }
                     }
                     
-                    // If capacity > 2, canal can't be placed there
-                    if (capacity > 2) {
+                    // Second pass: Check for valid opposite tile (only if we have adjacent water)
+                    if (hasAdjacentWater) {
+                        for (const neighbor of neighbors) {
+                            const neighborKey = `${neighbor.row},${neighbor.col}`;
+                            const neighborTile = challengeData.tiles[neighborKey];
+                            
+                            // Skip if this is the excluded location (when moving)
+                            if (excludeLocation && neighbor.row === excludeLocation.row && neighbor.col === excludeLocation.col) {
+                                continue;
+                            }
+                            
+                            // Check if neighbor is water (Coast, Ocean, or Reef)
+                            const isWater = neighborTile && neighborTile.terrain && 
+                                (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef');
+                            
+                            if (isWater) {
+                                // Calculate the direction from canal to this water tile
+                                const dr = neighbor.row - row;
+                                const dc = neighbor.col - col;
+                                const isOddRow = row % 2 === 1;
+                                
+                                // Determine direction index (0-5) based on relative position
+                                // Directions: 0=Right, 1=Top-right, 2=Top-left, 3=Left, 4=Bottom-left, 5=Bottom-right
+                                let directionIndex = -1;
+                                
+                                if (isOddRow) {
+                                    if (dr === 0 && dc === 1) directionIndex = 0; // Right
+                                    else if (dr === -1 && dc === 1) directionIndex = 1; // Top-right
+                                    else if (dr === -1 && dc === 0) directionIndex = 2; // Top-left
+                                    else if (dr === 0 && dc === -1) directionIndex = 3; // Left
+                                    else if (dr === 1 && dc === 0) directionIndex = 4; // Bottom-left
+                                    else if (dr === 1 && dc === 1) directionIndex = 5; // Bottom-right
+                                } else {
+                                    if (dr === 0 && dc === 1) directionIndex = 0; // Right
+                                    else if (dr === -1 && dc === 0) directionIndex = 1; // Top-right
+                                    else if (dr === -1 && dc === -1) directionIndex = 2; // Top-left
+                                    else if (dr === 0 && dc === -1) directionIndex = 3; // Left
+                                    else if (dr === 1 && dc === -1) directionIndex = 4; // Bottom-left
+                                    else if (dr === 1 && dc === 0) directionIndex = 5; // Bottom-right
+                                }
+                                
+                                // If we found the direction, check the opposite 3 tiles
+                                if (directionIndex >= 0) {
+                                    // Opposite 3 tiles are at directions (i+2) mod 6, (i+3) mod 6, (i+4) mod 6
+                                    const oppositeDirections = [
+                                        (directionIndex + 2) % 6,
+                                        (directionIndex + 3) % 6,
+                                        (directionIndex + 4) % 6
+                                    ];
+                                    
+                                    // Check each opposite direction for water tile or city center
+                                    for (const oppDir of oppositeDirections) {
+                                        const oppNeighbor = getNeighborAtDirection(row, col, oppDir);
+                                        if (oppNeighbor) {
+                                            const oppKey = `${oppNeighbor.row},${oppNeighbor.col}`;
+                                            const oppTile = challengeData.tiles[oppKey];
+                                            const oppPlaced = placedItems[oppKey];
+                                            
+                                            // Skip if this is the excluded location (when moving)
+                                            if (excludeLocation && oppNeighbor.row === excludeLocation.row && oppNeighbor.col === excludeLocation.col) {
+                                                continue;
+                                            }
+                                            
+                                            // Check if opposite tile has water or city center
+                                            if (oppTile && oppTile.terrain && 
+                                                (oppTile.terrain === 'Coast' || oppTile.terrain === 'Ocean' || oppTile.terrain === 'Reef')) {
+                                                validPlacement = true;
+                                                break;
+                                            }
+                                            if (oppPlaced && oppPlaced.type === 'district' && oppPlaced.name === 'City_Center') {
+                                                validPlacement = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // If we found a valid placement for this water tile, we can break
+                                if (validPlacement) break;
+                            }
+                        }
+                    }
+                    
+                    // Canal can have AT MOST 2 adjacent water or city center tiles
+                    if (waterOrCityCount > 2) {
                         return false;
                     }
                     
