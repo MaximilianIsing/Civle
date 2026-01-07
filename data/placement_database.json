@@ -310,7 +310,7 @@
     },
     {
       "name": "Colossus",
-      "description": "May be placed on any water tile that is adjacent to land.",
+      "description": "May be placed on any water tile that is adjacent to land and a Harbor.",
       "allowed_terrain": ["Coast", "Ocean"],
       "allowed_features": [],
       "required_feature_adjacency": [],
