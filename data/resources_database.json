@@ -211,6 +211,11 @@
       "is_coastal": false
     },
     {
+      "name": "Aluminum",
+      "improvement": "Mine",
+      "is_coastal": false
+    },
+    {
       "name": "Uranium",
       "improvement": "Mine",
       "is_coastal": false
