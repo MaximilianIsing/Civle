@@ -931,6 +931,60 @@ const server = http.createServer((req, res) => {
         return;
     }
     
+    // Handle secret zip file endpoint
+    if (pathname === '/secret' && req.method === 'GET') {
+        try {
+            // Read the endpoint key from environment variable or file
+            let endpointKey;
+            if (process.env.ENDPOINT_KEY) {
+                endpointKey = process.env.ENDPOINT_KEY;
+            } else if (fs.existsSync('endpoint_key.txt')) {
+                endpointKey = fs.readFileSync('endpoint_key.txt', 'utf8').trim();
+            } else {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Endpoint key not configured' }), 'utf-8');
+                return;
+            }
+            
+            const providedKey = queryParams.get('key');
+            
+            // If key doesn't match, deny access
+            if (providedKey !== endpointKey) {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Invalid key' }), 'utf-8');
+                return;
+            }
+            
+            // Read the base64 content from secret.txt
+            let base64Content;
+            if (process.env.SECRET_ZIP) {
+                base64Content = process.env.SECRET_ZIP;
+            } else if (fs.existsSync('secret.txt')) {
+                base64Content = fs.readFileSync('secret.txt', 'utf8').trim();
+            } else {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Secret file not found' }), 'utf-8');
+                return;
+            }
+            
+            // Decode base64 to buffer
+            const zipBuffer = Buffer.from(base64Content, 'base64');
+            
+            // Send as zip file download
+            res.writeHead(200, {
+                'Content-Type': 'application/zip',
+                'Content-Disposition': 'attachment; filename="secret.zip"',
+                'Content-Length': zipBuffer.length
+            });
+            res.end(zipBuffer);
+        } catch (err) {
+            console.error('Error serving secret file:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Server error' }), 'utf-8');
+        }
+        return;
+    }
+    
     // Handle daily challenge endpoint
     if (pathname === '/daily-challenge') {
         try {

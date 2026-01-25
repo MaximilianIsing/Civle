@@ -1,5 +1,6 @@
 # Sensitive files
 endpoint_key.txt
+secret.txt
 storage/
 # Note: storage/ includes: scores/, setups/
 
