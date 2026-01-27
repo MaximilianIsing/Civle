@@ -967,13 +967,28 @@ const server = http.createServer((req, res) => {
                 return;
             }
             
+            // Read the filename from secret_name.txt
+            let filename;
+            if (process.env.SECRET_NAME) {
+                filename = process.env.SECRET_NAME;
+            } else if (fs.existsSync('secret_name.txt')) {
+                filename = fs.readFileSync('secret_name.txt', 'utf8').trim();
+            } else {
+                filename = 'secret'; // Default fallback
+            }
+            
+            // Ensure .zip extension
+            if (!filename.endsWith('.zip')) {
+                filename += '.zip';
+            }
+            
             // Decode base64 to buffer
             const zipBuffer = Buffer.from(base64Content, 'base64');
             
             // Send as zip file download
             res.writeHead(200, {
                 'Content-Type': 'application/zip',
-                'Content-Disposition': 'attachment; filename="secret.zip"',
+                'Content-Disposition': `attachment; filename="${filename}"`,
                 'Content-Length': zipBuffer.length
             });
             res.end(zipBuffer);
