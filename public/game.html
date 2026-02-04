@@ -8831,7 +8831,14 @@
                 const now = new Date();
                 const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
                 const todayMMDD = String(estDate.getMonth() + 1).padStart(2, '0') + '-' + String(estDate.getDate()).padStart(2, '0');
-                pastChallengesAvailableDates = (data.dates || []).filter(d => d !== todayMMDD).sort();
+                const todayMonth = estDate.getMonth() + 1;
+                const todayDay = estDate.getDate();
+                pastChallengesAvailableDates = (data.dates || []).filter(d => {
+                    if (d === todayMMDD) return false;
+                    const [dMonth, dDay] = d.split('-').map(x => parseInt(x, 10));
+                    if (dMonth === todayMonth && dDay > todayDay) return false; // same month, later day
+                    return true;
+                }).sort();
                 pastChallengesDistrictsByDate = data.districtsByDate || {};
                 const monthSet = new Set();
                 pastChallengesAvailableDates.forEach(dateStr => {
