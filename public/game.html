@@ -232,6 +232,27 @@
             cursor: not-allowed;
         }
 
+        .return-today-btn {
+            padding: 10px 20px;
+            background: #7b4040;
+            color: #d4a5a5;
+            border: 1px solid #8b5050;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        .return-today-btn:hover {
+            background: #8b5050;
+            color: #e0b0b0;
+        }
+
+        .return-today-btn:active {
+            background: #6a3030;
+        }
+
         .controls {
             position: absolute;
             right: 16px;
@@ -1634,6 +1655,7 @@
     <div class="header">
         <div class="header-left">
             <button id="pastChallengesBtn" class="yesterday-best-btn" title="Play past day challenges">Play Past Challenges</button>
+            <button id="returnToTodayBtn" class="return-today-btn" title="Return to today's challenge" style="display: none;">Return to Today's Challenge</button>
         </div>
         <div class="header-center">
             <img src="assets/logo/Logo320x320.png" alt="Civle Logo" class="header-logo">
@@ -8806,6 +8828,10 @@
                 const day = estDate.getDate();
                 dateElement.textContent = `(${month}/${day})`;
             }
+            const returnBtn = document.getElementById('returnToTodayBtn');
+            if (returnBtn && !window.isCustomMode) {
+                returnBtn.style.display = overrideDate ? '' : 'none';
+            }
         }
 
         let pastChallengesAvailableDates = []; // ['01-01', '01-15', '02-03', ...]
@@ -9113,6 +9139,10 @@
                 if (pastChallengesBtn) {
                     pastChallengesBtn.style.display = 'none';
                 }
+                const returnToTodayBtn = document.getElementById('returnToTodayBtn');
+                if (returnToTodayBtn) {
+                    returnToTodayBtn.style.display = 'none';
+                }
             }
             
             // Store isCustomMode globally for use in other functions
@@ -9146,6 +9176,14 @@
                 if (pastChallengesBtn && !pastChallengesBtn.hasAttribute('data-listener-attached')) {
                     pastChallengesBtn.addEventListener('click', showPastChallengesModal);
                     pastChallengesBtn.setAttribute('data-listener-attached', 'true');
+                }
+                const returnToTodayBtn = document.getElementById('returnToTodayBtn');
+                if (returnToTodayBtn && !returnToTodayBtn.hasAttribute('data-listener-attached')) {
+                    returnToTodayBtn.addEventListener('click', async () => {
+                        await loadDailyChallenge();
+                        updateHeaderDate();
+                    });
+                    returnToTodayBtn.setAttribute('data-listener-attached', 'true');
                 }
                 const pastChallengePrevMonth = document.getElementById('pastChallengePrevMonth');
                 const pastChallengeNextMonth = document.getElementById('pastChallengeNextMonth');
