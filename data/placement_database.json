@@ -379,6 +379,60 @@
       "required_feature_adjacency": [],
       "required_resource_adjacency": [],
       "required_district_adjacency": ["Campus"]
+    },
+    {
+      "name": "Alhambra",
+      "description": "May be placed on any hill tile adjacent to an Encampment.",
+      "allowed_terrain": ["Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": ["Encampment"]
+    },
+    {
+      "name": "Great_Bath",
+      "description": "May be placed on any Floodplains tile.",
+      "allowed_terrain": ["Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": []
+    },
+    {
+      "name": "Great_Lighthouse",
+      "description": "May be placed on any water tile that is adjacent to land and a Harbor.",
+      "allowed_terrain": ["Coast", "Ocean"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": ["Harbor"]
+    },
+    {
+      "name": "Hagia_Sophia",
+      "description": "May be placed on any flat land tile adjacent to a Holy Site.",
+      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": ["Holy_Site"]
+    },
+    {
+      "name": "Jebel_Barkal",
+      "description": "May be placed on any hill tile adjacent to an Iron Mine.",
+      "allowed_terrain": ["Desert_Hill", "Grassland_Hill", "Plains_Hill", "Snow_Hill", "Tundra_Hills"],
+      "allowed_features": [],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": ["Iron"],
+      "required_district_adjacency": []
+    },
+    {
+      "name": "Mahabodhi_Temple",
+      "description": "May be placed only on a tile with Woods, adjacent to a Holy Site.",
+      "allowed_terrain": [],
+      "allowed_features": ["Woods"],
+      "required_feature_adjacency": [],
+      "required_resource_adjacency": [],
+      "required_district_adjacency": ["Holy_Site"]
     }
   ]
 }

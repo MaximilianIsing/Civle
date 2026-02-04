@@ -784,9 +784,12 @@
             'Camp', 'Farm', 'Fishing_Boats', 'Lumber_Mill', 'Mine', 'Offshore_Oil_Rig', 'Offshore_Wind_Farm',
             'Oil_Well', 'Pasture', 'Plantation', 'Quarry', 'Seaside_Resort', 'Ski_Resort', 'Solar_Farm', 'Wind_Farm'
         ];
+        // Wonders use name-based encoding in saves (w:Wonder_Name) - safe to add new ones anywhere
         const wondersData = [
-            'Angkor_Wat', 'Bolshoi_Theatre', 'Casa_de_Contratacion', 'Colosseum', 'Colossus', 'Etemenanki',
-            'Great_Zimbabwe', 'Oracle', 'Pyramids', 'Stonehenge', 'Temple_of_Artemis', 'University_of_Sankore'
+            'Alhambra', 'Angkor_Wat', 'Bolshoi_Theatre', 'Casa_de_Contratacion', 'Colosseum', 'Colossus',
+            'Etemenanki', 'Great_Bath', 'Great_Lighthouse', 'Great_Zimbabwe', 'Hagia_Sophia',
+            'Jebel_Barkal', 'Mahabodhi_Temple', 'Oracle', 'Pyramids', 'Stonehenge', 'Temple_of_Artemis',
+            'University_of_Sankore'
         ];
 
         // Current selections
@@ -806,6 +809,7 @@
         let dragStartPanY = 0;
 
         // Terrain, features, and resources data
+        // IMPORTANT: terrainBases and features use index-based encoding in saves - add new items at the END
         const terrainBases = [
             { name: 'Desert', path: 'assets/terrain/base/flat/Desert.webp' },
             { name: 'Grassland', path: 'assets/terrain/base/flat/Grassland.webp' },
@@ -827,9 +831,22 @@
             { name: 'Mountains_Grassland', path: 'assets/terrain/base/mountain/Mountains_Grassland.webp' },
             { name: 'Coast', path: 'assets/terrain/base/water/Coast.webp' },
             { name: 'Ocean', path: 'assets/terrain/base/water/Ocean.webp' },
-            { name: 'Reef', path: 'assets/terrain/base/water/Reef.webp' }
+            { name: 'Reef', path: 'assets/terrain/base/water/Reef.webp' },
+            { name: 'Chocolate_Hills', path: 'assets/natural_wonders/Chocolate_Hills.webp' },
+            { name: 'Dead_Sea', path: 'assets/natural_wonders/Dead_Sea.webp' },
+            { name: 'Delicate_Arch', path: 'assets/natural_wonders/Delicate_Arch.webp' },
+            { name: 'Eye_of_the_Sahara', path: 'assets/natural_wonders/Eye_of_the_Sahara.webp' },
+            { name: 'Fountain_of_Youth', path: 'assets/natural_wonders/Fountain_of_Youth.webp' },
+            { name: 'Gobustan', path: 'assets/natural_wonders/Gobustan.webp' },
+            { name: 'Great_Barrier_Reef', path: 'assets/natural_wonders/Great_Barrier_Reef.webp' },
+            { name: 'Ik-kil', path: 'assets/natural_wonders/Ik-kil.webp' },
+            { name: 'Mato_Tipila', path: 'assets/natural_wonders/Mato_Tipila.webp' },
+            { name: 'Matterhorn', path: 'assets/natural_wonders/Matterhorn.webp' },
+            { name: 'Mount_Kilimanjaro', path: 'assets/natural_wonders/Mount_Kilimanjaro.webp' },
+            { name: 'Tsingy_de_Bemaraha', path: 'assets/natural_wonders/Tsingy_de_Bemaraha.webp' }
         ];
 
+        // Features use index-based encoding - add new features at the END
         const features = [
             { name: 'Woods', path: 'assets/terrain/features/Woods.webp' },
             { name: 'Rainforest', path: 'assets/terrain/features/Rainforest.webp' },
@@ -837,13 +854,15 @@
             { name: 'Geothermal_Fissure', path: 'assets/terrain/features/Geothermal_Fissure.webp' }
         ];
 
+        // IMPORTANT: Order matters for save file compatibility! Tile resources use index-based encoding.
+        // Always add new resources at the END to avoid breaking old challenge files.
         const resources = [
             'Aluminum', 'Amber', 'Bananas', 'Cattle', 'Citrus', 'Coal', 'Cocoa', 'Coffee',
             'Copper', 'Cotton', 'Crabs', 'Deer', 'Diamonds', 'Dyes', 'Fish', 'Furs',
             'Gypsum', 'Honey', 'Horses', 'Incense', 'Ivory', 'Jade', 'Maize', 'Marble',
             'Mercury', 'Niter', 'Oil', 'Olives', 'Pearls', 'Rice', 'Salt', 'Sheep',
             'Silk', 'Silver', 'Spices', 'Stone', 'Sugar', 'Tea', 'Tobacco', 'Truffles',
-            'Turtles', 'Uranium', 'Whales', 'Wheat', 'Wine'
+            'Turtles', 'Uranium', 'Whales', 'Wheat', 'Wine', 'Iron'
         ];
 
         // Create lookup maps for optimized encoding

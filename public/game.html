@@ -702,6 +702,7 @@
             filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
         }
         
+        
         .hex-improvement:active {
             cursor: grabbing;
         }
@@ -1617,6 +1618,7 @@
         }
 
         // Terrain, features, and resources data (same as map maker)
+        // IMPORTANT: terrainBases and features use index-based encoding in saves - add new items at the END
         const terrainBases = [
             { name: 'Desert', path: 'assets/terrain/base/flat/Desert.webp' },
             { name: 'Grassland', path: 'assets/terrain/base/flat/Grassland.webp' },
@@ -1638,9 +1640,22 @@
             { name: 'Mountains_Grassland', path: 'assets/terrain/base/mountain/Mountains_Grassland.webp' },
             { name: 'Coast', path: 'assets/terrain/base/water/Coast.webp' },
             { name: 'Ocean', path: 'assets/terrain/base/water/Ocean.webp' },
-            { name: 'Reef', path: 'assets/terrain/base/water/Reef.webp' }
+            { name: 'Reef', path: 'assets/terrain/base/water/Reef.webp' },
+            { name: 'Chocolate_Hills', path: 'assets/natural_wonders/Chocolate_Hills.webp' },
+            { name: 'Dead_Sea', path: 'assets/natural_wonders/Dead_Sea.webp' },
+            { name: 'Delicate_Arch', path: 'assets/natural_wonders/Delicate_Arch.webp' },
+            { name: 'Eye_of_the_Sahara', path: 'assets/natural_wonders/Eye_of_the_Sahara.webp' },
+            { name: 'Fountain_of_Youth', path: 'assets/natural_wonders/Fountain_of_Youth.webp' },
+            { name: 'Gobustan', path: 'assets/natural_wonders/Gobustan.webp' },
+            { name: 'Great_Barrier_Reef', path: 'assets/natural_wonders/Great_Barrier_Reef.webp' },
+            { name: 'Ik-kil', path: 'assets/natural_wonders/Ik-kil.webp' },
+            { name: 'Mato_Tipila', path: 'assets/natural_wonders/Mato_Tipila.webp' },
+            { name: 'Matterhorn', path: 'assets/natural_wonders/Matterhorn.webp' },
+            { name: 'Mount_Kilimanjaro', path: 'assets/natural_wonders/Mount_Kilimanjaro.webp' },
+            { name: 'Tsingy_de_Bemaraha', path: 'assets/natural_wonders/Tsingy_de_Bemaraha.webp' }
         ];
 
+        // Features use index-based encoding - add new features at the END
         const features = [
             { name: 'Woods', path: 'assets/terrain/features/Woods.webp' },
             { name: 'Rainforest', path: 'assets/terrain/features/Rainforest.webp' },
@@ -1648,14 +1663,19 @@
             { name: 'Geothermal_Fissure', path: 'assets/terrain/features/Geothermal_Fissure.webp' }
         ];
 
+        // IMPORTANT: Order matters for save file compatibility! Tile resources use index-based encoding.
+        // Always add new resources at the END to avoid breaking old challenge files.
         const resources = [
             'Aluminum', 'Amber', 'Bananas', 'Cattle', 'Citrus', 'Coal', 'Cocoa', 'Coffee',
             'Copper', 'Cotton', 'Crabs', 'Deer', 'Diamonds', 'Dyes', 'Fish', 'Furs',
             'Gypsum', 'Honey', 'Horses', 'Incense', 'Ivory', 'Jade', 'Maize', 'Marble',
             'Mercury', 'Niter', 'Oil', 'Olives', 'Pearls', 'Rice', 'Salt', 'Sheep',
             'Silk', 'Silver', 'Spices', 'Stone', 'Sugar', 'Tea', 'Tobacco', 'Truffles',
-            'Turtles', 'Uranium', 'Whales', 'Wheat', 'Wine'
+            'Turtles', 'Uranium', 'Whales', 'Wheat', 'Wine', 'Iron'
         ];
+
+        // Natural wonder terrains (for Holy Site adjacency) - derived from terrainBases
+        const NATURAL_WONDER_TERRAINS = new Set(terrainBases.filter(t => t.path.includes('natural_wonders')).map(t => t.name));
 
         // Create lookup maps
         const terrainIndexMap = new Map();
@@ -3348,6 +3368,77 @@
                     img.style.pointerEvents = 'auto';
                     img.style.cursor = 'grab';
                     
+                    // Add tooltip handlers to wonder image (same as district/improvement)
+                    img.addEventListener('mouseenter', (e) => {
+                        if (draggedWonder) return;
+                        if (tooltipTimeout) {
+                            clearTimeout(tooltipTimeout);
+                            tooltipTimeout = null;
+                        }
+                        lastMouseX = e.clientX;
+                        lastMouseY = e.clientY;
+                        const wasOnDifferentTile = currentTooltipRow !== null && currentTooltipCol !== null &&
+                            (currentTooltipRow !== row || currentTooltipCol !== col);
+                        const isTooltipVisible = hexTooltip && hexTooltip.classList.contains('visible');
+                        if (isTooltipVisible && wasOnDifferentTile) {
+                            if (hexTooltip) {
+                                currentTooltipRow = row;
+                                currentTooltipCol = col;
+                                const content = formatTooltipContent(row, col);
+                                if (content) {
+                                    hexTooltip.innerHTML = content;
+                                    hexTooltip.style.left = (e.clientX + 10) + 'px';
+                                    hexTooltip.style.top = (e.clientY + 10) + 'px';
+                                    hexTooltip.classList.add('visible');
+                                }
+                            }
+                        } else if (!isTooltipVisible) {
+                            tooltipTimeout = setTimeout(() => {
+                                if (!draggedWonder && hexTooltip) {
+                                    currentTooltipRow = row;
+                                    currentTooltipCol = col;
+                                    const content = formatTooltipContent(row, col);
+                                    if (content) {
+                                        hexTooltip.innerHTML = content;
+                                        hexTooltip.style.left = (lastMouseX + 10) + 'px';
+                                        hexTooltip.style.top = (lastMouseY + 10) + 'px';
+                                        hexTooltip.classList.add('visible');
+                                    }
+                                }
+                            }, 1000);
+                        }
+                    });
+                    
+                    img.addEventListener('mouseleave', (e) => {
+                        if (tooltipTimeout) {
+                            clearTimeout(tooltipTimeout);
+                            tooltipTimeout = null;
+                        }
+                        const relatedTarget = e.relatedTarget;
+                        const isMovingToHex = relatedTarget && (
+                            relatedTarget.classList.contains('hex') ||
+                            relatedTarget.classList.contains('hex-wonder') ||
+                            relatedTarget.closest('.hex') !== null
+                        );
+                        if (!isMovingToHex) {
+                            if (hexTooltip) {
+                                hexTooltip.classList.remove('visible');
+                                currentTooltipRow = null;
+                                currentTooltipCol = null;
+                            }
+                        }
+                    });
+                    
+                    img.addEventListener('mousemove', (e) => {
+                        lastMouseX = e.clientX;
+                        lastMouseY = e.clientY;
+                        if (hexTooltip && hexTooltip.classList.contains('visible') &&
+                            currentTooltipRow === row && currentTooltipCol === col) {
+                            hexTooltip.style.left = (e.clientX + 10) + 'px';
+                            hexTooltip.style.top = (e.clientY + 10) + 'px';
+                        }
+                    });
+                    
                     // Add drag handlers for wonders
                     img.addEventListener('dragstart', (e) => {
                         draggedWonder = { row, col, name: placed.name };
@@ -4920,6 +5011,11 @@
         function isValidPlacement(row, col, type, name, tile, excludeLocation = null) {
             if (!tile || !tile.terrain) return false;
             
+            // No districts, improvements, or wonders can be placed on natural wonder tiles
+            if (tile.terrain && NATURAL_WONDER_TERRAINS.has(tile.terrain)) {
+                return false;
+            }
+            
             let itemData = null;
             if (type === 'district') {
                 itemData = placementData.districts.find(d => d.name === name);
@@ -5825,6 +5921,7 @@
             let geothermalFissureCount = 0;
             let reefCount = 0;
             let coastalResourceCount = 0;
+            let naturalWonderCount = 0;
             
             neighbors.forEach(neighbor => {
                 const neighborKey = `${neighbor.row},${neighbor.col}`;
@@ -5841,6 +5938,10 @@
                     // Check for mountains
                     if (neighborTile.terrain && neighborTile.terrain.includes('Mountain')) {
                         mountainCount++;
+                    }
+                    // Check for natural wonders
+                    if (neighborTile.terrain && NATURAL_WONDER_TERRAINS.has(neighborTile.terrain)) {
+                        naturalWonderCount++;
                     }
                     // Check for features
                     if (neighborTile.feature === 'Rainforest') {
@@ -5923,6 +6024,12 @@
                 const bonus = bonuses.Reef;
                 const amount = reefCount * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
+            }
+            
+            if (bonuses.Natural_Wonder && naturalWonderCount > 0) {
+                const bonus = bonuses.Natural_Wonder;
+                const amount = naturalWonderCount * bonus.bonus;
+                if (bonus.type === 'Faith') faith += amount;
             }
             
             if (bonuses.Coastal_Resources && coastalResourceCount > 0) {
@@ -6441,6 +6548,7 @@
             let geothermalFissureCount = 0;
             let reefCount = 0;
             let coastalResourceCount = 0;
+            let naturalWonderCount = 0;
             
             neighbors.forEach(neighbor => {
                 const neighborKey = `${neighbor.row},${neighbor.col}`;
@@ -6453,6 +6561,10 @@
                     // Check for mountains
                     if (neighborTile.terrain && neighborTile.terrain.includes('Mountain')) {
                         mountainCount++;
+                    }
+                    // Check for natural wonders
+                    if (neighborTile.terrain && NATURAL_WONDER_TERRAINS.has(neighborTile.terrain)) {
+                        naturalWonderCount++;
                     }
                     // Check for features
                     if (neighborTile.feature === 'Rainforest') {
@@ -6529,6 +6641,12 @@
                 const bonus = bonuses.Reef;
                 const amount = reefCount * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
+            }
+            
+            if (bonuses.Natural_Wonder && naturalWonderCount > 0) {
+                const bonus = bonuses.Natural_Wonder;
+                const amount = naturalWonderCount * bonus.bonus;
+                if (bonus.type === 'Faith') faith += amount;
             }
             
             if (bonuses.Coastal_Resources && coastalResourceCount > 0) {
@@ -6707,6 +6825,7 @@
             let geothermalFissureCount = 0;
             let reefCount = 0;
             let coastalResourceCount = 0;
+            let naturalWonderCount = 0;
             
             neighbors.forEach(neighbor => {
                 const neighborKey = `${neighbor.row},${neighbor.col}`;
@@ -6717,6 +6836,9 @@
                 if (neighborTile && !neighborPlaced) {
                     if (neighborTile.terrain && neighborTile.terrain.includes('Mountain')) {
                         mountainCount++;
+                    }
+                    if (neighborTile.terrain && NATURAL_WONDER_TERRAINS.has(neighborTile.terrain)) {
+                        naturalWonderCount++;
                     }
                     if (neighborTile.feature === 'Rainforest') {
                         rainforestCount++;
@@ -6809,6 +6931,9 @@
             }
             if (bonuses.Reef && reefCount > 0) {
                 sources.push({ type: 'Reef', count: reefCount, bonus: bonuses.Reef });
+            }
+            if (bonuses.Natural_Wonder && naturalWonderCount > 0) {
+                sources.push({ type: 'Natural_Wonder', count: naturalWonderCount, bonus: bonuses.Natural_Wonder });
             }
             if (bonuses.Coastal_Resources && coastalResourceCount > 0) {
                 // Get actual coastal resources for display
@@ -7093,6 +7218,52 @@
                         // Show text first
                         html += `<div class="tooltip-value">${parts.join(', ')}</div>`;
                         // Show icons below text
+                        const hasIcons = tile.terrainPath || tile.featurePath || tile.resourcePath;
+                        if (hasIcons) {
+                            html += '<div class="tooltip-icons">';
+                            if (tile.terrainPath) {
+                                html += `<img src="${tile.terrainPath}" alt="${tile.terrain || 'Terrain'}" class="tooltip-icon" title="${tile.terrain ? tile.terrain.replace(/_/g, ' ') : 'Terrain'}">`;
+                            }
+                            if (tile.featurePath) {
+                                html += `<img src="${tile.featurePath}" alt="${tile.feature || 'Feature'}" class="tooltip-icon" title="${tile.feature ? tile.feature.replace(/_/g, ' ') : 'Feature'}">`;
+                            }
+                            if (tile.resourcePath) {
+                                html += `<img src="${tile.resourcePath}" alt="${tile.resource || 'Resource'}" class="tooltip-icon" title="${tile.resource ? tile.resource.replace(/_/g, ' ') : 'Resource'}">`;
+                            }
+                            html += '</div>';
+                        }
+                    } else {
+                        html += '<div class="tooltip-value">None</div>';
+                    }
+                    html += '</div>';
+                }
+                
+                return html;
+            } else if (placed && placed.type === 'wonder') {
+                // Wonder tooltip
+                const wonderName = placed.name;
+                const wonderIconPath = `assets/wonders/${wonderName}.webp`;
+                
+                let html = '<div class="tooltip-label">Wonder:</div>';
+                html += `<div class="tooltip-value">${wonderName.replace(/_/g, ' ')}</div>`;
+                
+                // Show wonder icon
+                html += '<div class="tooltip-section">';
+                html += `<img src="${wonderIconPath}" alt="${wonderName.replace(/_/g, ' ')}" class="tooltip-icon">`;
+                html += '</div>';
+                
+                // Show underlying tile
+                if (tile) {
+                    html += '<div class="tooltip-section">';
+                    html += '<div class="tooltip-label">Terrain Type & Features:</div>';
+                    
+                    const parts = [];
+                    if (tile.terrain) parts.push(tile.terrain.replace(/_/g, ' '));
+                    if (tile.feature) parts.push(tile.feature.replace(/_/g, ' '));
+                    if (tile.resource) parts.push(tile.resource.replace(/_/g, ' '));
+                    
+                    if (parts.length > 0) {
+                        html += `<div class="tooltip-value">${parts.join(', ')}</div>`;
                         const hasIcons = tile.terrainPath || tile.featurePath || tile.resourcePath;
                         if (hasIcons) {
                             html += '<div class="tooltip-icons">';
