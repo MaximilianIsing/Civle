@@ -313,6 +313,71 @@
             background: #5a5a5a;
         }
 
+        .modifier-help {
+            font-size: 12px;
+            color: #aaa;
+            margin: -5px 0 10px 0;
+        }
+
+        .add-modifier-btn {
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: #3a3a3c;
+            border: 1px solid #4a4a4a;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .add-modifier-btn:hover {
+            background: #4a4a4a;
+        }
+
+        .modifier-item {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+            padding: 10px;
+            background: #252527;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .modifier-item input[type="text"] {
+            min-width: 0;
+        }
+
+        .modifier-item select {
+            padding: 4px 6px;
+            background: #2d2d2d;
+            border: 1px solid #4a4a4a;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .modifier-item .modifier-bonus {
+            font-weight: bold;
+            color: #4a90e2;
+        }
+
+        .modifier-item .remove-modifier {
+            margin-left: auto;
+            background: #5a3a3a;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .modifier-item .remove-modifier:hover {
+            background: #6a4a4a;
+        }
+
         .allocation-item {
             display: flex;
             justify-content: space-between;
@@ -737,6 +802,12 @@
                 <h3>Wonders</h3>
                 <div class="allocation-list" id="wondersAllocationsList"></div>
             </div>
+            <div class="allocation-section">
+                <h3>Daily Adjacency Modifiers</h3>
+                <p class="modifier-help">Add custom adjacency bonuses for this challenge (e.g. Encampment +2 Culture per adjacent district)</p>
+                <div class="allocation-list" id="modifiersList"></div>
+                <button type="button" class="add-modifier-btn" id="addModifierBtn">+ Add Modifier</button>
+            </div>
         </div>
     </div>
 
@@ -758,8 +829,17 @@
                 districts: {},
                 improvements: {},
                 wonders: {}
-            }
+            },
+            adjacency_modifiers: []
         };
+
+        // Adjacency modifier options (must match adjacency_database.json)
+        const ADJACENCY_SOURCE_TYPES = ['all_districts', 'Mountain', 'Rainforest', 'Woods', 'Natural_Wonder', 'Reef', 'Geothermal_Fissure',
+            'Government_Plaza', 'Diplomatic_Quarter', 'City_Center', 'Harbor', 'Commercial_Hub', 'Campus', 'Holy_Site', 'Industrial_Zone',
+            'Theater_Square', 'Encampment', 'Entertainment_Complex', 'Water_Park', 'Preserve', 'Aerodrome', 'Spaceport', 'Neighborhood',
+            'Aqueduct', 'Dam', 'Canal', 'River_Edge', 'Coastal_Resources', 'Strategic_Resource',
+            'Mine', 'Lumber_Mill', 'Quarry', 'Wonder'];
+        const ADJACENCY_YIELD_TYPES = ['Science', 'Faith', 'Gold', 'Production', 'Culture'];
 
         // River edge image mapping (edge index -> image filename)
         // Edge indices: 0=Top-right, 1=Right, 2=Bottom-right, 3=Bottom-left, 4=Left, 5=Top-left
@@ -900,6 +980,7 @@
         function init() {
             populateSidebar();
             populateAllocations();
+            populateModifiers();
             createHexGrid();
             checkWarnings();
             initMapZoomPan();
@@ -1116,6 +1197,159 @@
                 });
                 resourcesList.appendChild(item);
             });
+        }
+
+        function populateModifiers() {
+            const modifiersList = document.getElementById('modifiersList');
+            modifiersList.innerHTML = '';
+            (mapData.adjacency_modifiers || []).forEach((mod, idx) => {
+                modifiersList.appendChild(createModifierItem(mod, idx));
+            });
+
+            const addBtn = document.getElementById('addModifierBtn');
+            addBtn.onclick = () => {
+                if (!mapData.adjacency_modifiers) mapData.adjacency_modifiers = [];
+                mapData.adjacency_modifiers.push({
+                    district: 'Encampment',
+                    source: 'all_districts',
+                    bonus: 2,
+                    type: 'Culture',
+                    per: 1,
+                    title: '',
+                    description: ''
+                });
+                populateModifiers();
+            };
+        }
+
+        function createModifierItem(mod, idx) {
+            const item = document.createElement('div');
+            item.className = 'modifier-item';
+            item.dataset.idx = idx;
+
+            const titleInput = document.createElement('input');
+            titleInput.type = 'text';
+            titleInput.placeholder = 'Modifier title (e.g. Thành)';
+            titleInput.value = mod.title || '';
+            titleInput.style.flex = '1 1 100%';
+            titleInput.style.padding = '6px';
+            titleInput.style.background = '#2d2d2d';
+            titleInput.style.border = '1px solid #4a4a4a';
+            titleInput.style.color = '#fff';
+            titleInput.style.borderRadius = '4px';
+            titleInput.style.marginBottom = '6px';
+            titleInput.onchange = () => { mapData.adjacency_modifiers[idx].title = titleInput.value; };
+            titleInput.oninput = () => { mapData.adjacency_modifiers[idx].title = titleInput.value; };
+
+            const descInput = document.createElement('input');
+            descInput.type = 'text';
+            descInput.placeholder = 'Custom description for bottom panel (optional; leave blank for auto-generated)';
+            descInput.value = mod.description || '';
+            descInput.style.flex = '1 1 100%';
+            descInput.style.padding = '6px';
+            descInput.style.background = '#2d2d2d';
+            descInput.style.border = '1px solid #4a4a4a';
+            descInput.style.color = '#fff';
+            descInput.style.borderRadius = '4px';
+            descInput.style.marginBottom = '6px';
+            descInput.style.fontSize = '12px';
+            descInput.onchange = () => { mapData.adjacency_modifiers[idx].description = descInput.value; };
+            descInput.oninput = () => { mapData.adjacency_modifiers[idx].description = descInput.value; };
+
+            const districtSelect = document.createElement('select');
+            districtSelect.className = 'modifier-district';
+            districtsData.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d.replace(/_/g, ' ');
+                if (d === mod.district) opt.selected = true;
+                districtSelect.appendChild(opt);
+            });
+            districtSelect.onchange = () => {
+                mapData.adjacency_modifiers[idx].district = districtSelect.value;
+            };
+
+            const sourceSelect = document.createElement('select');
+            sourceSelect.className = 'modifier-source';
+            ADJACENCY_SOURCE_TYPES.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s.replace(/_/g, ' ');
+                if (s === mod.source) opt.selected = true;
+                sourceSelect.appendChild(opt);
+            });
+            sourceSelect.onchange = () => {
+                mapData.adjacency_modifiers[idx].source = sourceSelect.value;
+            };
+
+            const bonusInput = document.createElement('input');
+            bonusInput.type = 'number';
+            bonusInput.min = 1;
+            bonusInput.value = mod.bonus;
+            bonusInput.style.width = '40px';
+            bonusInput.style.padding = '4px';
+            bonusInput.style.background = '#2d2d2d';
+            bonusInput.style.border = '1px solid #4a4a4a';
+            bonusInput.style.color = '#fff';
+            bonusInput.style.borderRadius = '4px';
+            bonusInput.onchange = () => {
+                mapData.adjacency_modifiers[idx].bonus = parseInt(bonusInput.value) || 1;
+            };
+
+            const typeSelect = document.createElement('select');
+            typeSelect.className = 'modifier-type';
+            ADJACENCY_YIELD_TYPES.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                opt.textContent = t;
+                if (t === mod.type) opt.selected = true;
+                typeSelect.appendChild(opt);
+            });
+            typeSelect.onchange = () => {
+                mapData.adjacency_modifiers[idx].type = typeSelect.value;
+            };
+
+            const perInput = document.createElement('input');
+            perInput.type = 'number';
+            perInput.min = 1;
+            perInput.value = mod.per || 1;
+            perInput.title = 'Per N adjacent';
+            perInput.style.width = '36px';
+            perInput.style.padding = '4px';
+            perInput.style.background = '#2d2d2d';
+            perInput.style.border = '1px solid #4a4a4a';
+            perInput.style.color = '#fff';
+            perInput.style.borderRadius = '4px';
+            perInput.onchange = () => {
+                mapData.adjacency_modifiers[idx].per = parseInt(perInput.value) || 1;
+            };
+
+            const span = document.createElement('span');
+            span.className = 'modifier-bonus';
+            span.textContent = `+${mod.bonus}/${mod.per || 1}`;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-modifier';
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = () => {
+                mapData.adjacency_modifiers.splice(idx, 1);
+                populateModifiers();
+            };
+
+            item.appendChild(titleInput);
+            item.appendChild(descInput);
+            item.appendChild(document.createElement('br'));
+            item.appendChild(districtSelect);
+            item.appendChild(document.createTextNode(' +'));
+            item.appendChild(bonusInput);
+            item.appendChild(typeSelect);
+            item.appendChild(document.createTextNode(' per'));
+            item.appendChild(sourceSelect);
+            item.appendChild(document.createTextNode(' (per'));
+            item.appendChild(perInput);
+            item.appendChild(document.createTextNode(')'));
+            item.appendChild(removeBtn);
+            return item;
         }
 
         function populateAllocations() {
@@ -2006,6 +2240,18 @@
                 output += '||' + allocations.join(',');
             }
             
+            // Add adjacency modifiers: m:District:Source:Bonus:Yield:Per~Title[UnitSep]Description
+            if (mapData.adjacency_modifiers && mapData.adjacency_modifiers.length > 0) {
+                const modifierStrs = mapData.adjacency_modifiers.map(m => {
+                    const base = `m:${m.district}:${m.source}:${m.bonus}:${m.type}:${m.per || 1}`;
+                    let suffix = '';
+                    if (m.title) suffix += '~' + m.title;
+                    if (m.description && String(m.description).trim()) suffix += '\u001f' + String(m.description).trim();
+                    return base + suffix;
+                });
+                output += '||' + modifierStrs.join(',');
+            }
+            
             const dataBlob = new Blob([output], { type: 'application/octet-stream' });
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
@@ -2050,7 +2296,8 @@
                                 districts: {},
                                 improvements: {},
                                 wonders: {}
-                            }
+                            },
+                            adjacency_modifiers: []
                         };
                         
                         const tilesData = data.substring(7); // Skip "CIV1" + 2 chars
@@ -2160,38 +2407,75 @@
                             const allocations = allocationsStr.split(',');
                             allocations.forEach(allocStr => {
                                 if (!allocStr) return;
-                                const parts = allocStr.split(':');
-                                const type = parts[0];
-                                const name = parts[1];
+                                const allocParts = allocStr.split(':');
+                                const type = allocParts[0];
+                                const name = allocParts[1];
                                 
                                 if (type === 'd') {
                                     if (checkboxDistricts.includes(name)) {
                                         // Checkbox districts
-                                        mapData.allocations.districts[name] = parts[2] === 'c';
+                                        mapData.allocations.districts[name] = allocParts[2] === 'c';
                                     } else {
                                         // Number input districts
-                                        mapData.allocations.districts[name] = parseInt(parts[2]) || 0;
+                                        mapData.allocations.districts[name] = parseInt(allocParts[2]) || 0;
                                     }
                                 } else if (type === 'i') {
-                                    mapData.allocations.improvements[name] = parseInt(parts[2]) || 0;
+                                    mapData.allocations.improvements[name] = parseInt(allocParts[2]) || 0;
                                 } else if (type === 'w') {
                                     mapData.allocations.wonders[name] = true;
                                 }
                             });
-                            
-                            // Regenerate allocations UI if dimensions changed (do this after loading data)
-                            if (dimensionsChanged) {
-                                const districtsList = document.getElementById('districtsAllocationsList');
-                                const improvementsList = document.getElementById('improvementsAllocationsList');
-                                const wondersList = document.getElementById('wondersAllocationsList');
-                                districtsList.innerHTML = '';
-                                improvementsList.innerHTML = '';
-                                wondersList.innerHTML = '';
-                                populateAllocations();
-                            }
-                            
-                            // Update UI with loaded allocations
-                            districtsData.forEach(district => {
+                        }
+
+                        // Load adjacency modifiers if present
+                        const modifiersStr = parts.length > 2 ? parts[2] : null;
+                        if (modifiersStr) {
+                            mapData.adjacency_modifiers = [];
+                            const modifierEntries = modifiersStr.split(',');
+                            modifierEntries.forEach(modStr => {
+                                if (!modStr) return;
+                                const tildeIdx = modStr.indexOf('~');
+                                let dataPart = tildeIdx >= 0 ? modStr.substring(0, tildeIdx) : modStr;
+                                let afterTilde = tildeIdx >= 0 ? modStr.substring(tildeIdx + 1) : '';
+                                let descOnly = false;
+                                if (tildeIdx < 0 && dataPart.indexOf('\u001f') >= 0) {
+                                    const usIdx = dataPart.indexOf('\u001f');
+                                    afterTilde = dataPart.substring(usIdx + 1);
+                                    dataPart = dataPart.substring(0, usIdx);
+                                    descOnly = true;
+                                }
+                                const usIdx = afterTilde.indexOf('\u001f');
+                                const titlePart = descOnly ? '' : (usIdx >= 0 ? afterTilde.substring(0, usIdx) : afterTilde);
+                                const descPart = descOnly ? afterTilde : (usIdx >= 0 ? afterTilde.substring(usIdx + 1) : '');
+                                const modParts = dataPart.split(':');
+                                if (modParts[0] === 'm' && modParts.length >= 6) {
+                                    mapData.adjacency_modifiers.push({
+                                        district: modParts[1],
+                                        source: modParts[2],
+                                        bonus: parseInt(modParts[3]) || 1,
+                                        type: modParts[4],
+                                        per: parseInt(modParts[5]) || 1,
+                                        title: titlePart || '',
+                                        description: descPart || ''
+                                    });
+                                }
+                            });
+                        }
+                        populateModifiers();
+
+                        // Regenerate allocations UI if dimensions changed (do this after loading data)
+                        if (dimensionsChanged) {
+                            const districtsList = document.getElementById('districtsAllocationsList');
+                            const improvementsList = document.getElementById('improvementsAllocationsList');
+                            const wondersList = document.getElementById('wondersAllocationsList');
+                            districtsList.innerHTML = '';
+                            improvementsList.innerHTML = '';
+                            wondersList.innerHTML = '';
+                            populateAllocations();
+                        }
+                        
+                        // Update UI with loaded allocations
+                        districtsData.forEach(district => {
                                 if (checkboxDistricts.includes(district)) {
                                     // Update checkbox districts
                                     const items = document.querySelectorAll('.wonder-item');
@@ -2241,7 +2525,6 @@
                                     }
                                 });
                             });
-                        }
                     } else {
                         // Try old JSON format for backward compatibility
                         const loadedData = JSON.parse(data);
@@ -2275,6 +2558,9 @@
                                 improvements: {},
                                 wonders: {}
                             };
+                        }
+                        if (!mapData.adjacency_modifiers) {
+                            mapData.adjacency_modifiers = [];
                         }
                         
                         // Regenerate allocations UI if dimensions changed
@@ -2376,6 +2662,7 @@
                     improvements: {},
                     wonders: {}
                 };
+                mapData.adjacency_modifiers = [];
                 
                 // Clear all hex visuals
                 for (let row = 0; row < GRID_HEIGHT; row++) {
@@ -2436,6 +2723,7 @@
                     });
                 });
                 
+                populateModifiers();
                 updateStatus('Challenge cleared');
             }
         }

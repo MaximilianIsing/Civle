@@ -165,6 +165,13 @@
         }
 
         .header-left {
+            position: absolute;
+            left: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .header-center {
             display: flex;
             align-items: center;
             gap: 16px;
@@ -218,6 +225,11 @@
 
         .yesterday-best-btn:active {
             background: #4a4a4c;
+        }
+
+        .yesterday-best-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .controls {
@@ -537,6 +549,41 @@
             border: 1px solid #565758;
             cursor: not-allowed;
             opacity: 0.6;
+        }
+
+        .daily-modifier-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #2a3a4a 0%, #1a2a3a 100%);
+            border: 1px solid #4a90e2;
+            border-radius: 8px;
+            z-index: 1000;
+            max-width: 90%;
+            display: none;
+        }
+        .daily-modifier-panel .daily-modifier-panel-label {
+            font-size: 11px;
+            color: #8ab4f8;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .daily-modifier-panel .daily-modifier-item {
+            display: block;
+            margin-top: 4px;
+        }
+        .daily-modifier-panel .daily-modifier-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .daily-modifier-panel .daily-modifier-desc {
+            font-size: 12px;
+            color: #b0c4de;
+            margin-left: 8px;
         }
 
         .map-transform-wrapper {
@@ -1224,6 +1271,142 @@
             display: flex;
         }
         
+        .past-challenges-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        .past-challenges-modal.active {
+            display: flex;
+        }
+        .past-challenges-content {
+            background: #121213;
+            border: 1px solid #565758;
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            color: #ffffff;
+        }
+        .past-challenges-content h2 {
+            margin: 0 0 12px 0;
+            font-size: 22px;
+            font-weight: 700;
+            text-align: center;
+        }
+        .past-challenges-month-label {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .past-challenges-days-list {
+            max-height: 240px;
+            overflow-y: auto;
+            border: 1px solid #565758;
+            border-radius: 4px;
+            background: #1a1a1a;
+            margin-bottom: 12px;
+            padding: 4px;
+        }
+        .past-challenges-days-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        .past-challenges-days-list::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        .past-challenges-days-list::-webkit-scrollbar-thumb {
+            background: #3a3a3c;
+            border-radius: 4px;
+        }
+        .past-challenges-day-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px 14px;
+            background: transparent;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            font-size: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .past-challenges-day-label {
+            flex-shrink: 0;
+        }
+        .past-challenges-day-icons {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .past-challenges-district-icon {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+            margin-right: -5px;
+        }
+        .past-challenges-district-icon:last-child {
+            margin-right: 0;
+        }
+        .past-challenges-day-item:hover {
+            background: #3a3a3c;
+        }
+        .past-challenges-day-item:active {
+            background: #565758;
+        }
+        .past-challenges-loading,
+        .past-challenges-empty {
+            padding: 24px;
+            text-align: center;
+            color: #818384;
+            font-size: 15px;
+        }
+        .past-challenges-instruction {
+            color: #818384;
+            font-size: 14px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .past-challenges-nav {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .past-challenges-nav .close-btn {
+            padding: 12px 24px;
+            font-size: 16px;
+        }
+        .past-challenges-message {
+            margin-bottom: 16px;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .past-challenges-message.error {
+            background: rgba(139, 64, 64, 0.3);
+            border: 1px solid #8b5050;
+            color: #d4a5a5;
+        }
+        .past-challenges-message.success {
+            background: rgba(64, 139, 90, 0.2);
+            border: 1px solid #4a9050;
+            color: #a5d4b0;
+        }
+        
         .bug-report-content {
             background: #121213;
             border: 1px solid #565758;
@@ -1450,6 +1633,9 @@
 
     <div class="header">
         <div class="header-left">
+            <button id="pastChallengesBtn" class="yesterday-best-btn" title="Play past day challenges">Play Past Challenges</button>
+        </div>
+        <div class="header-center">
             <img src="assets/logo/Logo320x320.png" alt="Civle Logo" class="header-logo">
             <h1>CIVLE</h1>
             <span id="headerDate" class="header-date"></span>
@@ -1483,6 +1669,7 @@
         let GRID_HEIGHT = 0;
         let placedItems = {}; // { "row,col": { type: "district"|"improvement"|"wonder", name: "..." } }
         let availableItems = {}; // { "District_Name": count, "Improvement_Name": count }
+        let currentChallengeDate = null; // null = today, or 'MM-DD' when playing past challenge
         
         // Helper function to get today's date string (YYYY-MM-DD) in EST
         function getTodayDateString() {
@@ -1497,6 +1684,7 @@
         // Save game state to localStorage
         function saveGameState() {
             try {
+                if (currentChallengeDate) return; // Don't save when playing past challenge
                 const today = getTodayDateString();
                 const gameState = {
                     date: today,
@@ -1534,6 +1722,7 @@
             }
         }
         let adjacencyData = null;
+        let effectiveAdjacencyData = null; // Base + daily modifiers, used for district adjacency calculations
         let placementData = null;
         let resourcesData = null;
 
@@ -1615,6 +1804,91 @@
 
         function fromBase36(str) {
             return parseInt(str, 36);
+        }
+
+        function applyAdjacencyModifiers() {
+            if (!adjacencyData) {
+                effectiveAdjacencyData = null;
+                return;
+            }
+            // Deep clone adjacency data (base)
+            effectiveAdjacencyData = JSON.parse(JSON.stringify(adjacencyData));
+            const modifiers = (challengeData && challengeData.adjacency_modifiers) ? challengeData.adjacency_modifiers : [];
+            effectiveAdjacencyData.adjacency_modifiers = modifiers;
+            if (modifiers.length === 0) return;
+
+            // Store modifiers separately - they ADD to base bonuses (same source can give different yield types)
+            effectiveAdjacencyData.adjacency_modifiers = modifiers;
+
+            modifiers.forEach(mod => {
+                let districtBonus = effectiveAdjacencyData.district_adjacency_bonuses.find(d => d.name === mod.district);
+                if (!districtBonus) {
+                    districtBonus = { name: mod.district, adjacency_bonuses: {} };
+                    effectiveAdjacencyData.district_adjacency_bonuses.push(districtBonus);
+                    if (!effectiveAdjacencyData.districts_with_adjacency.includes(mod.district)) {
+                        effectiveAdjacencyData.districts_with_adjacency.push(mod.district);
+                    }
+                }
+                // Only add to adjacency_bonuses when source doesn't exist or has same type (no overwrite of diff type)
+                const existing = districtBonus.adjacency_bonuses[mod.source];
+                if (!existing) {
+                    districtBonus.adjacency_bonuses[mod.source] = { bonus: mod.bonus, type: mod.type, per: mod.per || 1 };
+                } else if (existing.type === mod.type) {
+                    districtBonus.adjacency_bonuses[mod.source] = { bonus: mod.bonus, type: mod.type, per: mod.per || 1 };
+                }
+                // When source exists with different type, modifier is applied via applyModifierBonuses() in calculation
+            });
+        }
+
+        function getModifierCountForSource(source, counts) {
+            const c = counts;
+            switch (source) {
+                case 'Mountain': return c.mountainCount || 0;
+                case 'Rainforest': return c.rainforestCount || 0;
+                case 'Woods': return c.woodsCount || 0;
+                case 'Geothermal_Fissure': return c.geothermalFissureCount || 0;
+                case 'Reef': return c.reefCount || 0;
+                case 'Natural_Wonder': return c.naturalWonderCount || 0;
+                case 'all_districts': return c.districtCount || 0;
+                case 'District': return c.districtCount || 0;
+                case 'Government_Plaza': return c.governmentPlazaCount || 0;
+                case 'City_Center': return c.cityCenterCount || 0;
+                case 'Harbor': return c.harborCount || 0;
+                case 'Commercial_Hub': return c.commercialHubCount || 0;
+                case 'River_Edge': return c.hasRiver ? 1 : 0;
+                case 'Coastal_Resources': return c.coastalResourceCount || 0;
+                case 'Strategic_Resource': return c.strategicResourceCount || 0;
+                case 'Mine': return (c.improvementCounts && c.improvementCounts.Mine) || 0;
+                case 'Lumber_Mill': return (c.improvementCounts && c.improvementCounts.Lumber_Mill) || 0;
+                case 'Quarry': return (c.improvementCounts && c.improvementCounts.Quarry) || 0;
+                case 'Aqueduct': return c.aqueductCount || 0;
+                case 'Dam': return c.damCount || 0;
+                case 'Canal': return c.canalCount || 0;
+                case 'Wonder': return c.wonderCount || 0;
+                case 'Entertainment_Complex': return c.entertainmentComplexCount || 0;
+                case 'Water_Park': return c.waterParkCount || 0;
+                default: return (c.districtCounts && c.districtCounts[source]) || 0;
+            }
+        }
+
+        function applyModifierBonuses(districtName, counts, yields) {
+            const modifiers = (effectiveAdjacencyData && effectiveAdjacencyData.adjacency_modifiers) || [];
+            const districtBonus = (effectiveAdjacencyData && effectiveAdjacencyData.district_adjacency_bonuses)
+                ? effectiveAdjacencyData.district_adjacency_bonuses.find(d => d.name === districtName) : null;
+            const districtModifiers = modifiers.filter(m => m.district === districtName);
+            districtModifiers.forEach(mod => {
+                const mergedBonus = districtBonus && districtBonus.adjacency_bonuses && districtBonus.adjacency_bonuses[mod.source];
+                if (mergedBonus && mergedBonus.type === mod.type) return;
+                const count = getModifierCountForSource(mod.source, counts);
+                if (count <= 0) return;
+                const per = mod.per || 1;
+                const amount = Math.floor(count / per) * mod.bonus;
+                if (mod.type === 'Science') yields.science += amount;
+                else if (mod.type === 'Faith') yields.faith += amount;
+                else if (mod.type === 'Gold') yields.gold += amount;
+                else if (mod.type === 'Production') yields.production += amount;
+                else if (mod.type === 'Culture') yields.culture += amount;
+            });
         }
 
         // Terrain, features, and resources data (same as map maker)
@@ -1731,7 +2005,8 @@
                                 districts: {},
                                 improvements: {},
                                 wonders: {}
-                            }
+                            },
+                            adjacency_modifiers: []
                         };
                         
                         const tilesData = data.substring(7);
@@ -1830,13 +2105,51 @@
                                 }
                             });
                         }
+
+                        // Load adjacency modifiers if present (parts[2])
+                        const modifiersStr = parts.length > 2 ? parts[2] : null;
+                        if (modifiersStr) {
+                            const modifierEntries = modifiersStr.split(',');
+                            modifierEntries.forEach(modStr => {
+                                if (!modStr) return;
+                                const tildeIdx = modStr.indexOf('~');
+                                let dataPart = tildeIdx >= 0 ? modStr.substring(0, tildeIdx) : modStr;
+                                let afterTilde = tildeIdx >= 0 ? modStr.substring(tildeIdx + 1) : '';
+                                let descOnly = false;
+                                if (tildeIdx < 0 && dataPart.indexOf('\u001f') >= 0) {
+                                    const usIdx = dataPart.indexOf('\u001f');
+                                    afterTilde = dataPart.substring(usIdx + 1);
+                                    dataPart = dataPart.substring(0, usIdx);
+                                    descOnly = true;
+                                }
+                                const usIdx = afterTilde.indexOf('\u001f');
+                                const titlePart = descOnly ? '' : (usIdx >= 0 ? afterTilde.substring(0, usIdx) : afterTilde);
+                                const descPart = descOnly ? afterTilde : (usIdx >= 0 ? afterTilde.substring(usIdx + 1) : '');
+                                const modParts = dataPart.split(':');
+                                if (modParts[0] === 'm' && modParts.length >= 6) {
+                                    challengeData.adjacency_modifiers.push({
+                                        district: modParts[1],
+                                        source: modParts[2],
+                                        bonus: parseInt(modParts[3]) || 1,
+                                        type: modParts[4],
+                                        per: parseInt(modParts[5]) || 1,
+                                        title: titlePart || '',
+                                        description: descPart || ''
+                                    });
+                                }
+                            });
+                        }
                     } else {
                         // Old JSON format
                         const loadedData = JSON.parse(data);
                         challengeData = loadedData;
+                        if (!challengeData.adjacency_modifiers) challengeData.adjacency_modifiers = [];
                         GRID_WIDTH = loadedData.width;
                         GRID_HEIGHT = loadedData.height;
                     }
+                    
+                    // Apply daily adjacency modifiers to create effective adjacency data
+                    applyAdjacencyModifiers();
                     
                     // Initialize game
                     placedItems = {};
@@ -1916,7 +2229,8 @@
                             districts: {},
                             improvements: {},
                             wonders: {}
-                        }
+                        },
+                        adjacency_modifiers: []
                     };
                     
                     const tilesData = data.substring(7);
@@ -1998,20 +2312,54 @@
                         const allocations = allocationsStr.split(',');
                         allocations.forEach(allocStr => {
                             if (!allocStr) return;
-                            const parts = allocStr.split(':');
-                            const type = parts[0];
-                            const name = parts[1];
+                            const allocParts = allocStr.split(':');
+                            const type = allocParts[0];
+                            const name = allocParts[1];
                             
                             if (type === 'd') {
-                                if (parts[2] === 'c') {
+                                if (allocParts[2] === 'c') {
                                     challengeData.allocations.districts[name] = true;
                                 } else {
-                                    challengeData.allocations.districts[name] = parseInt(parts[2]) || 0;
+                                    challengeData.allocations.districts[name] = parseInt(allocParts[2]) || 0;
                                 }
                             } else if (type === 'i') {
-                                challengeData.allocations.improvements[name] = parseInt(parts[2]) || 0;
+                                challengeData.allocations.improvements[name] = parseInt(allocParts[2]) || 0;
                             } else if (type === 'w') {
                                 challengeData.allocations.wonders[name] = true;
+                            }
+                        });
+                    }
+
+                    // Load adjacency modifiers if present
+                    const modifiersStr = parts.length > 2 ? parts[2] : null;
+                    if (modifiersStr) {
+                        const modifierEntries = modifiersStr.split(',');
+                        modifierEntries.forEach(modStr => {
+                            if (!modStr) return;
+                            const tildeIdx = modStr.indexOf('~');
+                            let dataPart = tildeIdx >= 0 ? modStr.substring(0, tildeIdx) : modStr;
+                            let afterTilde = tildeIdx >= 0 ? modStr.substring(tildeIdx + 1) : '';
+                            let descOnly = false;
+                            if (tildeIdx < 0 && dataPart.indexOf('\u001f') >= 0) {
+                                const usIdx = dataPart.indexOf('\u001f');
+                                afterTilde = dataPart.substring(usIdx + 1);
+                                dataPart = dataPart.substring(0, usIdx);
+                                descOnly = true;
+                            }
+                            const usIdx = afterTilde.indexOf('\u001f');
+                            const titlePart = descOnly ? '' : (usIdx >= 0 ? afterTilde.substring(0, usIdx) : afterTilde);
+                            const descPart = descOnly ? afterTilde : (usIdx >= 0 ? afterTilde.substring(usIdx + 1) : '');
+                            const modParts = dataPart.split(':');
+                            if (modParts[0] === 'm' && modParts.length >= 6) {
+                                challengeData.adjacency_modifiers.push({
+                                    district: modParts[1],
+                                    source: modParts[2],
+                                    bonus: parseInt(modParts[3]) || 1,
+                                    type: modParts[4],
+                                    per: parseInt(modParts[5]) || 1,
+                                    title: titlePart || '',
+                                    description: descPart || ''
+                                });
                             }
                         });
                     }
@@ -2019,10 +2367,15 @@
                     // Old JSON format
                     const loadedData = JSON.parse(data);
                     challengeData = loadedData;
+                    if (!challengeData.adjacency_modifiers) challengeData.adjacency_modifiers = [];
                     GRID_WIDTH = loadedData.width;
                     GRID_HEIGHT = loadedData.height;
                 }
                 
+                // Apply daily adjacency modifiers
+                applyAdjacencyModifiers();
+                
+                currentChallengeDate = null;
                 // Initialize game
                 placedItems = {};
                 availableItems = {};
@@ -2270,8 +2623,34 @@
                 mapContainer.appendChild(resetButton);
             }
             
+            // Add daily modifier panel (middle bottom)
+            let modifierPanel = document.getElementById('dailyModifierPanel');
+            if (modifierPanel) modifierPanel.remove();
+            modifierPanel = document.createElement('div');
+            modifierPanel.id = 'dailyModifierPanel';
+            modifierPanel.className = 'daily-modifier-panel';
+            const modifiers = challengeData && challengeData.adjacency_modifiers ? challengeData.adjacency_modifiers : [];
+            const modifiersWithTitles = modifiers.filter(m => m.title && m.title.trim());
+            if (modifiersWithTitles.length > 0) {
+                modifierPanel.style.display = 'block';
+                const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                modifierPanel.innerHTML = '<div class="daily-modifier-panel-label">Daily Modifier</div>' +
+                    modifiersWithTitles.map(m => {
+                        const desc = (m.description && String(m.description).trim()) ? m.description.trim() : formatModifierDescription(m);
+                        return `<div class="daily-modifier-item"><span class="daily-modifier-title">${esc(m.title.trim())}</span><span class="daily-modifier-desc">${esc(desc)}</span></div>`;
+                    }).join('');
+                mapContainer.appendChild(modifierPanel);
+            }
+            
             // Update reset button state
             updateResetButton();
+        }
+
+        function formatModifierDescription(mod) {
+            const per = mod.per || 1;
+            const sourceText = (mod.source || 'all_districts').replace(/_/g, ' ');
+            const perText = per > 1 ? ` per ${per} adjacent ${sourceText}` : ` per adjacent ${sourceText}`;
+            return `${mod.district.replace(/_/g, ' ')} gains +${mod.bonus} ${mod.type}${perText}`;
         }
 
         function createHex(row, col) {
@@ -2769,6 +3148,9 @@
                                 }
                             }
                             
+                            if (districtName === 'City_Center') {
+                                deleteEncampmentsAdjacentTo(row, col);
+                            }
                             // Validate and delete invalid adjacent wonders at old location
                             validateAndDeleteInvalidWonders(draggedDistrict.row, draggedDistrict.col);
                             
@@ -4271,6 +4653,9 @@
                                             }
                                         }
                                         
+                                        if (districtName === 'City_Center') {
+                                            deleteEncampmentsAdjacentTo(targetRow, targetCol);
+                                        }
                                         // Validate and delete invalid adjacent wonders at old location
                                         validateAndDeleteInvalidWonders(touchDragDistrict.row, touchDragDistrict.col);
                                         
@@ -4382,6 +4767,12 @@
             updateHexVisualDistricts(row, col);
         }
 
+        function getDistrictDisplayName(districtName) {
+            const modifiers = challengeData && challengeData.adjacency_modifiers ? challengeData.adjacency_modifiers : [];
+            const mod = modifiers.find(m => m.district === districtName && m.title && m.title.trim());
+            return mod ? mod.title.trim() : districtName.replace(/_/g, ' ');
+        }
+
         function populateSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.innerHTML = '';
@@ -4394,7 +4785,9 @@
             contentWrapper.style.display = 'flex';
             contentWrapper.style.flexDirection = 'column';
             
-            contentWrapper.innerHTML = '<h2>Available Items</h2>';
+            const availableItemsHeader = document.createElement('h2');
+            availableItemsHeader.textContent = 'Available Items';
+            contentWrapper.appendChild(availableItemsHeader);
             
             // Districts
             const districtsSection = document.createElement('div');
@@ -4442,7 +4835,8 @@
             districtNames.forEach(name => {
                 const itemData = placementData.districts.find(d => d.name === name);
                 if (itemData) {
-                    const item = createAvailableItem(name, 'district', availableItems[name]);
+                    const displayName = getDistrictDisplayName(name);
+                    const item = createAvailableItem(name, 'district', availableItems[name], displayName);
                     districtsSection.appendChild(item);
                 }
             });
@@ -4460,7 +4854,7 @@
                         improvementsSection.innerHTML = '<h3 style="margin-top: 15px; margin-bottom: 10px; color: #4a90e2; font-size: 16px;">Improvements</h3>';
                         hasImprovements = true;
                     }
-                    const item = createAvailableItem(name, 'improvement', availableItems[name]);
+                    const item = createAvailableItem(name, 'improvement', availableItems[name], null);
                     improvementsSection.appendChild(item);
                 }
             });
@@ -4480,7 +4874,7 @@
                         wondersSection.innerHTML = '<h3 style="margin-top: 15px; margin-bottom: 10px; color: #4a90e2; font-size: 16px;">Wonders</h3>';
                         hasWonders = true;
                     }
-                    const item = createAvailableItem(name, 'wonder', availableItems[name]);
+                    const item = createAvailableItem(name, 'wonder', availableItems[name], null);
                     wondersSection.appendChild(item);
                 }
             });
@@ -4534,7 +4928,8 @@
         function formatPlacementRequirements(itemData, type) {
             if (!itemData) return '';
             
-            let html = `<h4>${itemData.name.replace(/_/g, ' ')}</h4>`;
+            const displayName = (type === 'district') ? getDistrictDisplayName(itemData.name) : itemData.name.replace(/_/g, ' ');
+            let html = `<h4>${displayName}</h4>`;
             
             // Only show description if available
             if (itemData.description) {
@@ -4545,16 +4940,32 @@
                 html += `<div class="requirement-section"><span class="requirement-value">${description}</span></div>`;
             }
             
-            // For districts, show adjacency bonuses
-            if (type === 'district' && adjacencyData) {
-                const districtBonus = adjacencyData.district_adjacency_bonuses.find(d => d.name === itemData.name);
-                if (districtBonus && districtBonus.adjacency_bonuses) {
+            // For districts, show adjacency bonuses (use effectiveAdjacencyData to include daily modifiers)
+            const adjData = effectiveAdjacencyData || adjacencyData;
+            if (type === 'district' && adjData) {
+                const districtBonus = adjData.district_adjacency_bonuses.find(d => d.name === itemData.name);
+                const baseSources = districtBonus && districtBonus.adjacency_bonuses ? Object.keys(districtBonus.adjacency_bonuses) : [];
+                const modifierBonuses = (adjData.adjacency_modifiers || []).filter(m => m.district === itemData.name);
+                const hasModifierAdditions = modifierBonuses.some(m => {
+                    const base = districtBonus && districtBonus.adjacency_bonuses && districtBonus.adjacency_bonuses[m.source];
+                    return !base || base.type !== m.type;
+                });
+                if ((districtBonus && districtBonus.adjacency_bonuses) || hasModifierAdditions) {
                     html += `<div class="requirement-section" style="margin-top: 12px;"><strong>Adjacency Bonuses:</strong><ul style="margin: 8px 0 0 0; padding-left: 20px; list-style-type: disc;">`;
-                    Object.entries(districtBonus.adjacency_bonuses).forEach(([source, bonus]) => {
-                        const yieldType = bonus.type;
-                        const yieldIcon = `assets/yields/${yieldType}.webp`;
-                        const perText = bonus.per > 1 ? ` (per ${bonus.per})` : '';
-                        html += `<li style="margin-bottom: 4px;"><img src="${yieldIcon}" alt="${yieldType}" class="yield-icon" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">+${bonus.bonus} ${yieldType} from ${source.replace(/_/g, ' ')}${perText}</li>`;
+                    if (districtBonus && districtBonus.adjacency_bonuses) {
+                        Object.entries(districtBonus.adjacency_bonuses).forEach(([source, bonus]) => {
+                            const yieldType = bonus.type;
+                            const yieldIcon = `assets/yields/${yieldType}.webp`;
+                            const perText = bonus.per > 1 ? ` (per ${bonus.per})` : '';
+                            html += `<li style="margin-bottom: 4px;"><img src="${yieldIcon}" alt="${yieldType}" class="yield-icon" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">+${bonus.bonus} ${yieldType} from ${source.replace(/_/g, ' ')}${perText}</li>`;
+                        });
+                    }
+                    modifierBonuses.forEach(m => {
+                        const base = districtBonus && districtBonus.adjacency_bonuses && districtBonus.adjacency_bonuses[m.source];
+                        if (base && base.type === m.type) return;
+                        const yieldIcon = `assets/yields/${m.type}.webp`;
+                        const perText = (m.per || 1) > 1 ? ` (per ${m.per || 1})` : '';
+                        html += `<li style="margin-bottom: 4px;"><img src="${yieldIcon}" alt="${m.type}" class="yield-icon" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">+${m.bonus} ${m.type} from ${(m.source || 'all_districts').replace(/_/g, ' ')}${perText}</li>`;
                     });
                     html += `</ul></div>`;
                 }
@@ -4572,7 +4983,7 @@
             return html;
         }
 
-        function createAvailableItem(name, type, count) {
+        function createAvailableItem(name, type, count, displayName) {
             const item = document.createElement('div');
             item.className = 'available-item';
             item.draggable = count > 0;
@@ -4600,7 +5011,7 @@
             img.onerror = () => { img.style.display = 'none'; };
             
             const span = document.createElement('span');
-            span.textContent = name.replace(/_/g, ' ');
+            span.textContent = displayName != null ? displayName : name.replace(/_/g, ' ');
             
             const countSpan = document.createElement('span');
             countSpan.className = 'count' + (count === 0 ? ' zero' : '');
@@ -4846,6 +5257,10 @@
             
             availableItems[name] = (availableItems[name] || 0) - 1;
             
+            if (type === 'district' && name === 'City_Center') {
+                deleteEncampmentsAdjacentTo(row, col);
+            }
+            
             // Update visuals for this hex and all neighbors (for adjacency indicators)
             updateHexVisual(row, col);
             const neighbors = getNeighbors(row, col);
@@ -4856,6 +5271,31 @@
             populateSidebar();
             saveGameState();
             updateResetButton();
+        }
+
+        function deleteEncampmentsAdjacentTo(row, col) {
+            const neighbors = getNeighbors(row, col);
+            const encampmentsToDelete = [];
+            for (const neighbor of neighbors) {
+                const neighborKey = `${neighbor.row},${neighbor.col}`;
+                const placed = placedItems[neighborKey];
+                if (placed && placed.type === 'district' && placed.name === 'Encampment') {
+                    encampmentsToDelete.push(neighborKey);
+                }
+            }
+            for (const encampmentKey of encampmentsToDelete) {
+                const encampment = placedItems[encampmentKey];
+                if (encampment) {
+                    availableItems['Encampment'] = (availableItems['Encampment'] || 0) + 1;
+                    delete placedItems[encampmentKey];
+                    const [encRow, encCol] = encampmentKey.split(',').map(Number);
+                    updateHexVisual(encRow, encCol);
+                    const encNeighbors = getNeighbors(encRow, encCol);
+                    encNeighbors.forEach(neighbor => {
+                        updateHexVisual(neighbor.row, neighbor.col);
+                    });
+                }
+            }
         }
 
         function validateAndDeleteInvalidWonders(checkRow, checkCol) {
@@ -5871,8 +6311,10 @@
         }
 
         function calculateAdjacencyPreview(row, col, districtName, excludeLocation = null) {
-            // Calculate what adjacency would be if this district were placed here
-            const districtBonus = adjacencyData.district_adjacency_bonuses.find(d => d.name === districtName);
+            // Calculate what adjacency would be if this district were placed here (uses effective data with modifiers)
+            const adjData = effectiveAdjacencyData || adjacencyData;
+            if (!adjData) return null;
+            const districtBonus = adjData.district_adjacency_bonuses.find(d => d.name === districtName);
             if (!districtBonus) return null;
             
             const key = `${row},${col}`;
@@ -5904,6 +6346,7 @@
             
             // Check neighbors for terrain, features, and resources
             let districtCount = 0;
+            let districtCounts = {};
             let cityCenterCount = 0;
             let harborCount = 0;
             let commercialHubCount = 0;
@@ -5977,6 +6420,7 @@
                 if (neighborPlaced) {
                     if (neighborPlaced.type === 'district') {
                         districtCount++;
+                        districtCounts[neighborPlaced.name] = (districtCounts[neighborPlaced.name] || 0) + 1;
                         if (neighborPlaced.name === 'City_Center') cityCenterCount++;
                         if (neighborPlaced.name === 'Harbor') harborCount++;
                         if (neighborPlaced.name === 'Commercial_Hub') commercialHubCount++;
@@ -6149,13 +6593,25 @@
                 if (bonus.type === 'Production') production += amount;
             }
             
+            // Apply modifier bonuses
+            let hasRiver = false;
+            if (tile && tile.rivers) {
+                for (let i = 0; i < 6; i++) { if (tile.rivers[i]) { hasRiver = true; break; } }
+            }
+            const counts = { districtCount, districtCounts, cityCenterCount, harborCount, commercialHubCount, wonderCount,
+                entertainmentComplexCount, waterParkCount, governmentPlazaCount, aqueductCount, damCount, canalCount,
+                improvementCounts, mountainCount, rainforestCount, woodsCount, geothermalFissureCount, reefCount,
+                coastalResourceCount, naturalWonderCount, strategicResourceCount, hasRiver };
+            const yields = { science, faith, gold, production, culture };
+            applyModifierBonuses(districtName, counts, yields);
+            
             return {
-                science,
-                faith,
-                gold,
-                production,
-                culture,
-                total: science + faith + gold + production + culture
+                science: yields.science,
+                faith: yields.faith,
+                gold: yields.gold,
+                production: yields.production,
+                culture: yields.culture,
+                total: yields.science + yields.faith + yields.gold + yields.production + yields.culture
             };
         }
 
@@ -6500,7 +6956,9 @@
             if (!placed || placed.type !== 'district') return null;
             
             const districtName = placed.name;
-            const districtBonus = adjacencyData.district_adjacency_bonuses.find(d => d.name === districtName);
+            const adjData = effectiveAdjacencyData || adjacencyData;
+            if (!adjData) return null;
+            const districtBonus = adjData.district_adjacency_bonuses.find(d => d.name === districtName);
             if (!districtBonus) return null;
             
             const tile = challengeData.tiles[key];
@@ -6531,6 +6989,7 @@
             
             // Check neighbors for terrain, features, and resources
             let districtCount = 0;
+            let districtCounts = {};
             let cityCenterCount = 0;
             let harborCount = 0;
             let commercialHubCount = 0;
@@ -6594,6 +7053,7 @@
                 if (neighborPlaced) {
                     if (neighborPlaced.type === 'district') {
                         districtCount++;
+                        districtCounts[neighborPlaced.name] = (districtCounts[neighborPlaced.name] || 0) + 1;
                         if (neighborPlaced.name === 'City_Center') cityCenterCount++;
                         if (neighborPlaced.name === 'Harbor') harborCount++;
                         if (neighborPlaced.name === 'Commercial_Hub') commercialHubCount++;
@@ -6768,13 +7228,25 @@
                 if (bonus.type === 'Production') production += amount;
             }
             
+            // Apply modifier bonuses (adds yields from same source with different type, e.g. Mine->Culture)
+            let hasRiver = false;
+            if (tile && tile.rivers) {
+                for (let i = 0; i < 6; i++) { if (tile.rivers[i]) { hasRiver = true; break; } }
+            }
+            const counts = { districtCount, districtCounts, cityCenterCount, harborCount, commercialHubCount, wonderCount,
+                entertainmentComplexCount, waterParkCount, governmentPlazaCount, aqueductCount, damCount, canalCount,
+                improvementCounts, mountainCount, rainforestCount, woodsCount, geothermalFissureCount, reefCount,
+                coastalResourceCount, naturalWonderCount, strategicResourceCount, hasRiver };
+            const yields = { science, faith, gold, production, culture };
+            applyModifierBonuses(districtName, counts, yields);
+            
             return {
-                science,
-                faith,
-                gold,
-                production,
-                culture,
-                total: science + faith + gold + production + culture
+                science: yields.science,
+                faith: yields.faith,
+                gold: yields.gold,
+                production: yields.production,
+                culture: yields.culture,
+                total: yields.science + yields.faith + yields.gold + yields.production + yields.culture
             };
         }
 
@@ -6784,7 +7256,9 @@
             if (!placed || placed.type !== 'district') return [];
             
             const districtName = placed.name;
-            const districtBonus = adjacencyData.district_adjacency_bonuses.find(d => d.name === districtName);
+            const adjData = effectiveAdjacencyData || adjacencyData;
+            if (!adjData) return [];
+            const districtBonus = adjData.district_adjacency_bonuses.find(d => d.name === districtName);
             if (!districtBonus) return [];
             
             const tile = challengeData.tiles[key];
@@ -6979,6 +7453,25 @@
             if (bonuses.Strategic_Resource && strategicResourceCount > 0) {
                 sources.push({ type: 'Strategic_Resource', count: strategicResourceCount, bonus: bonuses.Strategic_Resource, resourceNames: strategicResources });
             }
+            
+            // Add modifier sources (same source, different yield type - e.g. Mine->Culture)
+            let hasRiver = false;
+            if (tile && tile.rivers) {
+                for (let i = 0; i < 6; i++) { if (tile.rivers[i]) { hasRiver = true; break; } }
+            }
+            const counts = { districtCount, districtCounts, cityCenterCount, harborCount, commercialHubCount, wonderCount,
+                entertainmentComplexCount, waterParkCount, governmentPlazaCount, aqueductCount, damCount, canalCount,
+                improvementCounts, mountainCount, rainforestCount, woodsCount, geothermalFissureCount, reefCount,
+                coastalResourceCount, naturalWonderCount, strategicResourceCount, hasRiver };
+            const modifiers = (effectiveAdjacencyData && effectiveAdjacencyData.adjacency_modifiers) || [];
+            modifiers.filter(m => m.district === districtName).forEach(mod => {
+                const count = getModifierCountForSource(mod.source, counts);
+                if (count > 0) {
+                    const baseBonus = bonuses[mod.source];
+                    if (baseBonus && baseBonus.type === mod.type) return; // Already in base
+                    sources.push({ type: mod.source, count, bonus: { bonus: mod.bonus, type: mod.type, per: mod.per || 1 } });
+                }
+            });
             
             return sources;
         }
@@ -7409,7 +7902,7 @@
                             <span>${totalScience + totalCulture + totalProduction + totalFaith + (totalGold * 0.5)}</span>
                         </div>
                     </div>
-                    ${window.isCustomMode ? '' : '<button id="submitScoreBtn" class="submit-score-btn">Submit Score</button>'}
+                    ${(window.isCustomMode || currentChallengeDate) ? '' : '<button id="submitScoreBtn" class="submit-score-btn">Submit Score</button>'}
                 `;
                 
                 // Check if user has already submitted today (only in normal mode)
@@ -8299,17 +8792,289 @@
             }
         });
 
-        // Update header date
-        function updateHeaderDate() {
-            const now = new Date();
-            const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-            const month = estDate.getMonth() + 1;
-            const day = estDate.getDate();
-            const dateString = `${month}/${day}`;
+        // Update header date (overrideDate = 'MM-DD' when playing past challenge)
+        function updateHeaderDate(overrideDate) {
             const dateElement = document.getElementById('headerDate');
-            if (dateElement) {
-                dateElement.textContent = `(${dateString})`;
+            if (!dateElement) return;
+            if (overrideDate) {
+                const [m, d] = overrideDate.split('-');
+                dateElement.textContent = `(${parseInt(m)}/${parseInt(d)})`;
+            } else {
+                const now = new Date();
+                const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+                const month = estDate.getMonth() + 1;
+                const day = estDate.getDate();
+                dateElement.textContent = `(${month}/${day})`;
             }
+        }
+
+        let pastChallengesAvailableDates = []; // ['01-01', '01-15', '02-03', ...]
+        let pastChallengesDistrictsByDate = {}; // { '01-01': ['Campus', 'City_Center', ...], ... }
+        let pastChallengesMonthsWithChallenges = []; // [1, 2, 12] - months that have challenges
+        let pastChallengesCurrentMonthIndex = 0; // index into pastChallengesMonthsWithChallenges
+
+        const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const DISTRICT_ORDER = ['City_Center', 'Government_Plaza', 'Diplomatic_Quarter', 'Neighborhood', 'Aqueduct', 'Canal', 'Dam', 'Industrial_Zone', 'Commercial_Hub', 'Harbor', 'Campus', 'Theater_Square', 'Entertainment_Complex', 'Water_Park', 'Holy_Site', 'Encampment', 'Preserve', 'Aerodrome', 'Spaceport'];
+
+        async function showPastChallengesModal() {
+            const modal = document.getElementById('pastChallengesModal');
+            const msgEl = document.getElementById('pastChallengesMessage');
+            const listEl = document.getElementById('pastChallengesDaysList');
+            if (!modal || !listEl) return;
+            msgEl.style.display = 'none';
+            listEl.innerHTML = '<div class="past-challenges-loading">Loading...</div>';
+            modal.classList.add('active');
+            try {
+                const response = await fetch('/day-challenges-list');
+                if (!response.ok) throw new Error('Failed to load');
+                const data = await response.json();
+                const now = new Date();
+                const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+                const todayMMDD = String(estDate.getMonth() + 1).padStart(2, '0') + '-' + String(estDate.getDate()).padStart(2, '0');
+                pastChallengesAvailableDates = (data.dates || []).filter(d => d !== todayMMDD).sort();
+                pastChallengesDistrictsByDate = data.districtsByDate || {};
+                const monthSet = new Set();
+                pastChallengesAvailableDates.forEach(dateStr => {
+                    const m = parseInt(dateStr.split('-')[0], 10);
+                    monthSet.add(m);
+                });
+                pastChallengesMonthsWithChallenges = Array.from(monthSet).sort((a, b) => a - b);
+                if (pastChallengesMonthsWithChallenges.length === 0) {
+                    listEl.innerHTML = '<div class="past-challenges-empty">No past challenges available.</div>';
+                    document.getElementById('pastChallengeMonthLabel').textContent = '';
+                    document.getElementById('pastChallengePrevMonth').style.display = 'none';
+                    document.getElementById('pastChallengeNextMonth').style.display = 'none';
+                    return;
+                }
+                document.getElementById('pastChallengePrevMonth').style.display = '';
+                document.getElementById('pastChallengeNextMonth').style.display = '';
+                const currentMonth = estDate.getMonth() + 1;
+                const idx = pastChallengesMonthsWithChallenges.indexOf(currentMonth);
+                pastChallengesCurrentMonthIndex = idx >= 0 ? idx : 0;
+                populatePastChallengesDaysList();
+            } catch (err) {
+                console.error('Error loading challenges list:', err);
+                listEl.innerHTML = '<div class="past-challenges-empty">Failed to load challenges.</div>';
+                document.getElementById('pastChallengeMonthLabel').textContent = '';
+            }
+        }
+
+        function closePastChallengesModal() {
+            const modal = document.getElementById('pastChallengesModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function updatePastChallengesNavButtons() {
+            const prevBtn = document.getElementById('pastChallengePrevMonth');
+            const nextBtn = document.getElementById('pastChallengeNextMonth');
+            if (!prevBtn || !nextBtn) return;
+            prevBtn.disabled = false;
+            nextBtn.disabled = false;
+        }
+
+        function populatePastChallengesDaysList() {
+            const listEl = document.getElementById('pastChallengesDaysList');
+            const labelEl = document.getElementById('pastChallengeMonthLabel');
+            if (!listEl || !labelEl) return;
+            if (pastChallengesMonthsWithChallenges.length === 0) return;
+            const month = pastChallengesMonthsWithChallenges[pastChallengesCurrentMonthIndex];
+            const monthStr = String(month).padStart(2, '0');
+            const datesInMonth = pastChallengesAvailableDates.filter(d => d.startsWith(monthStr + '-'));
+            labelEl.textContent = MONTH_NAMES[month - 1];
+            listEl.innerHTML = '';
+            datesInMonth.forEach(dateStr => {
+                const day = parseInt(dateStr.split('-')[1], 10);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'past-challenges-day-item';
+                const labelSpan = document.createElement('span');
+                labelSpan.className = 'past-challenges-day-label';
+                labelSpan.textContent = `${MONTH_NAMES[month - 1]} ${day}`;
+                btn.appendChild(labelSpan);
+                const iconsSpan = document.createElement('span');
+                iconsSpan.className = 'past-challenges-day-icons';
+                const districts = (pastChallengesDistrictsByDate[dateStr] || []).slice();
+                districts.sort((a, b) => {
+                    const iA = DISTRICT_ORDER.indexOf(a);
+                    const iB = DISTRICT_ORDER.indexOf(b);
+                    if (iA === -1 && iB === -1) return 0;
+                    if (iA === -1) return 1;
+                    if (iB === -1) return -1;
+                    return iA - iB;
+                });
+                districts.forEach(districtName => {
+                    const img = document.createElement('img');
+                    img.src = `assets/districts/${districtName}.webp`;
+                    img.alt = districtName;
+                    img.className = 'past-challenges-district-icon';
+                    img.onerror = () => { img.style.display = 'none'; };
+                    iconsSpan.appendChild(img);
+                });
+                btn.appendChild(iconsSpan);
+                btn.dataset.dateStr = dateStr;
+                btn.onclick = () => loadPastChallengeByDate(btn.dataset.dateStr);
+                listEl.appendChild(btn);
+            });
+            updatePastChallengesNavButtons();
+        }
+
+        async function loadPastChallengeByDate(dateStr) {
+            const msgEl = document.getElementById('pastChallengesMessage');
+            try {
+                const response = await fetch(`/day-challenge?date=${dateStr}`);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        msgEl.textContent = 'No challenge available for this date.';
+                        msgEl.className = 'past-challenges-message error';
+                        msgEl.style.display = 'block';
+                        return;
+                    }
+                    throw new Error('Failed to load challenge');
+                }
+                const data = await response.text();
+                await parseAndLoadChallenge(data, dateStr);
+                closePastChallengesModal();
+            } catch (err) {
+                console.error('Error loading past challenge:', err);
+                msgEl.textContent = 'Error loading challenge. Please try again.';
+                msgEl.className = 'past-challenges-message error';
+                msgEl.style.display = 'block';
+            }
+        }
+
+        async function parseAndLoadChallenge(data, dateStr) {
+            if (!terrainNameMap || !featureNameMap || !resourceNameMap) {
+                await loadGameData();
+            }
+            if (data.startsWith('CIV1')) {
+                const width = data.charCodeAt(4) - 48;
+                const height = data.charCodeAt(5) - 48;
+                GRID_WIDTH = width;
+                GRID_HEIGHT = height;
+                challengeData = {
+                    width, height, tiles: {}, allocations: { districts: {}, improvements: {}, wonders: {} },
+                    adjacency_modifiers: []
+                };
+                const tilesData = data.substring(7);
+                const parts = tilesData.split('||');
+                const tilesStr = parts[0];
+                if (tilesStr) {
+                    const tiles = tilesStr.split('|');
+                    tiles.forEach(tileStr => {
+                        if (!tileStr) return;
+                        const [pos, tileData] = tileStr.split(':');
+                        if (!pos || !tileData) return;
+                        const [rowStr, colStr] = pos.split(',');
+                        const row = parseInt(rowStr);
+                        const col = parseInt(colStr);
+                        const dataParts = tileData.split(';');
+                        let mainData = dataParts[0];
+                        let tStr = '', fStr = '', rStr = '';
+                        if (mainData.includes(',') && mainData.split(',').length >= 3) {
+                            const fields = mainData.split(',');
+                            tStr = fields[0] || '.'; fStr = fields[1] || '.'; rStr = fields[2] || '.';
+                        } else {
+                            tStr = mainData[0] || '.'; fStr = mainData[1] || '.'; rStr = mainData[2] || '.';
+                        }
+                        const key = `${row},${col}`;
+                        challengeData.tiles[key] = {};
+                        if (tStr && tStr !== '.') {
+                            const tIdx = fromBase36(tStr) - 1;
+                            const terrain = terrainNameMap.get(tIdx);
+                            if (terrain) {
+                                challengeData.tiles[key].terrain = terrain.name;
+                                challengeData.tiles[key].terrainPath = terrain.path;
+                            }
+                        }
+                        if (fStr && fStr !== '.') {
+                            const fIdx = fromBase36(fStr) - 1;
+                            const feature = featureNameMap.get(fIdx);
+                            if (feature) {
+                                challengeData.tiles[key].feature = feature.name;
+                                challengeData.tiles[key].featurePath = feature.path;
+                            }
+                        }
+                        if (rStr && rStr !== '.') {
+                            const rIdx = fromBase36(rStr) - 1;
+                            const resource = resourceNameMap.get(rIdx);
+                            if (resource) {
+                                challengeData.tiles[key].resource = resource;
+                                challengeData.tiles[key].resourcePath = `assets/recources/${resource}.webp`;
+                            }
+                        }
+                        if (dataParts.length > 1 && dataParts[1]) {
+                            const riversBin = parseInt(dataParts[1], 36).toString(2).padStart(6, '0');
+                            challengeData.tiles[key].rivers = [];
+                            for (let i = 0; i < 6; i++) challengeData.tiles[key].rivers[i] = riversBin[i] === '1';
+                        }
+                    });
+                }
+                const allocationsStr = parts.length > 1 ? parts[1] : null;
+                if (allocationsStr) {
+                    allocationsStr.split(',').forEach(allocStr => {
+                        if (!allocStr) return;
+                        const allocParts = allocStr.split(':');
+                        const type = allocParts[0], name = allocParts[1];
+                        if (type === 'd') {
+                            challengeData.allocations.districts[name] = allocParts[2] === 'c' ? true : (parseInt(allocParts[2]) || 0);
+                        } else if (type === 'i') {
+                            challengeData.allocations.improvements[name] = parseInt(allocParts[2]) || 0;
+                        } else if (type === 'w') {
+                            challengeData.allocations.wonders[name] = true;
+                        }
+                    });
+                }
+                const modifiersStr = parts.length > 2 ? parts[2] : null;
+                if (modifiersStr) {
+                    modifiersStr.split(',').forEach(modStr => {
+                        if (!modStr) return;
+                        const tildeIdx = modStr.indexOf('~');
+                        let dataPart = tildeIdx >= 0 ? modStr.substring(0, tildeIdx) : modStr;
+                        let afterTilde = tildeIdx >= 0 ? modStr.substring(tildeIdx + 1) : '';
+                        let descOnly = false;
+                        if (tildeIdx < 0 && dataPart.indexOf('\u001f') >= 0) {
+                            const usIdx = dataPart.indexOf('\u001f');
+                            afterTilde = dataPart.substring(usIdx + 1);
+                            dataPart = dataPart.substring(0, usIdx);
+                            descOnly = true;
+                        }
+                        const usIdx = afterTilde.indexOf('\u001f');
+                        const titlePart = descOnly ? '' : (usIdx >= 0 ? afterTilde.substring(0, usIdx) : afterTilde);
+                        const descPart = descOnly ? afterTilde : (usIdx >= 0 ? afterTilde.substring(usIdx + 1) : '');
+                        const modParts = dataPart.split(':');
+                        if (modParts[0] === 'm' && modParts.length >= 6) {
+                            challengeData.adjacency_modifiers.push({
+                                district: modParts[1], source: modParts[2], bonus: parseInt(modParts[3]) || 1,
+                                type: modParts[4], per: parseInt(modParts[5]) || 1, title: titlePart || '',
+                                description: descPart || ''
+                            });
+                        }
+                    });
+                }
+            } else {
+                const loadedData = JSON.parse(data);
+                challengeData = loadedData;
+                if (!challengeData.adjacency_modifiers) challengeData.adjacency_modifiers = [];
+                GRID_WIDTH = loadedData.width;
+                GRID_HEIGHT = loadedData.height;
+            }
+            applyAdjacencyModifiers();
+            placedItems = {};
+            availableItems = {};
+            Object.keys(challengeData.allocations.districts).forEach(name => {
+                const count = challengeData.allocations.districts[name];
+                availableItems[name] = count === true ? 1 : (count > 0 ? count : 0);
+            });
+            Object.keys(challengeData.allocations.improvements).forEach(name => {
+                const count = challengeData.allocations.improvements[name];
+                if (count > 0) availableItems[name] = count;
+            });
+            Object.keys(challengeData.allocations.wonders).forEach(name => {
+                if (challengeData.allocations.wonders[name]) availableItems[name] = 1;
+            });
+            currentChallengeDate = dateStr || null;
+            initializeGame();
+            updateHeaderDate(currentChallengeDate);
         }
 
         // Detect mobile devices
@@ -8331,11 +9096,15 @@
             const urlParams = new URLSearchParams(window.location.search);
             const isCustomMode = urlParams.get('mode') === 'custom';
             
-            // Hide leaderboard and yesterday's best button in custom mode
+            // Hide leaderboard, yesterday's best, and past challenges button in custom mode
             if (isCustomMode) {
                 const yesterdayBestBtn = document.getElementById('yesterdayBestBtn');
                 if (yesterdayBestBtn) {
                     yesterdayBestBtn.style.display = 'none';
+                }
+                const pastChallengesBtn = document.getElementById('pastChallengesBtn');
+                if (pastChallengesBtn) {
+                    pastChallengesBtn.style.display = 'none';
                 }
             }
             
@@ -8365,6 +9134,32 @@
                 showTutorial();
                 // Update header date
                 updateHeaderDate();
+                // Past Challenges button
+                const pastChallengesBtn = document.getElementById('pastChallengesBtn');
+                if (pastChallengesBtn && !pastChallengesBtn.hasAttribute('data-listener-attached')) {
+                    pastChallengesBtn.addEventListener('click', showPastChallengesModal);
+                    pastChallengesBtn.setAttribute('data-listener-attached', 'true');
+                }
+                const pastChallengePrevMonth = document.getElementById('pastChallengePrevMonth');
+                const pastChallengeNextMonth = document.getElementById('pastChallengeNextMonth');
+                if (pastChallengePrevMonth && !pastChallengePrevMonth.hasAttribute('data-listener-attached')) {
+                    pastChallengePrevMonth.addEventListener('click', () => {
+                        pastChallengesCurrentMonthIndex = (pastChallengesCurrentMonthIndex - 1 + pastChallengesMonthsWithChallenges.length) % pastChallengesMonthsWithChallenges.length;
+                        populatePastChallengesDaysList();
+                    });
+                    pastChallengePrevMonth.setAttribute('data-listener-attached', 'true');
+                }
+                if (pastChallengeNextMonth && !pastChallengeNextMonth.hasAttribute('data-listener-attached')) {
+                    pastChallengeNextMonth.addEventListener('click', () => {
+                        pastChallengesCurrentMonthIndex = (pastChallengesCurrentMonthIndex + 1) % pastChallengesMonthsWithChallenges.length;
+                        populatePastChallengesDaysList();
+                    });
+                    pastChallengeNextMonth.setAttribute('data-listener-attached', 'true');
+                }
+                document.addEventListener('click', (e) => {
+                    const modal = document.getElementById('pastChallengesModal');
+                    if (e.target === modal) closePastChallengesModal();
+                });
                 // Ensure help button event listener is set up
                 const helpBtn = document.getElementById('helpButton');
                 if (helpBtn && !helpBtn.hasAttribute('data-listener-attached')) {
@@ -8413,6 +9208,24 @@
             <h2>Yesterday's Best Setup</h2>
             <div id="yesterdayBestImage"></div>
             <button class="close-btn" onclick="closeYesterdayBest()">Close</button>
+        </div>
+    </div>
+
+    <!-- Past Challenges Modal -->
+    <div id="pastChallengesModal" class="past-challenges-modal">
+        <div class="past-challenges-content">
+            <h2>Past Challenges</h2>
+            <p class="past-challenges-instruction">Click a day to load that challenge.</p>
+            <div id="pastChallengeMonthLabel" class="past-challenges-month-label">January</div>
+            <div id="pastChallengesDaysList" class="past-challenges-days-list">
+                <!-- Populated by JS -->
+            </div>
+            <div id="pastChallengesMessage" class="past-challenges-message" style="display: none;"></div>
+            <div class="past-challenges-nav">
+                <button type="button" class="yesterday-best-btn" id="pastChallengePrevMonth">← Prev Month</button>
+                <button type="button" class="yesterday-best-btn" id="pastChallengeNextMonth">Next Month →</button>
+                <button type="button" class="close-btn" onclick="closePastChallengesModal()">Close</button>
+            </div>
         </div>
     </div>
 

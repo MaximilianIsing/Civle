@@ -43,6 +43,59 @@ const MIME_TYPES = {
     '.txt': 'text/plain'
 };
 
+// Cache for day challenges list (dates + districts per date). Refreshed every 24 hours.
+let dayChallengesListCache = null;
+const DAY_CHALLENGES_CACHE_MS = 24 * 60 * 60 * 1000;
+
+function parseDistrictsFromCivle(content) {
+    const districts = [];
+    if (!content || !content.startsWith('CIV1')) return districts;
+    const parts = content.split('||');
+    const allocationsStr = parts.length > 1 ? parts[1] : null;
+    if (!allocationsStr) return districts;
+    const allocations = allocationsStr.split(',');
+    allocations.forEach(allocStr => {
+        if (!allocStr) return;
+        const p = allocStr.split(':');
+        if (p[0] !== 'd') return;
+        const name = p[1];
+        const val = p[2];
+        const count = (val === 'c' || val === 'true') ? 1 : (parseInt(val, 10) || 0);
+        for (let i = 0; i < count; i++) districts.push(name);
+    });
+    return districts;
+}
+
+function getDayChallengesList() {
+    const now = Date.now();
+    if (dayChallengesListCache && (now - dayChallengesListCache.timestamp) < DAY_CHALLENGES_CACHE_MS) {
+        return dayChallengesListCache.data;
+    }
+    const challengesDir = './day_challenges';
+    const dates = [];
+    const districtsByDate = {};
+    if (fs.existsSync(challengesDir)) {
+        const files = fs.readdirSync(challengesDir);
+        files.forEach(file => {
+            const match = file.match(/^(\d{2})-(\d{2})\.civle$/);
+            if (match) {
+                const dateStr = `${match[1]}-${match[2]}`;
+                dates.push(dateStr);
+                try {
+                    const content = fs.readFileSync(path.join(challengesDir, file), 'utf8');
+                    districtsByDate[dateStr] = parseDistrictsFromCivle(content);
+                } catch (err) {
+                    districtsByDate[dateStr] = [];
+                }
+            }
+        });
+    }
+    dates.sort();
+    const data = { dates, districtsByDate };
+    dayChallengesListCache = { data, timestamp: now };
+    return data;
+}
+
 // Function to get date string in EST timezone
 function getESTDateString(date = new Date()) {
     const estDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/New_York' }));
@@ -1025,8 +1078,49 @@ const server = http.createServer((req, res) => {
         }
         return;
     }
+    
+    // Handle past day challenge endpoint (for playing old challenges)
+    if (pathname === '/day-challenge' && req.method === 'GET') {
+        try {
+            const dateParam = queryParams.get('date');
+            if (!dateParam || !/^\d{2}-\d{2}$/.test(dateParam)) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Invalid date format. Use MM-DD' }), 'utf-8');
+                return;
+            }
+            const challengePath = `./day_challenges/${dateParam}.civle`;
+            if (fs.existsSync(challengePath)) {
+                const challengeContent = fs.readFileSync(challengePath, 'utf8');
+                res.writeHead(200, { 'Content-Type': 'text/plain' });
+                res.end(challengeContent, 'utf-8');
+            } else {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Challenge not found for this date' }), 'utf-8');
+            }
+        } catch (err) {
+            console.error('Error serving day challenge:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Server error loading challenge' }), 'utf-8');
+        }
+        return;
+    }
+    
+    // List available day challenges (for Past Challenges modal)
+    if (pathname === '/day-challenges-list' && req.method === 'GET') {
+        try {
+            const { dates, districtsByDate } = getDayChallengesList();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ dates, districtsByDate }), 'utf-8');
+        } catch (err) {
+            console.error('Error listing day challenges:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Server error' }), 'utf-8');
+        }
+        return;
+    }
+    
     // Check if accessing map_maker with key
-    else if (pathname === '/map_maker' || pathname === '/map_maker.html') {
+    if (pathname === '/map_maker' || pathname === '/map_maker.html') {
         try {
             // Read the endpoint key from environment variable or file
             let endpointKey;
