@@ -6518,7 +6518,6 @@
             if (bonuses.City_Center && cityCenterCount > 0) {
                 const bonus = bonuses.City_Center;
                 const amount = cityCenterCount * bonus.bonus;
-
                 if (bonus.type === 'Science') science += amount;
                 else if (bonus.type === 'Faith') faith += amount;
                 else if (bonus.type === 'Gold') gold += amount;
@@ -7396,6 +7395,7 @@
             let improvementCounts = {};
             let mountainCount = 0;
             let rainforestCount = 0;
+            let woodsCount = 0;
             let geothermalFissureCount = 0;
             let reefCount = 0;
             let coastalResourceCount = 0;
@@ -7416,6 +7416,9 @@
                     }
                     if (neighborTile.feature === 'Rainforest') {
                         rainforestCount++;
+                    }
+                    if (neighborTile.feature === 'Woods') {
+                        woodsCount++;
                     }
                     if (neighborTile.terrain === 'Reef') {
                         reefCount++;
