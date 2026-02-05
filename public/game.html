@@ -6518,19 +6518,32 @@
             if (bonuses.City_Center && cityCenterCount > 0) {
                 const bonus = bonuses.City_Center;
                 const amount = cityCenterCount * bonus.bonus;
-                if (bonus.type === 'Gold') gold += amount;
+
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Harbor && harborCount > 0) {
                 const bonus = bonuses.Harbor;
                 const amount = harborCount * bonus.bonus;
-                if (bonus.type === 'Gold') gold += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Commercial_Hub && commercialHubCount > 0) {
                 const bonus = bonuses.Commercial_Hub;
                 const amount = commercialHubCount * bonus.bonus;
-                if (bonus.type === 'Gold') gold += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Government_Plaza && governmentPlazaCount > 0) {
@@ -6546,19 +6559,31 @@
             if (bonuses.Wonder && wonderCount > 0) {
                 const bonus = bonuses.Wonder;
                 const amount = wonderCount * bonus.bonus;
-                if (bonus.type === 'Culture') culture += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Entertainment_Complex && entertainmentComplexCount > 0) {
                 const bonus = bonuses.Entertainment_Complex;
                 const amount = entertainmentComplexCount * bonus.bonus;
-                if (bonus.type === 'Culture') culture += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Water_Park && waterParkCount > 0) {
                 const bonus = bonuses.Water_Park;
                 const amount = waterParkCount * bonus.bonus;
-                if (bonus.type === 'Culture') culture += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Mine && improvementCounts.Mine) {
@@ -6613,6 +6638,20 @@
                 const bonus = bonuses.Strategic_Resource;
                 const amount = strategicResourceCount * bonus.bonus;
                 if (bonus.type === 'Production') production += amount;
+            }
+            
+            // Handle district-type sources from modifiers (Campus, Holy_Site, Industrial_Zone, Theater_Square, etc.)
+            const HANDLED_SOURCES = new Set(['Mountain','Rainforest','Woods','Geothermal_Fissure','Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
+            for (const [source, bonus] of Object.entries(bonuses)) {
+                if (HANDLED_SOURCES.has(source)) continue;
+                const count = (districtCounts && districtCounts[source]) || 0;
+                if (count <= 0) continue;
+                const amount = Math.floor(count / (bonus.per || 1)) * bonus.bonus;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             // Apply modifier bonuses
@@ -7151,19 +7190,31 @@
             if (bonuses.City_Center && cityCenterCount > 0) {
                 const bonus = bonuses.City_Center;
                 const amount = cityCenterCount * bonus.bonus;
-                if (bonus.type === 'Gold') gold += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Harbor && harborCount > 0) {
                 const bonus = bonuses.Harbor;
                 const amount = harborCount * bonus.bonus;
-                if (bonus.type === 'Gold') gold += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Commercial_Hub && commercialHubCount > 0) {
                 const bonus = bonuses.Commercial_Hub;
                 const amount = commercialHubCount * bonus.bonus;
-                if (bonus.type === 'Gold') gold += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Government_Plaza && governmentPlazaCount > 0) {
@@ -7179,19 +7230,31 @@
             if (bonuses.Wonder && wonderCount > 0) {
                 const bonus = bonuses.Wonder;
                 const amount = wonderCount * bonus.bonus;
-                if (bonus.type === 'Culture') culture += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Entertainment_Complex && entertainmentComplexCount > 0) {
                 const bonus = bonuses.Entertainment_Complex;
                 const amount = entertainmentComplexCount * bonus.bonus;
-                if (bonus.type === 'Culture') culture += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Water_Park && waterParkCount > 0) {
                 const bonus = bonuses.Water_Park;
                 const amount = waterParkCount * bonus.bonus;
-                if (bonus.type === 'Culture') culture += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             // Check improvements
@@ -7250,6 +7313,20 @@
                 if (bonus.type === 'Production') production += amount;
             }
             
+            // Handle district-type sources from modifiers (Campus, Holy_Site, Industrial_Zone, Theater_Square, etc.)
+            const HANDLED_SOURCES_CALC = new Set(['Mountain','Rainforest','Woods','Geothermal_Fissure','Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
+            for (const [source, bonus] of Object.entries(bonuses)) {
+                if (HANDLED_SOURCES_CALC.has(source)) continue;
+                const count = (districtCounts && districtCounts[source]) || 0;
+                if (count <= 0) continue;
+                const amount = Math.floor(count / (bonus.per || 1)) * bonus.bonus;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
+            }
+            
             // Apply modifier bonuses (adds yields from same source with different type, e.g. Mine->Culture)
             let hasRiver = false;
             if (tile && tile.rivers) {
@@ -7304,6 +7381,7 @@
             
             // Count neighbors
             let districtCount = 0;
+            let districtCounts = {};
             let cityCenterCount = 0;
             let harborCount = 0;
             let commercialHubCount = 0;
@@ -7359,6 +7437,7 @@
                 if (neighborPlaced) {
                     if (neighborPlaced.type === 'district') {
                         districtCount++;
+                        districtCounts[neighborPlaced.name] = (districtCounts[neighborPlaced.name] || 0) + 1;
                         if (neighborPlaced.name === 'City_Center') cityCenterCount++;
                         if (neighborPlaced.name === 'Harbor') harborCount++;
                         if (neighborPlaced.name === 'Commercial_Hub') commercialHubCount++;
@@ -7474,6 +7553,16 @@
             
             if (bonuses.Strategic_Resource && strategicResourceCount > 0) {
                 sources.push({ type: 'Strategic_Resource', count: strategicResourceCount, bonus: bonuses.Strategic_Resource, resourceNames: strategicResources });
+            }
+            
+            // Handle district-type sources (Campus, Holy_Site, Industrial_Zone, etc. from modifiers)
+            const HANDLED_SOURCES_GET = new Set(['Mountain','Rainforest','Woods','Geothermal_Fissure','Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
+            for (const [source, bonus] of Object.entries(bonuses)) {
+                if (HANDLED_SOURCES_GET.has(source)) continue;
+                const count = (districtCounts && districtCounts[source]) || 0;
+                if (count > 0) {
+                    sources.push({ type: source, count, bonus });
+                }
             }
             
             // Add modifier sources (same source, different yield type - e.g. Mine->Culture)
