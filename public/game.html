@@ -2131,7 +2131,7 @@
                         // Load adjacency modifiers if present (parts[2])
                         const modifiersStr = parts.length > 2 ? parts[2] : null;
                         if (modifiersStr) {
-                            const modifierEntries = modifiersStr.split(',');
+                            const modifierEntries = modifiersStr.includes('\u001e') ? modifiersStr.split('\u001e') : modifiersStr.split(',');
                             modifierEntries.forEach(modStr => {
                                 if (!modStr) return;
                                 const tildeIdx = modStr.indexOf('~');
@@ -2144,9 +2144,15 @@
                                     dataPart = dataPart.substring(0, usIdx);
                                     descOnly = true;
                                 }
-                                const usIdx = afterTilde.indexOf('\u001f');
-                                const titlePart = descOnly ? '' : (usIdx >= 0 ? afterTilde.substring(0, usIdx) : afterTilde);
-                                const descPart = descOnly ? afterTilde : (usIdx >= 0 ? afterTilde.substring(usIdx + 1) : '');
+                                let modSuffixParts = afterTilde.split('\u001f');
+                                let hidden = false;
+                                const lastPart = modSuffixParts[modSuffixParts.length - 1];
+                                if (lastPart === '0' || lastPart === '1') {
+                                    hidden = (lastPart === '1');
+                                    modSuffixParts = modSuffixParts.slice(0, -1);
+                                }
+                                const titlePart = descOnly ? '' : (modSuffixParts[0] || '');
+                                const descPart = descOnly ? (modSuffixParts[0] || '') : (modSuffixParts[1] || '');
                                 const modParts = dataPart.split(':');
                                 if (modParts[0] === 'm' && modParts.length >= 6) {
                                     challengeData.adjacency_modifiers.push({
@@ -2156,7 +2162,8 @@
                                         type: modParts[4],
                                         per: parseInt(modParts[5]) || 1,
                                         title: titlePart || '',
-                                        description: descPart || ''
+                                        description: descPart || '',
+                                        hidden: hidden
                                     });
                                 }
                             });
@@ -2355,7 +2362,7 @@
                     // Load adjacency modifiers if present
                     const modifiersStr = parts.length > 2 ? parts[2] : null;
                     if (modifiersStr) {
-                        const modifierEntries = modifiersStr.split(',');
+                        const modifierEntries = modifiersStr.includes('\u001e') ? modifiersStr.split('\u001e') : modifiersStr.split(',');
                         modifierEntries.forEach(modStr => {
                             if (!modStr) return;
                             const tildeIdx = modStr.indexOf('~');
@@ -2368,9 +2375,15 @@
                                 dataPart = dataPart.substring(0, usIdx);
                                 descOnly = true;
                             }
-                            const usIdx = afterTilde.indexOf('\u001f');
-                            const titlePart = descOnly ? '' : (usIdx >= 0 ? afterTilde.substring(0, usIdx) : afterTilde);
-                            const descPart = descOnly ? afterTilde : (usIdx >= 0 ? afterTilde.substring(usIdx + 1) : '');
+                            let modSuffixParts = afterTilde.split('\u001f');
+                            let hidden = false;
+                            const lastPart = modSuffixParts[modSuffixParts.length - 1];
+                            if (lastPart === '0' || lastPart === '1') {
+                                hidden = (lastPart === '1');
+                                modSuffixParts = modSuffixParts.slice(0, -1);
+                            }
+                            const titlePart = descOnly ? '' : (modSuffixParts[0] || '');
+                            const descPart = descOnly ? (modSuffixParts[0] || '') : (modSuffixParts[1] || '');
                             const modParts = dataPart.split(':');
                             if (modParts[0] === 'm' && modParts.length >= 6) {
                                 challengeData.adjacency_modifiers.push({
@@ -2380,7 +2393,8 @@
                                     type: modParts[4],
                                     per: parseInt(modParts[5]) || 1,
                                     title: titlePart || '',
-                                    description: descPart || ''
+                                    description: descPart || '',
+                                    hidden: hidden
                                 });
                             }
                         });
@@ -2652,7 +2666,7 @@
             modifierPanel.id = 'dailyModifierPanel';
             modifierPanel.className = 'daily-modifier-panel';
             const modifiers = challengeData && challengeData.adjacency_modifiers ? challengeData.adjacency_modifiers : [];
-            const modifiersWithTitles = modifiers.filter(m => m.title && m.title.trim());
+            const modifiersWithTitles = modifiers.filter(m => m.title && m.title.trim() && !m.hidden);
             if (modifiersWithTitles.length > 0) {
                 modifierPanel.style.display = 'block';
                 const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -4791,7 +4805,7 @@
 
         function getDistrictDisplayName(districtName) {
             const modifiers = challengeData && challengeData.adjacency_modifiers ? challengeData.adjacency_modifiers : [];
-            const mod = modifiers.find(m => m.district === districtName && m.title && m.title.trim());
+            const mod = modifiers.find(m => m.district === districtName && m.title && m.title.trim() && !m.hidden);
             return mod ? mod.title.trim() : districtName.replace(/_/g, ' ');
         }
 
@@ -9151,7 +9165,7 @@
                 }
                 const modifiersStr = parts.length > 2 ? parts[2] : null;
                 if (modifiersStr) {
-                    modifiersStr.split(',').forEach(modStr => {
+                    (modifiersStr.includes('\u001e') ? modifiersStr.split('\u001e') : modifiersStr.split(',')).forEach(modStr => {
                         if (!modStr) return;
                         const tildeIdx = modStr.indexOf('~');
                         let dataPart = tildeIdx >= 0 ? modStr.substring(0, tildeIdx) : modStr;
@@ -9163,15 +9177,21 @@
                             dataPart = dataPart.substring(0, usIdx);
                             descOnly = true;
                         }
-                        const usIdx = afterTilde.indexOf('\u001f');
-                        const titlePart = descOnly ? '' : (usIdx >= 0 ? afterTilde.substring(0, usIdx) : afterTilde);
-                        const descPart = descOnly ? afterTilde : (usIdx >= 0 ? afterTilde.substring(usIdx + 1) : '');
+                        let modSuffixParts = afterTilde.split('\u001f');
+                        let hidden = false;
+                        const lastPart = modSuffixParts[modSuffixParts.length - 1];
+                        if (lastPart === '0' || lastPart === '1') {
+                            hidden = (lastPart === '1');
+                            modSuffixParts = modSuffixParts.slice(0, -1);
+                        }
+                        const titlePart = descOnly ? '' : (modSuffixParts[0] || '');
+                        const descPart = descOnly ? (modSuffixParts[0] || '') : (modSuffixParts[1] || '');
                         const modParts = dataPart.split(':');
                         if (modParts[0] === 'm' && modParts.length >= 6) {
                             challengeData.adjacency_modifiers.push({
                                 district: modParts[1], source: modParts[2], bonus: parseInt(modParts[3]) || 1,
                                 type: modParts[4], per: parseInt(modParts[5]) || 1, title: titlePart || '',
-                                description: descPart || ''
+                                description: descPart || '', hidden: hidden
                             });
                         }
                     });
