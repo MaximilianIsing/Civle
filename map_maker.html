@@ -1216,7 +1216,8 @@
                     type: 'Culture',
                     per: 1,
                     title: '',
-                    description: ''
+                    description: '',
+                    hidden: false
                 });
                 populateModifiers();
             };
@@ -1255,6 +1256,20 @@
             descInput.style.fontSize = '12px';
             descInput.onchange = () => { mapData.adjacency_modifiers[idx].description = descInput.value; };
             descInput.oninput = () => { mapData.adjacency_modifiers[idx].description = descInput.value; };
+
+            const hiddenLabel = document.createElement('label');
+            hiddenLabel.style.display = 'flex';
+            hiddenLabel.style.alignItems = 'center';
+            hiddenLabel.style.gap = '8px';
+            hiddenLabel.style.marginBottom = '6px';
+            const hiddenCheckbox = document.createElement('input');
+            hiddenCheckbox.type = 'checkbox';
+            hiddenCheckbox.checked = !!mod.hidden;
+            hiddenCheckbox.onchange = () => { mapData.adjacency_modifiers[idx].hidden = hiddenCheckbox.checked; };
+            hiddenCheckbox.onclick = () => { mapData.adjacency_modifiers[idx].hidden = hiddenCheckbox.checked; };
+            hiddenLabel.appendChild(hiddenCheckbox);
+            hiddenLabel.appendChild(document.createTextNode('Hidden (no popup, no district rename)'));
+            item.appendChild(hiddenLabel);
 
             const districtSelect = document.createElement('select');
             districtSelect.className = 'modifier-district';
@@ -2240,16 +2255,22 @@
                 output += '||' + allocations.join(',');
             }
             
-            // Add adjacency modifiers: m:District:Source:Bonus:Yield:Per~Title[UnitSep]Description
+            // Add adjacency modifiers: m:District:Source:Bonus:Yield:Per~Title[UnitSep]Description[UnitSep]H (H=0|1 for hidden)
+            // When title exists, always use 3-part format so hidden is unambiguous
             if (mapData.adjacency_modifiers && mapData.adjacency_modifiers.length > 0) {
                 const modifierStrs = mapData.adjacency_modifiers.map(m => {
                     const base = `m:${m.district}:${m.source}:${m.bonus}:${m.type}:${m.per || 1}`;
                     let suffix = '';
-                    if (m.title) suffix += '~' + m.title;
-                    if (m.description && String(m.description).trim()) suffix += '\u001f' + String(m.description).trim();
+                    if (m.title) {
+                        suffix = '~' + m.title + '\u001f' + (m.description && String(m.description).trim() ? m.description.trim() : '') + '\u001f' + (m.hidden ? '1' : '0');
+                    } else if (m.description && String(m.description).trim()) {
+                        suffix = '\u001f' + m.description.trim() + (m.hidden ? '\u001f1' : '');
+                    } else if (m.hidden) {
+                        suffix = '\u001f\u001f1';
+                    }
                     return base + suffix;
                 });
-                output += '||' + modifierStrs.join(',');
+                output += '||' + modifierStrs.join('\u001e'); // Use RS to avoid splitting on commas in title/description
             }
             
             const dataBlob = new Blob([output], { type: 'application/octet-stream' });
@@ -2431,7 +2452,8 @@
                         const modifiersStr = parts.length > 2 ? parts[2] : null;
                         if (modifiersStr) {
                             mapData.adjacency_modifiers = [];
-                            const modifierEntries = modifiersStr.split(',');
+                            // Split by RS only (new format); fall back to comma for old files that don't contain RS
+                            const modifierEntries = modifiersStr.includes('\u001e') ? modifiersStr.split('\u001e') : modifiersStr.split(',');
                             modifierEntries.forEach(modStr => {
                                 if (!modStr) return;
                                 const tildeIdx = modStr.indexOf('~');
@@ -2444,9 +2466,15 @@
                                     dataPart = dataPart.substring(0, usIdx);
                                     descOnly = true;
                                 }
-                                const usIdx = afterTilde.indexOf('\u001f');
-                                const titlePart = descOnly ? '' : (usIdx >= 0 ? afterTilde.substring(0, usIdx) : afterTilde);
-                                const descPart = descOnly ? afterTilde : (usIdx >= 0 ? afterTilde.substring(usIdx + 1) : '');
+                                let modSuffixParts = afterTilde.split('\u001f');
+                                let hidden = false;
+                                const lastPart = modSuffixParts[modSuffixParts.length - 1];
+                                if (lastPart === '0' || lastPart === '1') {
+                                    hidden = (lastPart === '1');
+                                    modSuffixParts = modSuffixParts.slice(0, -1);
+                                }
+                                const titlePart = descOnly ? '' : (modSuffixParts[0] || '');
+                                const descPart = descOnly ? (modSuffixParts[0] || '') : (modSuffixParts[1] || '');
                                 const modParts = dataPart.split(':');
                                 if (modParts[0] === 'm' && modParts.length >= 6) {
                                     mapData.adjacency_modifiers.push({
@@ -2456,7 +2484,8 @@
                                         type: modParts[4],
                                         per: parseInt(modParts[5]) || 1,
                                         title: titlePart || '',
-                                        description: descPart || ''
+                                        description: descPart || '',
+                                        hidden: hidden
                                     });
                                 }
                             });
