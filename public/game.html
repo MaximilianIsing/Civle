@@ -1883,6 +1883,8 @@
                 case 'Mine': return (c.improvementCounts && c.improvementCounts.Mine) || 0;
                 case 'Lumber_Mill': return (c.improvementCounts && c.improvementCounts.Lumber_Mill) || 0;
                 case 'Quarry': return (c.improvementCounts && c.improvementCounts.Quarry) || 0;
+                case 'Fishing_Boats': return (c.improvementCounts && c.improvementCounts.Fishing_Boats) || 0;
+                case 'Marsh': return c.marshCount || 0;
                 case 'Aqueduct': return c.aqueductCount || 0;
                 case 'Dam': return c.damCount || 0;
                 case 'Canal': return c.canalCount || 0;
@@ -6397,6 +6399,7 @@
             let mountainCount = 0;
             let rainforestCount = 0;
             let woodsCount = 0;
+            let marshCount = 0;
             let geothermalFissureCount = 0;
             let reefCount = 0;
             let coastalResourceCount = 0;
@@ -6480,42 +6483,79 @@
                 const amount = mountainCount * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
                 else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Rainforest && rainforestCount > 0) {
                 const bonus = bonuses.Rainforest;
                 const amount = Math.floor(rainforestCount / bonus.per) * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Woods && woodsCount > 0) {
                 const bonus = bonuses.Woods;
                 const amount = Math.floor(woodsCount / bonus.per) * bonus.bonus;
-                if (bonus.type === 'Faith') faith += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
+            }
+            
+            if (bonuses.Marsh && marshCount > 0) {
+                const bonus = bonuses.Marsh;
+                const amount = Math.floor(marshCount / (bonus.per || 1)) * bonus.bonus;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Geothermal_Fissure && geothermalFissureCount > 0) {
                 const bonus = bonuses.Geothermal_Fissure;
                 const amount = geothermalFissureCount * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Reef && reefCount > 0) {
                 const bonus = bonuses.Reef;
                 const amount = reefCount * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Natural_Wonder && naturalWonderCount > 0) {
                 const bonus = bonuses.Natural_Wonder;
                 const amount = naturalWonderCount * bonus.bonus;
-                if (bonus.type === 'Faith') faith += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Coastal_Resources && coastalResourceCount > 0) {
                 const bonus = bonuses.Coastal_Resources;
                 const amount = coastalResourceCount * bonus.bonus;
-                if (bonus.type === 'Gold') gold += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             // Apply bonuses (same logic as calculateAdjacency)
@@ -6614,7 +6654,21 @@
             if (bonuses.Quarry && improvementCounts.Quarry) {
                 const bonus = bonuses.Quarry;
                 const amount = improvementCounts.Quarry * bonus.bonus;
-                if (bonus.type === 'Production') production += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
+            }
+            
+            if (bonuses.Fishing_Boats && improvementCounts.Fishing_Boats) {
+                const bonus = bonuses.Fishing_Boats;
+                const amount = Math.floor(improvementCounts.Fishing_Boats / (bonus.per || 1)) * bonus.bonus;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Aqueduct && aqueductCount > 0) {
@@ -6654,7 +6708,7 @@
             }
             
             // Handle district-type sources from modifiers (Campus, Holy_Site, Industrial_Zone, Theater_Square, etc.)
-            const HANDLED_SOURCES = new Set(['Mountain','Rainforest','Woods','Geothermal_Fissure','Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
+            const HANDLED_SOURCES = new Set(['Mountain','Rainforest','Woods','Marsh','Geothermal_Fissure','Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Fishing_Boats','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
             for (const [source, bonus] of Object.entries(bonuses)) {
                 if (HANDLED_SOURCES.has(source)) continue;
                 const count = (districtCounts && districtCounts[source]) || 0;
@@ -6674,7 +6728,7 @@
             }
             const counts = { districtCount, districtCounts, cityCenterCount, harborCount, commercialHubCount, wonderCount,
                 entertainmentComplexCount, waterParkCount, governmentPlazaCount, aqueductCount, damCount, canalCount,
-                improvementCounts, mountainCount, rainforestCount, woodsCount, geothermalFissureCount, reefCount,
+                improvementCounts, mountainCount, rainforestCount, woodsCount, marshCount, geothermalFissureCount, reefCount,
                 coastalResourceCount, naturalWonderCount, strategicResourceCount, hasRiver };
             const yields = { science, faith, gold, production, culture };
             applyModifierBonuses(districtName, counts, yields);
@@ -7078,6 +7132,7 @@
             let mountainCount = 0;
             let rainforestCount = 0;
             let woodsCount = 0;
+            let marshCount = 0;
             let geothermalFissureCount = 0;
             let reefCount = 0;
             let coastalResourceCount = 0;
@@ -7151,42 +7206,79 @@
                 const amount = mountainCount * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
                 else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Rainforest && rainforestCount > 0) {
                 const bonus = bonuses.Rainforest;
                 const amount = Math.floor(rainforestCount / bonus.per) * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Woods && woodsCount > 0) {
                 const bonus = bonuses.Woods;
                 const amount = Math.floor(woodsCount / bonus.per) * bonus.bonus;
-                if (bonus.type === 'Faith') faith += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
+            }
+            
+            if (bonuses.Marsh && marshCount > 0) {
+                const bonus = bonuses.Marsh;
+                const amount = Math.floor(marshCount / (bonus.per || 1)) * bonus.bonus;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Geothermal_Fissure && geothermalFissureCount > 0) {
                 const bonus = bonuses.Geothermal_Fissure;
                 const amount = geothermalFissureCount * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Reef && reefCount > 0) {
                 const bonus = bonuses.Reef;
                 const amount = reefCount * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Natural_Wonder && naturalWonderCount > 0) {
                 const bonus = bonuses.Natural_Wonder;
                 const amount = naturalWonderCount * bonus.bonus;
-                if (bonus.type === 'Faith') faith += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Coastal_Resources && coastalResourceCount > 0) {
                 const bonus = bonuses.Coastal_Resources;
                 const amount = coastalResourceCount * bonus.bonus;
-                if (bonus.type === 'Gold') gold += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             // Apply bonuses
@@ -7286,7 +7378,21 @@
             if (bonuses.Quarry && improvementCounts.Quarry) {
                 const bonus = bonuses.Quarry;
                 const amount = improvementCounts.Quarry * bonus.bonus;
-                if (bonus.type === 'Production') production += amount;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
+            }
+            
+            if (bonuses.Fishing_Boats && improvementCounts.Fishing_Boats) {
+                const bonus = bonuses.Fishing_Boats;
+                const amount = Math.floor(improvementCounts.Fishing_Boats / (bonus.per || 1)) * bonus.bonus;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Aqueduct && aqueductCount > 0) {
@@ -7327,7 +7433,7 @@
             }
             
             // Handle district-type sources from modifiers (Campus, Holy_Site, Industrial_Zone, Theater_Square, etc.)
-            const HANDLED_SOURCES_CALC = new Set(['Mountain','Rainforest','Woods','Geothermal_Fissure','Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
+            const HANDLED_SOURCES_CALC = new Set(['Mountain','Rainforest','Woods','Marsh','Geothermal_Fissure','Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Fishing_Boats','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
             for (const [source, bonus] of Object.entries(bonuses)) {
                 if (HANDLED_SOURCES_CALC.has(source)) continue;
                 const count = (districtCounts && districtCounts[source]) || 0;
@@ -7347,7 +7453,7 @@
             }
             const counts = { districtCount, districtCounts, cityCenterCount, harborCount, commercialHubCount, wonderCount,
                 entertainmentComplexCount, waterParkCount, governmentPlazaCount, aqueductCount, damCount, canalCount,
-                improvementCounts, mountainCount, rainforestCount, woodsCount, geothermalFissureCount, reefCount,
+                improvementCounts, mountainCount, rainforestCount, woodsCount, marshCount, geothermalFissureCount, reefCount,
                 coastalResourceCount, naturalWonderCount, strategicResourceCount, hasRiver };
             const yields = { science, faith, gold, production, culture };
             applyModifierBonuses(districtName, counts, yields);
@@ -7410,6 +7516,7 @@
             let mountainCount = 0;
             let rainforestCount = 0;
             let woodsCount = 0;
+            let marshCount = 0;
             let geothermalFissureCount = 0;
             let reefCount = 0;
             let coastalResourceCount = 0;
@@ -7433,6 +7540,9 @@
                     }
                     if (neighborTile.feature === 'Woods') {
                         woodsCount++;
+                    }
+                    if (neighborTile.feature === 'Marsh') {
+                        marshCount++;
                     }
                     if (neighborTile.terrain === 'Reef') {
                         reefCount++;
@@ -7518,6 +7628,12 @@
             if (bonuses.Rainforest && rainforestCount > 0) {
                 sources.push({ type: 'Rainforest', count: rainforestCount, bonus: bonuses.Rainforest });
             }
+            if (bonuses.Woods && woodsCount > 0) {
+                sources.push({ type: 'Woods', count: woodsCount, bonus: bonuses.Woods });
+            }
+            if (bonuses.Marsh && marshCount > 0) {
+                sources.push({ type: 'Marsh', count: marshCount, bonus: bonuses.Marsh });
+            }
             if (bonuses.Geothermal_Fissure && geothermalFissureCount > 0) {
                 sources.push({ type: 'Geothermal_Fissure', count: geothermalFissureCount, bonus: bonuses.Geothermal_Fissure });
             }
@@ -7550,6 +7666,9 @@
             if (bonuses.Quarry && improvementCounts.Quarry) {
                 sources.push({ type: 'Quarry', count: improvementCounts.Quarry, bonus: bonuses.Quarry });
             }
+            if (bonuses.Fishing_Boats && improvementCounts.Fishing_Boats) {
+                sources.push({ type: 'Fishing_Boats', count: improvementCounts.Fishing_Boats, bonus: bonuses.Fishing_Boats });
+            }
             
             // Check for strategic resources
             let strategicResourceCount = 0;
@@ -7573,7 +7692,7 @@
             }
             
             // Handle district-type sources (Campus, Holy_Site, Industrial_Zone, etc. from modifiers)
-            const HANDLED_SOURCES_GET = new Set(['Mountain','Rainforest','Woods','Geothermal_Fissure','Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
+            const HANDLED_SOURCES_GET = new Set(['Mountain','Rainforest','Woods','Marsh','Geothermal_Fissure','Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Fishing_Boats','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
             for (const [source, bonus] of Object.entries(bonuses)) {
                 if (HANDLED_SOURCES_GET.has(source)) continue;
                 const count = (districtCounts && districtCounts[source]) || 0;
@@ -7589,7 +7708,7 @@
             }
             const counts = { districtCount, districtCounts, cityCenterCount, harborCount, commercialHubCount, wonderCount,
                 entertainmentComplexCount, waterParkCount, governmentPlazaCount, aqueductCount, damCount, canalCount,
-                improvementCounts, mountainCount, rainforestCount, woodsCount, geothermalFissureCount, reefCount,
+                improvementCounts, mountainCount, rainforestCount, woodsCount, marshCount, geothermalFissureCount, reefCount,
                 coastalResourceCount, naturalWonderCount, strategicResourceCount, hasRiver };
             const modifiers = (effectiveAdjacencyData && effectiveAdjacencyData.adjacency_modifiers) || [];
             modifiers.filter(m => m.district === districtName).forEach(mod => {
@@ -7620,7 +7739,7 @@
                 return null;
             }
             // Improvements
-            if (sourceType === 'Mine' || sourceType === 'Lumber_Mill' || sourceType === 'Quarry') {
+            if (sourceType === 'Mine' || sourceType === 'Lumber_Mill' || sourceType === 'Quarry' || sourceType === 'Fishing_Boats') {
                 return `assets/improvements/${sourceType}.webp`;
             }
             // Features
