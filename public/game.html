@@ -1752,6 +1752,7 @@
         let mapZoom = 1.5;
         let mapPanX = 0;
         let mapPanY = 0;
+        let mapZoomPanListenersAttached = false;
         let isDragging = false;
         let dragStartX = 0;
         let dragStartY = 0;
@@ -8835,34 +8836,42 @@
 
         function initMapZoomPan() {
             const mapContainer = document.getElementById('mapContainer');
-            const mapTransformWrapper = document.getElementById('mapTransformWrapper');
             const zoomInBtn = document.getElementById('zoomInBtn');
             const zoomOutBtn = document.getElementById('zoomOutBtn');
             const resetZoomBtn = document.getElementById('resetZoomBtn');
 
             function updateTransform() {
-                mapTransformWrapper.style.transform = `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`;
+                const mapTransformWrapper = document.getElementById('mapTransformWrapper');
+                if (mapTransformWrapper) {
+                    mapTransformWrapper.style.transform = `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`;
+                }
             }
 
-            zoomInBtn.onclick = (e) => {
+            if (zoomInBtn) zoomInBtn.onclick = (e) => {
                 e.stopPropagation();
                 mapZoom = Math.min(mapZoom * 1.2, 3.0);
                 updateTransform();
             };
 
-            zoomOutBtn.onclick = (e) => {
+            if (zoomOutBtn) zoomOutBtn.onclick = (e) => {
                 e.stopPropagation();
                 mapZoom = Math.max(mapZoom / 1.2, 0.5);
                 updateTransform();
             };
 
-            resetZoomBtn.onclick = (e) => {
+            if (resetZoomBtn) resetZoomBtn.onclick = (e) => {
                 e.stopPropagation();
                 mapZoom = 1.5; // Increased from 1.0 to zoom in more by default
                 mapPanX = 0;
                 mapPanY = 0;
                 updateTransform();
             };
+
+            if (mapZoomPanListenersAttached) {
+                updateTransform();
+                return;
+            }
+            mapZoomPanListenersAttached = true;
 
             mapContainer.addEventListener('wheel', (e) => {
                 if (!e.ctrlKey && !e.shiftKey && !e.altKey) {
@@ -8910,7 +8919,7 @@
                 // Allow panning on background or terrain tiles, but not on districts, improvements, wonders, or buttons
                 if (e.button === 0 && !isButtonClick && !isScorePanel && !isDistrict && !isImprovement && !isWonder) {
                     // Allow panning on background, hex grid, or any hex (terrain)
-                    if (e.target === mapContainer || e.target === mapTransformWrapper || e.target.id === 'hexGrid' || e.target.closest('.hex')) {
+                    if (e.target === mapContainer || e.target.closest('#mapTransformWrapper')) {
                         isDragging = true;
                         mapContainer.classList.add('dragging');
                         dragStartX = e.clientX;
@@ -8939,7 +8948,7 @@
                     const isWonder = touch.target.closest('.hex-wonder');
                     
                     if (!isButtonClick && !isScorePanel && !isDistrict && !isImprovement && !isWonder) {
-                        if (touch.target === mapContainer || touch.target === mapTransformWrapper || touch.target.id === 'hexGrid' || touch.target.closest('.hex')) {
+                        if (touch.target === mapContainer || touch.target.closest('#mapTransformWrapper')) {
                             touchPanStart = {
                                 x: touch.clientX,
                                 y: touch.clientY,
