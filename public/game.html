@@ -5465,6 +5465,39 @@
                         });
                     }
                 }
+                
+                // Check all Canals - delete any no longer within 3 tiles of a city center
+                // Use excludeLocation so isValidPlacement ignores the City Center we're about to delete
+                const canalsToCheck = [];
+                for (const [canalKey, canalPlaced] of Object.entries(placedItems)) {
+                    if (canalPlaced.type === 'district' && canalPlaced.name === 'Canal') {
+                        canalsToCheck.push(canalKey);
+                    }
+                }
+                const canalsToDelete = [];
+                for (const canalKey of canalsToCheck) {
+                    const [canalRow, canalCol] = canalKey.split(',').map(Number);
+                    const canal = placedItems[canalKey];
+                    if (canal) {
+                        const canalTile = challengeData.tiles[canalKey];
+                        if (!isValidPlacement(canalRow, canalCol, 'district', 'Canal', canalTile, { row, col })) {
+                            canalsToDelete.push(canalKey);
+                        }
+                    }
+                }
+                for (const canalKey of canalsToDelete) {
+                    const canal = placedItems[canalKey];
+                    if (canal) {
+                        availableItems[canal.name] = (availableItems[canal.name] || 0) + 1;
+                        delete placedItems[canalKey];
+                        const [canalRow, canalCol] = canalKey.split(',').map(Number);
+                        updateHexVisual(canalRow, canalCol);
+                        const canalNeighbors = getNeighbors(canalRow, canalCol);
+                        canalNeighbors.forEach(neighbor => {
+                            updateHexVisual(neighbor.row, neighbor.col);
+                        });
+                    }
+                }
             }
             
             // Delete the item itself
@@ -5637,6 +5670,22 @@
                 
                 // Special placement rules for Canal
                 if (name === 'Canal') {
+                    // Canal must be within 3 tiles of a city center (excluding the one at excludeLocation)
+                    let withinRangeOfCityCenter = false;
+                    for (const [cityKey, cityPlaced] of Object.entries(placedItems)) {
+                        if (cityPlaced.type !== 'district' || cityPlaced.name !== 'City_Center') continue;
+                        if (excludeLocation) {
+                            const [cityRow, cityCol] = cityKey.split(',').map(Number);
+                            if (cityRow === excludeLocation.row && cityCol === excludeLocation.col) continue;
+                        }
+                        const [cityRow, cityCol] = cityKey.split(',').map(Number);
+                        if (getHexDistance(row, col, cityRow, cityCol) <= 3) {
+                            withinRangeOfCityCenter = true;
+                            break;
+                        }
+                    }
+                    if (!withinRangeOfCityCenter) return false;
+                    
                     const neighbors = getNeighbors(row, col);
                     let hasAdjacentWater = false;
                     let validPlacement = false;
