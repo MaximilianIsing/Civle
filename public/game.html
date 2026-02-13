@@ -6440,7 +6440,12 @@
                 }
                 if (hasRiver && bonuses.River_Edge) {
                     const bonus = bonuses.River_Edge;
-                    if (bonus.type === 'Gold') gold += bonus.bonus;
+                    const amount = bonus.bonus;
+                    if (bonus.type === 'Science') science += amount;
+                    else if (bonus.type === 'Faith') faith += amount;
+                    else if (bonus.type === 'Gold') gold += amount;
+                    else if (bonus.type === 'Production') production += amount;
+                    else if (bonus.type === 'Culture') culture += amount;
                 }
             }
             
@@ -7190,7 +7195,12 @@
                     }
                     if (hasRiver && bonuses.River_Edge) {
                         const bonus = bonuses.River_Edge;
-                        if (bonus.type === 'Gold') gold += bonus.bonus;
+                        const amount = bonus.bonus;
+                        if (bonus.type === 'Science') science += amount;
+                        else if (bonus.type === 'Faith') faith += amount;
+                        else if (bonus.type === 'Gold') gold += amount;
+                        else if (bonus.type === 'Production') production += amount;
+                        else if (bonus.type === 'Culture') culture += amount;
                 }
             }
             
