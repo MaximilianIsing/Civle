@@ -6795,7 +6795,7 @@
             const HANDLED_SOURCES = new Set(['Mountain','Rainforest','Woods','Marsh','Geothermal_Fissure','Reef','Great_Barrier_Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Fishing_Boats','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
             for (const [source, bonus] of Object.entries(bonuses)) {
                 if (HANDLED_SOURCES.has(source)) continue;
-                const count = (districtCounts && districtCounts[source]) || 0;
+                const count = (districtCounts && districtCounts[source]) || (improvementCounts && improvementCounts[source]) || 0;
                 if (count <= 0) continue;
                 const amount = Math.floor(count / (bonus.per || 1)) * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
@@ -7542,7 +7542,7 @@
             const HANDLED_SOURCES_CALC = new Set(['Mountain','Rainforest','Woods','Marsh','Geothermal_Fissure','Reef','Great_Barrier_Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Fishing_Boats','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
             for (const [source, bonus] of Object.entries(bonuses)) {
                 if (HANDLED_SOURCES_CALC.has(source)) continue;
-                const count = (districtCounts && districtCounts[source]) || 0;
+                const count = (districtCounts && districtCounts[source]) || (improvementCounts && improvementCounts[source]) || 0;
                 if (count <= 0) continue;
                 const amount = Math.floor(count / (bonus.per || 1)) * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
@@ -7808,7 +7808,7 @@
             const HANDLED_SOURCES_GET = new Set(['Mountain','Rainforest','Woods','Marsh','Geothermal_Fissure','Reef','Great_Barrier_Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Fishing_Boats','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
             for (const [source, bonus] of Object.entries(bonuses)) {
                 if (HANDLED_SOURCES_GET.has(source)) continue;
-                const count = (districtCounts && districtCounts[source]) || 0;
+                const count = (districtCounts && districtCounts[source]) || (improvementCounts && improvementCounts[source]) || 0;
                 if (count > 0) {
                     sources.push({ type: source, count, bonus });
                 }
