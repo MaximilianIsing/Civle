@@ -1871,6 +1871,7 @@
                 case 'Woods': return c.woodsCount || 0;
                 case 'Geothermal_Fissure': return c.geothermalFissureCount || 0;
                 case 'Reef': return c.reefCount || 0;
+                case 'Water': return c.waterTileCount || 0;
                 case 'Great_Barrier_Reef': return c.greatBarrierReefCount || 0;
                 case 'Natural_Wonder': return c.naturalWonderCount || 0;
                 case 'all_districts': return c.districtCount || 0;
@@ -6470,6 +6471,7 @@
             let geothermalFissureCount = 0;
             let reefCount = 0;
             let greatBarrierReefCount = 0;
+            let waterTileCount = 0;
             let coastalResourceCount = 0;
             let naturalWonderCount = 0;
             
@@ -6515,6 +6517,11 @@
                     if (neighborTile.resource && (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
                         coastalResourceCount++;
                     }
+                }
+                
+                // Water tiles (Coast, Ocean, Reef): count by underlying terrain; Harbors/Water Parks on coast still count as water
+                if (neighborTile && (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
+                    waterTileCount++;
                 }
                 
                 // Special case: Geothermal Fissures count even if there's a City_Center on the tile
@@ -6605,6 +6612,16 @@
             if (bonuses.Reef && reefCount > 0) {
                 const bonus = bonuses.Reef;
                 const amount = reefCount * bonus.bonus;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
+            }
+            
+            if (bonuses.Water && waterTileCount > 0) {
+                const bonus = bonuses.Water;
+                const amount = Math.floor(waterTileCount / (bonus.per || 1)) * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
                 else if (bonus.type === 'Faith') faith += amount;
                 else if (bonus.type === 'Gold') gold += amount;
@@ -6792,7 +6809,7 @@
             }
             
             // Handle district-type sources from modifiers (Campus, Holy_Site, Industrial_Zone, Theater_Square, etc.)
-            const HANDLED_SOURCES = new Set(['Mountain','Rainforest','Woods','Marsh','Geothermal_Fissure','Reef','Great_Barrier_Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Fishing_Boats','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
+            const HANDLED_SOURCES = new Set(['Mountain','Rainforest','Woods','Marsh','Geothermal_Fissure','Reef','Water','Great_Barrier_Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Fishing_Boats','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
             for (const [source, bonus] of Object.entries(bonuses)) {
                 if (HANDLED_SOURCES.has(source)) continue;
                 const count = (districtCounts && districtCounts[source]) || (improvementCounts && improvementCounts[source]) || 0;
@@ -6812,7 +6829,7 @@
             }
             const counts = { districtCount, districtCounts, cityCenterCount, harborCount, commercialHubCount, wonderCount,
                 entertainmentComplexCount, waterParkCount, governmentPlazaCount, aqueductCount, damCount, canalCount,
-                improvementCounts, mountainCount, rainforestCount, woodsCount, marshCount, geothermalFissureCount, reefCount, greatBarrierReefCount,
+                improvementCounts, mountainCount, rainforestCount, woodsCount, marshCount, geothermalFissureCount, reefCount, waterTileCount, greatBarrierReefCount,
                 coastalResourceCount, naturalWonderCount, strategicResourceCount, hasRiver };
             const yields = { science, faith, gold, production, culture };
             applyModifierBonuses(districtName, counts, yields);
@@ -7225,6 +7242,7 @@
             let geothermalFissureCount = 0;
             let reefCount = 0;
             let greatBarrierReefCount = 0;
+            let waterTileCount = 0;
             let coastalResourceCount = 0;
             let naturalWonderCount = 0;
             
@@ -7265,6 +7283,11 @@
                     if (neighborTile.resource && (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
                         coastalResourceCount++;
                     }
+                }
+                
+                // Water tiles (Coast, Ocean, Reef): count by underlying terrain; Harbors/Water Parks on coast still count as water
+                if (neighborTile && (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
+                    waterTileCount++;
                 }
                 
                 // Special case: Geothermal Fissures count even if there's a City_Center on the tile
@@ -7350,6 +7373,16 @@
             if (bonuses.Reef && reefCount > 0) {
                 const bonus = bonuses.Reef;
                 const amount = reefCount * bonus.bonus;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
+            }
+            
+            if (bonuses.Water && waterTileCount > 0) {
+                const bonus = bonuses.Water;
+                const amount = Math.floor(waterTileCount / (bonus.per || 1)) * bonus.bonus;
                 if (bonus.type === 'Science') science += amount;
                 else if (bonus.type === 'Faith') faith += amount;
                 else if (bonus.type === 'Gold') gold += amount;
@@ -7539,7 +7572,7 @@
             }
             
             // Handle district-type sources from modifiers (Campus, Holy_Site, Industrial_Zone, Theater_Square, etc.)
-            const HANDLED_SOURCES_CALC = new Set(['Mountain','Rainforest','Woods','Marsh','Geothermal_Fissure','Reef','Great_Barrier_Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Fishing_Boats','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
+            const HANDLED_SOURCES_CALC = new Set(['Mountain','Rainforest','Woods','Marsh','Geothermal_Fissure','Reef','Water','Great_Barrier_Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Fishing_Boats','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
             for (const [source, bonus] of Object.entries(bonuses)) {
                 if (HANDLED_SOURCES_CALC.has(source)) continue;
                 const count = (districtCounts && districtCounts[source]) || (improvementCounts && improvementCounts[source]) || 0;
@@ -7559,7 +7592,7 @@
             }
             const counts = { districtCount, districtCounts, cityCenterCount, harborCount, commercialHubCount, wonderCount,
                 entertainmentComplexCount, waterParkCount, governmentPlazaCount, aqueductCount, damCount, canalCount,
-                improvementCounts, mountainCount, rainforestCount, woodsCount, marshCount, geothermalFissureCount, reefCount, greatBarrierReefCount,
+                improvementCounts, mountainCount, rainforestCount, woodsCount, marshCount, geothermalFissureCount, reefCount, waterTileCount, greatBarrierReefCount,
                 coastalResourceCount, naturalWonderCount, strategicResourceCount, hasRiver };
             const yields = { science, faith, gold, production, culture };
             applyModifierBonuses(districtName, counts, yields);
@@ -7626,6 +7659,7 @@
             let geothermalFissureCount = 0;
             let reefCount = 0;
             let greatBarrierReefCount = 0;
+            let waterTileCount = 0;
             let coastalResourceCount = 0;
             let naturalWonderCount = 0;
             
@@ -7657,6 +7691,11 @@
                     if (neighborTile.terrain === 'Great_Barrier_Reef') {
                         greatBarrierReefCount++;
                     }
+                }
+                
+                // Water tiles (Coast, Ocean, Reef): count by underlying terrain; Harbors/Water Parks on coast still count as water
+                if (neighborTile && (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
+                    waterTileCount++;
                 }
                 
                 // Coastal resources count even if there's a district on the tile
@@ -7750,6 +7789,9 @@
             if (bonuses.Reef && reefCount > 0) {
                 sources.push({ type: 'Reef', count: reefCount, bonus: bonuses.Reef });
             }
+            if (bonuses.Water && waterTileCount > 0) {
+                sources.push({ type: 'Water', count: waterTileCount, bonus: bonuses.Water });
+            }
             if (bonuses.Great_Barrier_Reef && greatBarrierReefCount > 0) {
                 sources.push({ type: 'Great_Barrier_Reef', count: greatBarrierReefCount, bonus: bonuses.Great_Barrier_Reef });
             }
@@ -7805,7 +7847,7 @@
             }
             
             // Handle district-type sources (Campus, Holy_Site, Industrial_Zone, etc. from modifiers)
-            const HANDLED_SOURCES_GET = new Set(['Mountain','Rainforest','Woods','Marsh','Geothermal_Fissure','Reef','Great_Barrier_Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Fishing_Boats','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
+            const HANDLED_SOURCES_GET = new Set(['Mountain','Rainforest','Woods','Marsh','Geothermal_Fissure','Reef','Water','Great_Barrier_Reef','Natural_Wonder','all_districts','District','City_Center','Harbor','Commercial_Hub','Government_Plaza','Wonder','Entertainment_Complex','Water_Park','Mine','Lumber_Mill','Quarry','Fishing_Boats','Aqueduct','Dam','Canal','River_Edge','Coastal_Resources','Strategic_Resource']);
             for (const [source, bonus] of Object.entries(bonuses)) {
                 if (HANDLED_SOURCES_GET.has(source)) continue;
                 const count = (districtCounts && districtCounts[source]) || (improvementCounts && improvementCounts[source]) || 0;
@@ -7821,7 +7863,7 @@
             }
             const counts = { districtCount, districtCounts, cityCenterCount, harborCount, commercialHubCount, wonderCount,
                 entertainmentComplexCount, waterParkCount, governmentPlazaCount, aqueductCount, damCount, canalCount,
-                improvementCounts, mountainCount, rainforestCount, woodsCount, marshCount, geothermalFissureCount, reefCount, greatBarrierReefCount,
+                improvementCounts, mountainCount, rainforestCount, woodsCount, marshCount, geothermalFissureCount, reefCount, waterTileCount, greatBarrierReefCount,
                 coastalResourceCount, naturalWonderCount, strategicResourceCount, hasRiver };
             const modifiers = (effectiveAdjacencyData && effectiveAdjacencyData.adjacency_modifiers) || [];
             modifiers.filter(m => m.district === districtName).forEach(mod => {
@@ -7875,7 +7917,7 @@
                 }
             }
             // Special cases - no icon available
-            if (sourceType === 'River_Edge' || sourceType === 'Strategic_Resource' || sourceType === 'Coastal_Resource' || sourceType === 'Wonder') {
+            if (sourceType === 'River_Edge' || sourceType === 'Water' || sourceType === 'Strategic_Resource' || sourceType === 'Coastal_Resource' || sourceType === 'Wonder') {
                 return null; // No icon for these
             }
             return null;
