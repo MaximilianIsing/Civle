@@ -6519,6 +6519,13 @@
                     }
                 }
                 
+                // Woods/Rainforest/Marsh: still count for adjacency when tile has a resource and only an improvement is placed (e.g. Camp on Deer in Woods)
+                if (neighborTile && neighborPlaced && neighborPlaced.type === 'improvement' && neighborTile.resource) {
+                    if (neighborTile.feature === 'Rainforest') rainforestCount++;
+                    if (neighborTile.feature === 'Woods') woodsCount++;
+                    if (neighborTile.feature === 'Marsh') marshCount++;
+                }
+                
                 // Water tiles (Coast, Ocean, Reef): count by underlying terrain; Harbors/Water Parks on coast still count as water
                 if (neighborTile && (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
                     waterTileCount++;
@@ -7285,6 +7292,13 @@
                     }
                 }
                 
+                // Woods/Rainforest/Marsh: still count for adjacency when tile has a resource and only an improvement is placed (e.g. Camp on Deer in Woods)
+                if (neighborTile && neighborPlaced && neighborPlaced.type === 'improvement' && neighborTile.resource) {
+                    if (neighborTile.feature === 'Rainforest') rainforestCount++;
+                    if (neighborTile.feature === 'Woods') woodsCount++;
+                    if (neighborTile.feature === 'Marsh') marshCount++;
+                }
+                
                 // Water tiles (Coast, Ocean, Reef): count by underlying terrain; Harbors/Water Parks on coast still count as water
                 if (neighborTile && (neighborTile.terrain === 'Coast' || neighborTile.terrain === 'Ocean' || neighborTile.terrain === 'Reef')) {
                     waterTileCount++;
@@ -7691,6 +7705,13 @@
                     if (neighborTile.terrain === 'Great_Barrier_Reef') {
                         greatBarrierReefCount++;
                     }
+                }
+                
+                // Woods/Rainforest/Marsh: still count for adjacency when tile has a resource and only an improvement is placed (e.g. Camp on Deer in Woods)
+                if (neighborTile && neighborPlaced && neighborPlaced.type === 'improvement' && neighborTile.resource) {
+                    if (neighborTile.feature === 'Rainforest') rainforestCount++;
+                    if (neighborTile.feature === 'Woods') woodsCount++;
+                    if (neighborTile.feature === 'Marsh') marshCount++;
                 }
                 
                 // Water tiles (Coast, Ocean, Reef): count by underlying terrain; Harbors/Water Parks on coast still count as water
