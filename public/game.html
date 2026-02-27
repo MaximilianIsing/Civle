@@ -1692,6 +1692,16 @@
         let placedItems = {}; // { "row,col": { type: "district"|"improvement"|"wonder", name: "..." } }
         let availableItems = {}; // { "District_Name": count, "Improvement_Name": count }
         let currentChallengeDate = null; // null = today, or 'MM-DD' when playing past challenge
+        let currentChallengeHash = null; // SHA-256 hex of today's challenge raw data; null when past/custom
+        
+        // Hash challenge data for server verification (prevents submitting old challenge after midnight)
+        async function hashChallengeRaw(text) {
+            const enc = new TextEncoder();
+            const data = enc.encode(text);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
         
         // Helper function to get today's date string (YYYY-MM-DD) in EST
         function getTodayDateString() {
@@ -2025,6 +2035,7 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
+                    currentChallengeHash = null; // Custom file - no server verification
                     const data = e.target.result;
                     
                     if (data.startsWith('CIV1')) {
@@ -2256,6 +2267,7 @@
                 }
                 
                 const data = await response.text();
+                currentChallengeHash = await hashChallengeRaw(data);
                 
                 // Parse the challenge data (same logic as loadChallenge)
                 if (data.startsWith('CIV1')) {
@@ -8419,10 +8431,11 @@
                     // Continue with submission even if screenshot fails
                 }
                 
-                // Send score and screenshot together (server determines if screenshot should be saved)
+                // Send score, screenshot, and challenge hash for server verification (must match today's challenge)
                 const requestBody = {
                     score: totalScore,
-                    screenshot: screenshotData
+                    screenshot: screenshotData,
+                    challengeHash: currentChallengeHash
                 };
                 
                 const scoreResponse = await fetch('/submit-score', {
@@ -8539,7 +8552,8 @@
                             },
                             body: JSON.stringify({ 
                                 score: totalScore,
-                                name: name 
+                                name: name,
+                                challengeHash: currentChallengeHash
                             })
                         });
                         
@@ -9521,6 +9535,7 @@
                 if (challengeData.allocations.wonders[name]) availableItems[name] = 1;
             });
             currentChallengeDate = dateStr || null;
+            currentChallengeHash = null; // Past challenge - no hash for server verification
             initializeGame();
             updateHeaderDate(currentChallengeDate);
         }

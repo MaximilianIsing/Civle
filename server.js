@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const PORT = process.env.PORT || 8000;
 
@@ -264,10 +265,24 @@ const server = http.createServer((req, res) => {
                     return;
                 }
                 
-                // If score is provided, check if this is a duplicate submission
+                // If score is provided, verify the submission is for today's challenge (prevents old-tab trick)
                 if (score !== undefined) {
-                    // Note: We can't perfectly prevent duplicate submissions without user identification,
-                    // but we'll rely on client-side localStorage to prevent multiple submissions per day
+                    const challengeHash = data.challengeHash || null;
+                    const dateStringEst = getESTDateString();
+                    const challengePath = path.join(__dirname, 'day_challenges', `${dateStringEst}.civle`);
+                    let expectedHash = null;
+                    if (fs.existsSync(challengePath)) {
+                        const challengeContent = fs.readFileSync(challengePath, 'utf8');
+                        expectedHash = crypto.createHash('sha256').update(challengeContent, 'utf8').digest('hex');
+                    }
+                    if (!challengeHash || !expectedHash || challengeHash !== expectedHash) {
+                        res.writeHead(400, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            success: false,
+                            error: 'Challenge verification failed. Please refresh the page and load today\'s challenge before submitting.'
+                        }), 'utf-8');
+                        return;
+                    }
                 }
                 
                 // Get current date in EST timezone
