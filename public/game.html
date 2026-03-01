@@ -6793,20 +6793,32 @@
             
             if (bonuses.Aqueduct && aqueductCount > 0) {
                 const bonus = bonuses.Aqueduct;
-                const amount = aqueductCount * bonus.bonus;
-                if (bonus.type === 'Production') production += amount;
+                const amount = Math.floor(aqueductCount / (bonus.per || 1)) * bonus.bonus;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Dam && damCount > 0) {
                 const bonus = bonuses.Dam;
-                const amount = damCount * bonus.bonus;
-                if (bonus.type === 'Production') production += amount;
+                const amount = Math.floor(damCount / (bonus.per || 1)) * bonus.bonus;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Canal && canalCount > 0) {
                 const bonus = bonuses.Canal;
-                const amount = canalCount * bonus.bonus;
-                if (bonus.type === 'Production') production += amount;
+                const amount = Math.floor(canalCount / (bonus.per || 1)) * bonus.bonus;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             let strategicResourceCount = 0;
@@ -7562,20 +7574,32 @@
             
             if (bonuses.Aqueduct && aqueductCount > 0) {
                 const bonus = bonuses.Aqueduct;
-                const amount = aqueductCount * bonus.bonus;
-                if (bonus.type === 'Production') production += amount;
+                const amount = Math.floor(aqueductCount / (bonus.per || 1)) * bonus.bonus;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Dam && damCount > 0) {
                 const bonus = bonuses.Dam;
-                const amount = damCount * bonus.bonus;
-                if (bonus.type === 'Production') production += amount;
+                const amount = Math.floor(damCount / (bonus.per || 1)) * bonus.bonus;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             if (bonuses.Canal && canalCount > 0) {
                 const bonus = bonuses.Canal;
-                const amount = canalCount * bonus.bonus;
-                if (bonus.type === 'Production') production += amount;
+                const amount = Math.floor(canalCount / (bonus.per || 1)) * bonus.bonus;
+                if (bonus.type === 'Science') science += amount;
+                else if (bonus.type === 'Faith') faith += amount;
+                else if (bonus.type === 'Gold') gold += amount;
+                else if (bonus.type === 'Production') production += amount;
+                else if (bonus.type === 'Culture') culture += amount;
             }
             
             // Check for strategic resources
