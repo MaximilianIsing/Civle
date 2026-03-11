@@ -160,7 +160,7 @@
       "must_be_on_woods": false,
       "must_be_coastal": false,
       "only_buildable_on_resources": true,
-      "resources_its_built_on": ["Fish", "Amber", "Pearls", "Turtles", "Whales"]
+      "resources_its_built_on": ["Fish", "Crabs", "Amber", "Pearls", "Turtles", "Whales"]
     },
     {
       "name": "Lumber_Mill",
