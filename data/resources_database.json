@@ -11,6 +11,11 @@
       "is_coastal": false
     },
     {
+      "name": "Crabs",
+      "improvement": "Fishing_Boats",
+      "is_coastal": true
+    },
+    {
       "name": "Fish",
       "improvement": "Fishing_Boats",
       "is_coastal": true
