@@ -410,7 +410,7 @@
     {
       "name": "Hagia_Sophia",
       "description": "May be placed on any flat land tile adjacent to a Holy Site.",
-      "allowed_terrain": ["Grassland", "Plains", "Desert", "Tundra", "Snow"],
+      "allowed_terrain": ["Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains","Grassland", "Plains", "Desert", "Tundra", "Snow"],
       "allowed_features": [],
       "required_feature_adjacency": [],
       "required_resource_adjacency": [],
