@@ -219,7 +219,7 @@
     {
       "name": "Plantation",
       "description": "A recourse improvement, may only be placed on certain recourses. Ignores other terrain and features.",
-      "allowed_terrain": ["Grassland", "Plains", "Desert", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
+      "allowed_terrain": ["Grassland_Hill","Plains_Hill", "Grassland", "Plains", "Desert", "Desert_Floodplains", "Grassland_Floodplains", "Plains_Floodplains"],
       "must_be_on_woods": false,
       "must_be_coastal": false,
       "only_buildable_on_resources": true,
